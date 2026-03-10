@@ -1,7 +1,7 @@
 // app/api/generate-render/route.js
-// Next.js App Router API route — supports OpenAI gpt-image-1.5 (primary) and Higgsfield FLUX (fallback)
-// For C2R: image editing (input_image + material instruction)
-// For S2I/Imagine: generation or image-conditioned generation
+// Next.js App Router API route — OpenAI Responses API (primary) + Higgsfield FLUX (fallback)
+// For S2I: sketch-to-image generation/editing with multi-turn correction support
+// Now uses the same Responses API + gpt-4.1 approach as C2R's generate-image route
 
 export async function OPTIONS() {
   return new Response(null, {
@@ -24,22 +24,51 @@ export async function POST(request) {
   let body;
   try { body = await request.json(); } catch { body = {}; }
 
-  const { prompt, aspect_ratio = '1:1', input_image, input_image_2, input_image_3, input_image_4, mask_image, quality = 'high', input_fidelity } = body;
+  const {
+    prompt,
+    input_image,              // base64 image (sketch or reference)
+    input_image_2,            // additional reference images
+    input_image_3,
+    input_image_4,
+    mask_image,               // mask for targeted editing
+    previous_response_id,     // for multi-turn corrections
+    action = 'auto',          // "edit" = force edit, "generate" = new image, "auto" = model decides
+    aspect_ratio = '1:1',
+    quality = 'high',
+    size,                     // if provided, use directly; otherwise derive from aspect_ratio
+    input_fidelity = 'high',
+  } = body;
+
   if (!prompt || prompt.trim().length < 5) {
     return Response.json({ error: 'prompt is required' }, { status: 400, headers: corsHeaders });
   }
 
   const hasInputImage = input_image && input_image.length > 100;
 
-  // Try OpenAI first, then Higgsfield fallback
+  // Try OpenAI Responses API first, then Higgsfield fallback
   const openaiKey = process.env.OPENAI_API_KEY;
   if (openaiKey) {
     try {
-      const result = await openaiGenerate({ openaiKey, prompt: prompt.trim(), hasInputImage, input_image, input_image_2, input_image_3, input_image_4, mask_image, aspect_ratio, quality, input_fidelity });
+      const result = await responsesGenerate({
+        openaiKey,
+        prompt: prompt.trim(),
+        hasInputImage,
+        input_image,
+        input_image_2,
+        input_image_3,
+        input_image_4,
+        mask_image,
+        previous_response_id,
+        action,
+        aspect_ratio,
+        quality,
+        size,
+        input_fidelity,
+      });
       return Response.json(result, { headers: corsHeaders });
     } catch (e) {
-      // If OpenAI fails, fall through to Higgsfield
-      console.error('OpenAI image API error:', e.message);
+      console.error('Responses API error:', e.message);
+      // Fall through to Higgsfield
     }
   }
 
@@ -59,102 +88,120 @@ export async function POST(request) {
 }
 
 // ────────────────────────────────────────────────────────────
-// OpenAI gpt-image-1.5 — supports both generation and image editing
+// OpenAI Responses API with gpt-4.1 — same approach as C2R
+// Supports multi-turn corrections via previous_response_id
 // ────────────────────────────────────────────────────────────
-async function openaiGenerate({ openaiKey, prompt, hasInputImage, input_image, input_image_2, input_image_3, input_image_4, mask_image, aspect_ratio, quality, input_fidelity }) {
+async function responsesGenerate({ openaiKey, prompt, hasInputImage, input_image, input_image_2, input_image_3, input_image_4, mask_image, previous_response_id, action, aspect_ratio, quality, size, input_fidelity }) {
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${openaiKey}`,
   };
 
-  // Map aspect ratio to OpenAI size format
-  const sizeMap = {
-    '1:1': '1024x1024',
-    '16:9': '1536x1024',
-    '9:16': '1024x1536',
-    '4:3': '1536x1024',
-    '3:4': '1024x1536',
-  };
-  const size = sizeMap[aspect_ratio] || '1024x1024';
+  // Resolve size: use explicit size, or derive from aspect_ratio
+  let resolvedSize = size || 'auto';
+  if (!size) {
+    const sizeMap = {
+      '1:1': '1024x1024',
+      '16:9': '1536x1024',
+      '9:16': '1024x1536',
+      '4:3': '1536x1024',
+      '3:4': '1024x1536',
+    };
+    resolvedSize = sizeMap[aspect_ratio] || 'auto';
+  }
 
-  if (hasInputImage) {
-    // Image EDIT — multipart/form-data per OpenAI docs
-    // Convert base64 images to Blobs for FormData upload
-    const formData = new FormData();
-    formData.append('model', 'gpt-image-1.5');
-    formData.append('prompt', prompt);
-    formData.append('size', size);
-    formData.append('quality', quality);
-    formData.append('input_fidelity', input_fidelity || 'high');
+  // Build input content
+  let input;
 
-    // Helper: convert base64 (with or without data: prefix) to a Blob
-    function base64ToBlob(b64str) {
-      const raw = b64str.startsWith('data:') ? b64str.split(',')[1] : b64str;
-      const bytes = Buffer.from(raw, 'base64');
-      return new Blob([bytes], { type: 'image/png' });
+  if (previous_response_id) {
+    // Multi-turn correction: images already in context from previous response
+    input = prompt;
+  } else if (hasInputImage) {
+    // First turn with image(s): include them in the user message
+    const content = [];
+
+    // Helper to add an image to content
+    function addImage(b64str) {
+      if (!b64str || b64str.length < 100) return;
+      const dataUrl = b64str.startsWith('data:')
+        ? b64str
+        : `data:image/png;base64,${b64str}`;
+      content.push({ type: 'input_image', image_url: dataUrl });
     }
 
-    // Append input images as image[] entries (matches curl -F "image[]=@file.png")
-    if (input_image) formData.append('image[]', base64ToBlob(input_image), 'input.png');
-    if (input_image_2) formData.append('image[]', base64ToBlob(input_image_2), 'input2.png');
-    if (input_image_3) formData.append('image[]', base64ToBlob(input_image_3), 'input3.png');
-    if (input_image_4) formData.append('image[]', base64ToBlob(input_image_4), 'input4.png');
+    addImage(input_image);
+    if (input_image_2) addImage(input_image_2);
+    if (input_image_3) addImage(input_image_3);
+    if (input_image_4) addImage(input_image_4);
 
-    // Mask: transparent alpha = area to edit, opaque = area to preserve
-    // For C2R the mask covers the jewelry object so only it gets material conversion
+    // Add mask description if provided (Responses API doesn't use mask directly,
+    // but we can describe it in the prompt for the model's understanding)
+    let fullPrompt = prompt;
     if (mask_image) {
-      formData.append('mask', base64ToBlob(mask_image), 'mask.png');
+      fullPrompt += '\n\nA mask has been provided — edit only the masked (transparent) region of the image while preserving everything else.';
     }
 
-    const res = await fetch('https://api.openai.com/v1/images/edits', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${openaiKey}` },
-      body: formData,
-    });
+    content.push({ type: 'input_text', text: fullPrompt });
 
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error?.message || `OpenAI edit error: HTTP ${res.status}`);
-    }
-
-    // OpenAI gpt-image-1.5 returns base64 directly
-    const b64 = data?.data?.[0]?.b64_json;
-    if (!b64) throw new Error('No image data returned from OpenAI');
-
-    return { url: `data:image/png;base64,${b64}`, mode: 'openai-edit' };
-
+    input = [{ role: 'user', content }];
   } else {
-    // Image GENERATION — text prompt only (for Imagine tool)
-    // Append quality suffix if not already present
+    // Text-only generation (no image, no previous turn)
+    // Append quality suffix for better jewelry renders
     const lower = prompt.toLowerCase();
     const hasPhotoDir = lower.includes('photography') || lower.includes('photorealistic') || lower.includes('macro') || lower.includes('8k');
-    const fullPrompt = hasPhotoDir ? prompt : prompt + '. Photorealistic luxury jewelry photography, soft studio lighting, sharp macro detail.';
-
-    const genBody = {
-      model: 'gpt-image-1.5',
-      prompt: fullPrompt,
-      size,
-      quality,
-      n: 1,
-    };
-
-    const res = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(genBody),
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error?.message || `OpenAI generation error: HTTP ${res.status}`);
-    }
-
-    const b64 = data?.data?.[0]?.b64_json;
-    const url = data?.data?.[0]?.url;
-    if (!b64 && !url) throw new Error('No image data returned from OpenAI');
-
-    return { url: b64 ? `data:image/png;base64,${b64}` : url, mode: 'openai-generate' };
+    input = hasPhotoDir ? prompt : prompt + '. Photorealistic luxury jewelry photography, soft studio lighting, sharp macro detail.';
   }
+
+  // Build the tool configuration
+  const toolConfig = {
+    type: 'image_generation',
+    quality,
+    input_fidelity,
+    size: resolvedSize,
+  };
+
+  // action: "edit" forces editing the input image
+  // action: "generate" forces generating a new image
+  // action: "auto" lets the model decide (default)
+  if (action && action !== 'auto') {
+    toolConfig.action = action;
+  }
+
+  const requestBody = {
+    model: 'gpt-4.1',
+    input,
+    tools: [toolConfig],
+  };
+
+  if (previous_response_id) {
+    requestBody.previous_response_id = previous_response_id;
+  }
+
+  const res = await fetch('https://api.openai.com/v1/responses', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(requestBody),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.error?.message || `Responses API error: HTTP ${res.status}`);
+  }
+
+  // Extract the generated image from the response output
+  const imageOutput = (data.output || []).find(o => o.type === 'image_generation_call');
+  if (!imageOutput || !imageOutput.result) {
+    console.error('No image in response. Output types:', (data.output || []).map(o => o.type));
+    throw new Error('No image generated in response');
+  }
+
+  return {
+    url: `data:image/png;base64,${imageOutput.result}`,
+    mode: 'responses-api-' + (imageOutput.action || action || 'unknown'),
+    response_id: data.id,
+    action: imageOutput.action || action,
+    revised_prompt: imageOutput.revised_prompt || null,
+  };
 }
 
 // ────────────────────────────────────────────────────────────
