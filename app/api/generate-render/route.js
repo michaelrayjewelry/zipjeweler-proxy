@@ -78,3 +78,20 @@ export async function POST(request) {
   }
   return Response.json({ error: 'Timed out. Try again.' }, { status: 504, headers: corsHeaders });
 }
+
+export async function GET() {
+  return Response.json(
+    {
+      status: 'ok',
+      service: 'zipjeweler-proxy',
+      hasKeyId: !!process.env.HIGGSFIELD_KEY_ID,
+      hasKeySecret: !!process.env.HIGGSFIELD_KEY_SECRET,
+      timestamp: new Date().toISOString(),
+    },
+    {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      },
+    }
+  );
+}
