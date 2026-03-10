@@ -81,19 +81,21 @@ async function responsesGenerate({ openaiKey, prompt, input_image, previous_resp
       ? input_image
       : `data:image/png;base64,${input_image}`;
 
-    input = {
-      role: 'user',
-      content: [
-        {
-          type: 'input_image',
-          image_url: dataUrl,
-        },
-        {
-          type: 'input_text',
-          text: prompt,
-        },
-      ],
-    };
+    input = [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'input_image',
+            image_url: dataUrl,
+          },
+          {
+            type: 'input_text',
+            text: prompt,
+          },
+        ],
+      },
+    ];
   } else {
     // Text-only (no image, no previous turn)
     input = prompt;
