@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/generate-render.mjs": {
-      "maxDuration": 60
-    }
-  },
   "headers": [
     {
       "source": "/api/(.*)",
