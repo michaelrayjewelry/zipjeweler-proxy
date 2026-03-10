@@ -1,9 +1,6 @@
 {
   "name": "zipjeweler-proxy",
   "version": "1.0.0",
-  "description": "ZipJeweler render generation proxy",
   "private": true,
-  "dependencies": {
-    "@higgsfield/client": "^2.0.0"
-  }
+  "type": "module"
 }
