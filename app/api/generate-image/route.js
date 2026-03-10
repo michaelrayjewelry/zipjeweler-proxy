@@ -118,7 +118,7 @@ async function responsesGenerate({ openaiKey, prompt, input_image, previous_resp
   }
 
   const requestBody = {
-    model: 'gpt-4o',
+    model: 'gpt-4.1',
     input,
     tools: [toolConfig],
   };
