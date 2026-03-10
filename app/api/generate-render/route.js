@@ -24,7 +24,7 @@ export async function POST(request) {
   let body;
   try { body = await request.json(); } catch { body = {}; }
 
-  const { prompt, aspect_ratio = '1:1', input_image, input_image_2, input_image_3, input_image_4, quality = 'high', input_fidelity } = body;
+  const { prompt, aspect_ratio = '1:1', input_image, input_image_2, input_image_3, input_image_4, mask_image, quality = 'high', input_fidelity } = body;
   if (!prompt || prompt.trim().length < 5) {
     return Response.json({ error: 'prompt is required' }, { status: 400, headers: corsHeaders });
   }
@@ -35,7 +35,7 @@ export async function POST(request) {
   const openaiKey = process.env.OPENAI_API_KEY;
   if (openaiKey) {
     try {
-      const result = await openaiGenerate({ openaiKey, prompt: prompt.trim(), hasInputImage, input_image, input_image_2, input_image_3, input_image_4, aspect_ratio, quality, input_fidelity });
+      const result = await openaiGenerate({ openaiKey, prompt: prompt.trim(), hasInputImage, input_image, input_image_2, input_image_3, input_image_4, mask_image, aspect_ratio, quality, input_fidelity });
       return Response.json(result, { headers: corsHeaders });
     } catch (e) {
       // If OpenAI fails, fall through to Higgsfield
@@ -61,7 +61,7 @@ export async function POST(request) {
 // ────────────────────────────────────────────────────────────
 // OpenAI gpt-image-1.5 — supports both generation and image editing
 // ────────────────────────────────────────────────────────────
-async function openaiGenerate({ openaiKey, prompt, hasInputImage, input_image, input_image_2, input_image_3, input_image_4, aspect_ratio, quality, input_fidelity }) {
+async function openaiGenerate({ openaiKey, prompt, hasInputImage, input_image, input_image_2, input_image_3, input_image_4, mask_image, aspect_ratio, quality, input_fidelity }) {
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${openaiKey}`,
@@ -99,6 +99,12 @@ async function openaiGenerate({ openaiKey, prompt, hasInputImage, input_image, i
     if (input_image_2) formData.append('image[]', base64ToBlob(input_image_2), 'input2.png');
     if (input_image_3) formData.append('image[]', base64ToBlob(input_image_3), 'input3.png');
     if (input_image_4) formData.append('image[]', base64ToBlob(input_image_4), 'input4.png');
+
+    // Mask: transparent alpha = area to edit, opaque = area to preserve
+    // For C2R the mask covers the jewelry object so only it gets material conversion
+    if (mask_image) {
+      formData.append('mask', base64ToBlob(mask_image), 'mask.png');
+    }
 
     const res = await fetch('https://api.openai.com/v1/images/edits', {
       method: 'POST',

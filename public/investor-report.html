@@ -3336,6 +3336,110 @@ function handleC2RUpload(input) {
   reader.readAsDataURL(file);
 }
 
+/* ── Generate mask from CAD image: transparent alpha where jewelry is, opaque where background is ── */
+/* OpenAI mask: transparent (alpha=0) = area to EDIT, opaque (alpha=255) = area to KEEP */
+function generateC2RMask(b64Image) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, w, h);
+      const d = imageData.data;
+
+      // Sample corners to detect background color (most CAD screenshots have uniform bg)
+      const cornerSamples = [];
+      const sampleSize = Math.max(5, Math.floor(Math.min(w, h) * 0.02));
+      for (let y = 0; y < sampleSize; y++) {
+        for (let x = 0; x < sampleSize; x++) {
+          const i = (y * w + x) * 4;
+          cornerSamples.push([d[i], d[i+1], d[i+2]]);
+        }
+        for (let x = w - sampleSize; x < w; x++) {
+          const i = (y * w + x) * 4;
+          cornerSamples.push([d[i], d[i+1], d[i+2]]);
+        }
+      }
+      for (let y = h - sampleSize; y < h; y++) {
+        for (let x = 0; x < sampleSize; x++) {
+          const i = (y * w + x) * 4;
+          cornerSamples.push([d[i], d[i+1], d[i+2]]);
+        }
+        for (let x = w - sampleSize; x < w; x++) {
+          const i = (y * w + x) * 4;
+          cornerSamples.push([d[i], d[i+1], d[i+2]]);
+        }
+      }
+
+      // Average the corner samples to get background color
+      let bgR = 0, bgG = 0, bgB = 0;
+      cornerSamples.forEach(([r,g,b]) => { bgR += r; bgG += g; bgB += b; });
+      bgR = Math.round(bgR / cornerSamples.length);
+      bgG = Math.round(bgG / cornerSamples.length);
+      bgB = Math.round(bgB / cornerSamples.length);
+
+      // Create mask: compare each pixel to background color
+      // If pixel is close to bg color → opaque (keep/don't edit)
+      // If pixel is different from bg → transparent (edit this area = the jewelry)
+      const threshold = 60; // color distance threshold
+      const maskData = ctx.createImageData(w, h);
+      const md = maskData.data;
+
+      for (let i = 0; i < d.length; i += 4) {
+        const dr = d[i] - bgR;
+        const dg = d[i+1] - bgG;
+        const db = d[i+2] - bgB;
+        const dist = Math.sqrt(dr*dr + dg*dg + db*db);
+
+        if (dist < threshold) {
+          // Background pixel → opaque white (preserve, don't edit)
+          md[i] = 255; md[i+1] = 255; md[i+2] = 255; md[i+3] = 255;
+        } else {
+          // Jewelry pixel → transparent (edit this area)
+          md[i] = 0; md[i+1] = 0; md[i+2] = 0; md[i+3] = 0;
+        }
+      }
+
+      // Dilate the transparent (jewelry) region slightly to capture edges
+      const dilated = new Uint8ClampedArray(md);
+      const radius = Math.max(2, Math.floor(Math.min(w, h) * 0.005));
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = (y * w + x) * 4;
+          if (md[idx + 3] === 0) continue; // already transparent
+          // Check if any neighbor within radius is transparent
+          let nearTransparent = false;
+          for (let dy = -radius; dy <= radius && !nearTransparent; dy++) {
+            for (let dx = -radius; dx <= radius && !nearTransparent; dx++) {
+              const nx = x + dx, ny = y + dy;
+              if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+              if (md[(ny * w + nx) * 4 + 3] === 0) nearTransparent = true;
+            }
+          }
+          if (nearTransparent) {
+            dilated[idx] = 0; dilated[idx+1] = 0; dilated[idx+2] = 0; dilated[idx+3] = 0;
+          }
+        }
+      }
+
+      // Write dilated mask back
+      for (let i = 0; i < dilated.length; i++) maskData.data[i] = dilated[i];
+
+      ctx.putImageData(maskData, 0, 0);
+
+      // Export as PNG base64 (PNG preserves alpha channel)
+      const maskB64 = canvas.toDataURL('image/png').split(',')[1];
+      resolve(maskB64);
+    };
+    img.src = 'data:image/png;base64,' + b64Image;
+  });
+}
+
 /* ── Build material/scene instruction for C2R img2img (no Claude, no design prompt) ── */
 function buildC2RInstruction(corrections) {
   const metal    = document.getElementById('c2r-metal').value;
@@ -3346,28 +3450,73 @@ function buildC2RInstruction(corrections) {
   const angle    = document.getElementById('c2r-angle').value;
   const notes    = document.getElementById('c2r-notes').value.trim();
 
-  let prompt = 'Edit this image of a jewelry piece. Keep the EXACT same piece — same shape, silhouette, proportions, stone count, prong positions, band width, and every structural detail must be pixel-identical. ';
-  prompt += 'Do NOT redesign, reinterpret, or change the form in any way. ';
-  prompt += 'The ONLY change is to replace the CAD/wireframe material appearance with photorealistic materials as specified below. ';
-  prompt += 'The output should look like a professional product photograph of this exact same piece of jewelry.\n\n';
+  // Build a precise, structured material-conversion prompt
+  // The mask isolates the jewelry, so the prompt only needs to describe the target materials
+  let prompt = '';
+
+  // IDENTITY LOCK — tell the model what it must NOT change
+  prompt += 'STRICT IDENTITY LOCK: This is a CAD/3D model of a jewelry piece. ';
+  prompt += 'The output MUST be the identical piece — same silhouette outline, same proportions, ';
+  prompt += 'same number and positions of stones, same prong/bezel/channel settings, ';
+  prompt += 'same band width and profile, same decorative elements. ';
+  prompt += 'Do NOT add, remove, resize, or reposition ANY structural element. ';
+  prompt += 'Do NOT change the viewing angle or perspective.\n\n';
+
+  // MATERIAL CONVERSION — what TO change
+  prompt += 'MATERIAL CONVERSION ONLY:\n';
+  prompt += 'Replace the flat CAD/wireframe surface appearance with photorealistic materials:\n';
+
+  if (metal) {
+    prompt += '- METAL: ' + metal + ' with accurate color, reflectivity, and surface properties specific to this alloy. ';
+    if (metal.includes('Yellow Gold')) prompt += 'Warm yellow-gold metallic sheen. ';
+    else if (metal.includes('White Gold')) prompt += 'Cool silvery-white metallic sheen with slight warmth. ';
+    else if (metal.includes('Rose Gold')) prompt += 'Warm pink-copper metallic sheen. ';
+    else if (metal.includes('Platinum')) prompt += 'Bright cool white metallic with dense reflectivity. ';
+    else if (metal.includes('Silver')) prompt += 'Bright white metallic with slightly softer sheen than platinum. ';
+    prompt += '\n';
+  }
+
+  if (finish) {
+    prompt += '- SURFACE FINISH: ' + finish;
+    if (finish === 'High Polish') prompt += ' — mirror-like reflections, sharp specular highlights';
+    else if (finish === 'Matte') prompt += ' — soft diffuse light, minimal reflections, velvety surface';
+    else if (finish === 'Satin') prompt += ' — fine directional brushing, soft sheen, subtle linear highlights';
+    else if (finish === 'Hammered') prompt += ' — small dimpled texture, varied reflections from concave facets';
+    else if (finish === 'Brushed') prompt += ' — visible parallel micro-scratches, subdued reflectivity';
+    else if (finish === 'Sandblast') prompt += ' — uniform matte granular texture, no reflections';
+    prompt += '.\n';
+  }
+
+  if (stone && stone !== 'No stone') {
+    prompt += '- STONES: ' + stone;
+    if (stone === 'Diamond') prompt += ' — brilliant cut with high fire, dispersion, and scintillation. Clear/white with prismatic light refraction.';
+    else if (stone === 'Sapphire') prompt += ' — deep royal blue, vitreous luster, visible pleochroism.';
+    else if (stone === 'Emerald') prompt += ' — rich green with characteristic garden inclusions, vitreous to resinous luster.';
+    else if (stone === 'Ruby') prompt += ' — deep pigeon-blood red, vitreous luster with subtle fluorescence.';
+    else if (stone === 'Morganite') prompt += ' — soft peachy-pink, transparent with vitreous luster.';
+    else if (stone === 'Aquamarine') prompt += ' — light blue to blue-green, transparent with glassy luster.';
+    else if (stone === 'Opal') prompt += ' — play of color with iridescent flashes, translucent with waxy luster.';
+    else if (stone === 'Pearl') prompt += ' — smooth nacre surface, soft orient overtone, lustrous sphere.';
+    prompt += ' Preserve exact count and placement of every stone.\n';
+  }
+
+  prompt += '\n';
 
   if (corrections) prompt += 'CORRECTIONS FROM PRIOR PASS:\n' + corrections + '\n\n';
 
-  const matParts = [];
-  if (metal) matParts.push(metal);
-  if (finish) matParts.push(finish + ' finish');
-  if (stone && stone !== 'No stone') matParts.push(stone + ' stones');
-  if (matParts.length) prompt += 'MATERIALS: ' + matParts.join(', ') + '.\n';
+  // SCENE
+  prompt += 'SCENE SETUP:\n';
+  if (bg) prompt += '- Background: ' + bg + '\n';
+  else prompt += '- Background: Clean white studio\n';
+  if (lighting) prompt += '- Lighting: ' + lighting + '\n';
+  else prompt += '- Lighting: Soft diffused studio lighting\n';
+  if (angle) prompt += '- Camera: ' + angle + ' (match the angle shown in the input image)\n';
+  else prompt += '- Camera: Match the exact angle and perspective from the input image\n';
 
-  const sceneParts = [];
-  if (bg) sceneParts.push(bg + ' background');
-  if (lighting) sceneParts.push(lighting + ' lighting');
-  if (angle) sceneParts.push(angle);
-  if (sceneParts.length) prompt += 'SCENE: ' + sceneParts.join(', ') + '.\n';
+  if (notes) prompt += '- Notes: ' + notes + '\n';
 
-  if (notes) prompt += 'NOTES: ' + notes + '.\n';
-
-  prompt += 'Photorealistic luxury jewelry photography, 8K, macro detail.';
+  prompt += '\nOUTPUT: Ultra-high-resolution photorealistic luxury jewelry product photograph, 8K macro detail, accurate metal reflections and stone refractions.';
+  prompt += ' The result should be indistinguishable from a professional product photo of this exact piece.';
   return prompt;
 }
 
@@ -3420,10 +3569,27 @@ async function renderC2RDirect() {
   if (instrEl) instrEl.textContent = prompt;
 
   try {
+    // Generate auto-mask to isolate the jewelry object from background
+    // Mask tells OpenAI: transparent = edit (jewelry), opaque = keep (background)
+    let maskB64 = null;
+    try {
+      maskB64 = await generateC2RMask(c2rImageB64);
+    } catch(e) {
+      console.warn('Mask generation failed, proceeding without mask:', e.message);
+    }
+
+    const payload = {
+      prompt,
+      input_image: c2rImageB64,
+      aspect_ratio: '1:1',
+      input_fidelity: 'high',
+    };
+    if (maskB64) payload.mask_image = maskB64;
+
     const res = await fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, input_image: c2rImageB64, aspect_ratio: '1:1', input_fidelity: 'high' })
+      body: JSON.stringify(payload)
     });
     const data = await res.json();
     if (spinner) spinner.style.display = 'none';
