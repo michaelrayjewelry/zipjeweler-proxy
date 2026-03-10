@@ -1,15 +1,11 @@
 // api/generate-render.js
 // ZipJeweler render proxy — receives a prompt from the browser,
 // calls Higgsfield FLUX, returns the image URL.
-// Deployed on Vercel. Never exposes API keys to the client.
+// CommonJS format for Vercel serverless functions.
 
-import { higgsfield, config } from '@higgsfield/client/v2';
+const { higgsfield, config } = require('@higgsfield/client/v2');
 
-config({
-  credentials: `${process.env.HIGGSFIELD_KEY_ID}:${process.env.HIGGSFIELD_KEY_SECRET}`
-});
-
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
 
   // ── CORS preflight ──────────────────────────────────────
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -28,6 +24,11 @@ export default async function handler(req, res) {
     });
   }
 
+  // ── Configure Higgsfield ────────────────────────────────
+  config({
+    credentials: `${process.env.HIGGSFIELD_KEY_ID}:${process.env.HIGGSFIELD_KEY_SECRET}`
+  });
+
   // ── Parse body ──────────────────────────────────────────
   const { prompt, aspect_ratio = '1:1' } = req.body || {};
 
@@ -35,8 +36,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'prompt is required (min 10 chars).' });
   }
 
-  // ── Build the full jewelry render prompt ────────────────
-  // Prepend quality modifiers if not already in the prompt
+  // ── Prepend quality modifiers if not already present ───
   const qualityPrefix = prompt.toLowerCase().includes('photorealistic')
     ? ''
     : 'Photorealistic luxury jewelry photography, macro lens, ultra-sharp, ray-traced reflections, 8K, ';
@@ -50,11 +50,11 @@ export default async function handler(req, res) {
       {
         input: {
           prompt: fullPrompt,
-          aspect_ratio,        // '1:1' default — square product shot
+          aspect_ratio,
           safety_tolerance: 2,
           seed: Math.floor(Math.random() * 999999)
         },
-        withPolling: true      // SDK polls until complete — up to 60s
+        withPolling: true
       }
     );
 
@@ -79,4 +79,4 @@ export default async function handler(req, res) {
       error: err?.message || 'Image generation failed.'
     });
   }
-}
+};
