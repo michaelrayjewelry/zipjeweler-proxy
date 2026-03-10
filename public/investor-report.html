@@ -2609,6 +2609,7 @@ const FIELDS = [
   {k:'deliveryMethod',  l:'Delivery',            g:'Order'},
   {k:'referenceNotes',  l:'Reference Notes',     g:'Files'},
   {k:'productionNotes', l:'Production Notes',    g:'Files'},
+  {k:'designDescription',l:'Design Concept',      g:'Design'},
   {k:'renderStyle',     l:'Render Style',        g:'Render'},
   {k:'renderAngle',     l:'Render Angle',        g:'Render'},
   {k:'renderBackground',l:'Background',          g:'Render'},
@@ -2622,6 +2623,7 @@ RULES:
 - Acknowledge what they said before asking the next thing.
 - Priority order: piece type > metal > stones/setting > dimensions > client > budget > timeline > render style.
 - When you have enough design info, ask about render preferences (style, angle, background).
+- Pay close attention to ALL design details the user describes — motifs, shapes, themes, textures, sculptural elements, symbolic meaning, animal forms, architectural elements, etc. These are critical for accurate renders.
 
 FIELD EXTRACTION — append to EVERY reply, no exceptions:
 [FIELDS]{"key":"value"}[/FIELDS]
@@ -2630,7 +2632,7 @@ Only include confidently extracted keys. Use exactly:
 projectName, collection, clientName, clientEmail, pieceType, metalType, metalWeight, finish,
 stoneType, stoneCount, stoneCaratWeight, settingStyle, ringSize, dimensions, engravingNotes,
 budget, timeline, status, priority, deliveryMethod, referenceNotes, productionNotes,
-renderStyle, renderAngle, renderBackground
+renderStyle, renderAngle, renderBackground, designDescription
 
 pieceType: ring|necklace|bracelet|earrings|pendant|brooch|bangle|cufflinks|anklet|other
 metalType: 14k yellow gold|14k white gold|14k rose gold|18k yellow gold|18k white gold|18k rose gold|platinum|sterling silver|palladium
@@ -2639,7 +2641,9 @@ priority: low|medium|high|urgent
 finish: high polish|matte|satin|hammered|brushed|sandblast|oxidized
 renderStyle: photorealistic|product studio|lifestyle|artistic sketch|3D render
 renderAngle: front|side|top-down|45 degree|flat lay|multi-angle
-renderBackground: white studio|black studio|velvet|marble|lifestyle|outdoor|bokeh`;
+renderBackground: white studio|black studio|velvet|marble|lifestyle|outdoor|bokeh
+
+designDescription: THIS IS THE MOST IMPORTANT FIELD. Accumulate a rich, detailed description of the FULL design concept as the conversation progresses. Include: motifs (eagle, snake, floral, geometric), sculptural details (spread wings, coiled body), textures (feathered, scaled, hammered), proportions, distinctive features, and any visual references the user mentions. Update this field in EVERY reply, building on previous details as the user adds more. This field will be used DIRECTLY to generate the render image, so it must be vivid and complete — not just "pendant" but "large eagle pendant with spread wings, detailed individual feathers, diamond-set eyes, clutching a branch in talons, art nouveau style".`;
 
 let anthropicKey = '';
 let higgsKey     = '';
@@ -2781,34 +2785,90 @@ function checkRenderReady() {
   }
 }
 
-/* ── Build render prompt from brief ── */
-function buildRenderPrompt() {
-  const parts = [];
+/* ── Build render prompt from conversation using Claude ── */
+async function buildRenderPrompt() {
+  // Gather all design context from the conversation
   const v = fieldValues;
-  if (v.renderStyle) parts.push(v.renderStyle);
-  parts.push('photograph of a fine jewelry piece');
-  if (v.pieceType)       parts.push(v.pieceType);
+
+  // Build a context summary from all extracted fields
+  const fieldSummary = Object.entries(v)
+    .filter(([k, val]) => val && val !== 'null')
+    .map(([k, val]) => {
+      const field = FIELDS.find(f => f.k === k);
+      return (field ? field.l : k) + ': ' + val;
+    }).join('\n');
+
+  // Get the last several conversation messages for context
+  const recentMsgs = history.slice(-10).map(m => m.role + ': ' + m.content).join('\n\n');
+
+  // Use Claude to synthesize everything into an optimal image generation prompt
+  try {
+    const res = await claudeAPI({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 400,
+      system: `You write image generation prompts for FLUX, a text-to-image AI. Your job is to translate a jewelry design conversation into a single, highly specific image prompt.
+
+CRITICAL RULES:
+1. The prompt must describe EXACTLY what the user described — every motif, shape, material, texture, and design element.
+2. Lead with the most distinctive visual element (e.g., "Eagle pendant with spread wings" NOT "fine jewelry pendant").
+3. Include ALL design details: animal/nature motifs, sculptural forms, textures, stone placement, metalwork style.
+4. Specify the metal color and finish explicitly (e.g., "polished 18k yellow gold" not just "gold").
+5. Include stones with their specific placement (e.g., "ruby eyes, pavé diamond wing feathers").
+6. End with photography direction: lighting, angle, background.
+7. Do NOT be generic. Do NOT say "fine jewelry piece" when the user described a specific design.
+8. The prompt should be 2-4 sentences, dense with visual detail.
+
+Output ONLY the prompt text. No labels, no quotes, no explanation.`,
+      messages: [{
+        role: 'user',
+        content: `Here is the jewelry design conversation and extracted fields. Write a precise image generation prompt that captures EVERY design detail discussed.
+
+EXTRACTED FIELDS:
+${fieldSummary}
+
+RECENT CONVERSATION:
+${recentMsgs}
+
+Write the FLUX image generation prompt now.`
+      }]
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return (data.content?.[0]?.text || '').trim();
+    }
+  } catch(e) { /* fall through to fallback */ }
+
+  // Fallback: use designDescription + fields if Claude call fails
+  const parts = [];
+  if (v.designDescription) {
+    parts.push(v.designDescription);
+  } else {
+    if (v.renderStyle) parts.push(v.renderStyle);
+    parts.push('photograph of');
+    if (v.pieceType) parts.push('a ' + v.pieceType);
+    else parts.push('a fine jewelry piece');
+  }
   if (v.metalType)       parts.push('in ' + v.metalType);
+  if (v.finish)          parts.push('with ' + v.finish + ' finish');
   if (v.settingStyle)    parts.push(v.settingStyle + ' setting');
-  if (v.stoneType)       parts.push('set with ' + (v.stoneCount||'') + ' ' + v.stoneType);
+  if (v.stoneType)       parts.push('set with ' + (v.stoneCount ? v.stoneCount + ' ' : '') + v.stoneType);
   if (v.stoneCaratWeight)parts.push(v.stoneCaratWeight + ' total carat weight');
-  if (v.finish)          parts.push(v.finish + ' finish');
+  if (v.engravingNotes)  parts.push(v.engravingNotes);
+  if (v.referenceNotes)  parts.push(v.referenceNotes);
   if (v.renderAngle)     parts.push(v.renderAngle + ' view');
   const bg = v.renderBackground || 'white studio';
-  parts.push(bg + ' background');
-  parts.push('ultra high resolution, luxury jewelry photography, 8K, macro detail');
+  parts.push(bg + ' background, luxury jewelry photography, 8K macro detail');
   return parts.join(', ');
 }
 
 /* ── Render — requires server-side backend ── */
 async function generateRender() {
-  const prompt = buildRenderPrompt();
-
   // No proxy configured yet — show helpful message
   if (!PROXY_URL) {
     document.getElementById('render-placeholder').style.display = 'none';
     document.getElementById('render-backend-msg').style.display = 'flex';
-    addBubble('assistant', '\u2139\ufe0f Proxy not yet configured. Set PROXY_URL in the HTML to your Vercel deployment URL.\n\nRender prompt ready to send:\n\n\u201C' + prompt + '\u201D');
+    addBubble('assistant', '\u2139\ufe0f Render proxy not configured.');
     return;
   }
 
@@ -2817,21 +2877,29 @@ async function generateRender() {
   document.getElementById('render-backend-msg').style.display = 'none';
   document.getElementById('render-img').style.display = 'none';
   const wrap = document.getElementById('render-img-wrap');
-  // Spinner
   let spinnerDiv = document.getElementById('render-spinner-imagine');
   if (!spinnerDiv) {
     spinnerDiv = document.createElement('div');
     spinnerDiv.id = 'render-spinner-imagine';
     spinnerDiv.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:100%;padding:20px;';
-    spinnerDiv.innerHTML = '<div style="width:28px;height:28px;border:2px solid rgba(207,181,132,.15);border-top-color:#CFB584;border-radius:50%;animation:ispin .8s linear infinite;"></div><div style="font-family:\'DM Sans\',sans-serif;font-size:9.5px;color:#3A3835;">Generating render…</div>';
+    spinnerDiv.innerHTML = '<div style="width:28px;height:28px;border:2px solid rgba(207,181,132,.15);border-top-color:#CFB584;border-radius:50%;animation:ispin .8s linear infinite;"></div><div style="font-family:\'DM Sans\',sans-serif;font-size:9.5px;color:#3A3835;">Building render prompt…</div>';
     wrap.appendChild(spinnerDiv);
   }
   spinnerDiv.style.display = 'flex';
+  spinnerDiv.querySelector('div:last-child').textContent = 'Building render prompt…';
 
   const btn = document.getElementById('render-btn');
   if (btn) btn.style.opacity = '.5';
 
   try {
+    // Step 1: Build prompt from conversation using Claude
+    const prompt = await buildRenderPrompt();
+    if (!prompt || prompt.length < 10) throw new Error('Could not build render prompt');
+
+    // Step 2: Send to Higgsfield
+    spinnerDiv.querySelector('div:last-child').textContent = 'Generating render…';
+    addBubble('assistant', '\u2728 Generating render with prompt:\n\n\u201C' + prompt + '\u201D');
+
     const res = await fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2845,16 +2913,15 @@ async function generateRender() {
       throw new Error(data.error || 'No image URL returned');
     }
 
-    // Show the rendered image
     const img = document.getElementById('render-img');
     img.src = data.url;
     img.style.display = 'block';
-    addBubble('assistant', '\u2728 Render complete! Image generated via Higgsfield FLUX.\n\nPrompt used:\n\u201C' + prompt + '\u201D');
+    addBubble('assistant', '\u2728 Render complete!');
 
   } catch(e) {
     spinnerDiv.style.display = 'none';
     document.getElementById('render-backend-msg').style.display = 'flex';
-    addBubble('assistant', '\u26a0\ufe0f Render failed: ' + e.message + '\n\nPrompt was:\n\u201C' + prompt + '\u201D');
+    addBubble('assistant', '\u26a0\ufe0f Render failed: ' + e.message);
   }
 
   if (btn) btn.style.opacity = '1';

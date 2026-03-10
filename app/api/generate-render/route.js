@@ -33,9 +33,11 @@ export async function POST(request) {
     return Response.json({ error: 'prompt is required' }, { status: 400, headers: corsHeaders });
   }
 
-  const qualityPrefix = prompt.toLowerCase().includes('photorealistic') ? '' :
-    'Photorealistic luxury jewelry photography, macro lens, ultra-sharp, ray-traced reflections, 8K, ';
-  const fullPrompt = qualityPrefix + prompt.trim();
+  // Append quality suffix only if prompt doesn't already include photography direction
+  const lower = prompt.toLowerCase();
+  const hasPhotoDir = lower.includes('photography') || lower.includes('photorealistic') || lower.includes('macro') || lower.includes('8k');
+  const qualitySuffix = hasPhotoDir ? '' : '. Photorealistic luxury jewelry photography, soft studio lighting, sharp macro detail.';
+  const fullPrompt = prompt.trim() + qualitySuffix;
 
   const AUTH = `Key ${keyId}:${keySecret}`;
   const BASE = 'https://platform.higgsfield.ai';
