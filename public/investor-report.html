@@ -1065,6 +1065,9 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                         <div id="s2i-render-error" style="display:none;text-align:center;padding:16px;font-family:'DM Sans',sans-serif;font-size:10px;color:#C9534B;line-height:1.6;"></div>
                         <img id="s2i-render-img" style="display:none;width:100%;height:100%;object-fit:cover;" alt="AI render" />
                       </div>
+                      <!-- Fidelity Grade -->
+                      <div id="s2i-fidelity-grade" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;"></div>
+                      <button id="s2i-retry-btn" onclick="retryRender('s2i')" style="display:none;margin-top:6px;padding:5px 14px;background:rgba(201,83,75,.12);border:1px solid rgba(201,83,75,.25);border-radius:14px;color:#C9534B;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(201,83,75,.2)'" onmouseout="this.style.background='rgba(201,83,75,.12)'">\u21BB Retry with Corrections</button>
                     </div>
                   </div>
                 </div>
@@ -1333,6 +1336,9 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                         <div id="c2r-render-error" style="display:none;text-align:center;padding:16px;font-family:'DM Sans',sans-serif;font-size:10px;color:#C9534B;line-height:1.6;"></div>
                         <img id="c2r-render-img" style="display:none;width:100%;height:100%;object-fit:cover;" alt="AI render" />
                       </div>
+                      <!-- Fidelity Grade -->
+                      <div id="c2r-fidelity-grade" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;"></div>
+                      <button id="c2r-retry-btn" onclick="retryRender('c2r')" style="display:none;margin-top:6px;padding:5px 14px;background:rgba(201,83,75,.12);border:1px solid rgba(201,83,75,.25);border-radius:14px;color:#C9534B;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(201,83,75,.2)'" onmouseout="this.style.background='rgba(201,83,75,.12)'">\u21BB Retry with Corrections</button>
                     </div>
                   </div>
                 </div>
@@ -3111,28 +3117,68 @@ async function runS2IAnalysis(b64) {
     notes   ? 'Notes: ' + notes   : '',
   ].filter(Boolean).join(' | ') || 'No specs specified';
 
-  const systemPrompt = `You are ZipJeweler\'s Sketch to Image AI. Analyze jewelry sketches and produce structured render prompts.
+  const systemPrompt = `You are ZipJeweler's Sketch-to-Render AI. Your job is to analyze jewelry sketches with absolute precision and produce a LOCKED render prompt that preserves the exact design — no redesigning, no adding elements, no creative reinterpretation.
 
-When given a sketch/image:
-1. DESCRIBE what you see in the sketch (shape, form, style, visible details)
-2. LIST extracted specs as a JSON object under [SPECS]...[/SPECS]
-3. WRITE a detailed render prompt under [PROMPT]...[/PROMPT]
+When given a sketch/image, produce these sections in order:
 
-The render prompt should be highly detailed, photorealistic, and ready to send to an image generation model. Include: jewelry type, metal, stones, setting, finish, angle (front 3/4 view), background (white studio), lighting (soft diffused jewelry lighting), quality modifiers.
+1. VISUAL ANALYSIS — 2-3 sentences describing exactly what you see. Be surgical: silhouette, proportions, stone count and placement, setting type, negative space, component relationships.
 
-Keep analysis to 2-3 sentences. Be specific and technical.`;
+2. [SPEC]{...}[/SPEC] — Strict JSON spec extraction:
+{
+  "jewelry_type": "ring|pendant|earring|bracelet|necklace|brooch|other",
+  "materials": { "metal": "...", "finish": "..." },
+  "gemstones": [{ "zone_id": "center_1", "type": "...", "shape": "...", "setting": "...", "count_estimate": 1, "size_estimate_mm": "..." }],
+  "design_elements": [{ "element_id": "head_1", "category": "head|shank|halo|gallery|basket|shoulder|bezel_wall|motif|fringe|clasp", "description": "..." }],
+  "critical_fidelity_rules": ["Preserve exact silhouette.", "Do not alter stone count.", ...],
+  "allowed_render_changes": ["Apply material substitution", "Add photoreal lighting"],
+  "uncertainties": ["Side gallery not fully visible", ...]
+}
+
+3. [GEOMETRY]{...}[/GEOMETRY] — Strict JSON geometry description:
+{
+  "overall_view": "front|side|top|3_4|multi_view",
+  "symmetry": "symmetrical|asymmetrical|likely_symmetrical|unknown",
+  "silhouette_notes": "Describe the overall outline precisely...",
+  "proportion_rules": ["Head width is approximately 1.8x band width.", ...],
+  "must_preserve": ["Negative space beneath center head", "Raised cathedral shoulders", ...],
+  "risk_flags": ["Perspective may hide left shoulder thickness", ...]
+}
+
+4. [PROMPT]...[/PROMPT] — The locked render prompt. MUST follow this exact structure:
+
+REFERENCE LOCK: Use the uploaded image as the primary structural reference. Match silhouette, proportions, spatial relationships, element placement, stone count, and negative space exactly.
+
+SUBJECT: [Describe the EXACT piece — lead with the most distinctive visual element, not generic "fine jewelry". E.g. "Eagle pendant with spread wings and individually articulated feathers" not "pendant"]
+
+MATERIALS: [Exact metal color, finish, stone types with placement. E.g. "Polished 18k yellow gold body, pavé-set round brilliant diamonds along wing edges, two bezel-set ruby eyes"]
+
+STRUCTURE: [Faithfully describe every visible structural element from the sketch — silhouette, proportions, component relationships, negative space. This must match the geometry analysis above.]
+
+FORBIDDEN: Do not redesign. Do not add or remove elements. Do not change proportions. Do not alter setting type. Do not change stone count, spacing, or scale. Do not thicken, slim, taper, or reshape the structure. Do not add ornamentation not in the source.
+
+CAMERA: [angle, framing — match source perspective]
+SCENE: [background, lighting, surface]
+QUALITY: Photorealistic luxury jewelry photography, 8K, macro detail, ray-traced reflections, controlled caustics.
+
+CRITICAL RULES:
+- Geometry fidelity > material realism > photo quality > speed.
+- The sketch is the source of truth. The render should look like the SAME EXACT jewelry design, only upgraded into a realistic luxury product image.
+- Lead the prompt with the most distinctive visual element of the design.
+- If the sketch shows an eagle, the render MUST show an eagle. If it shows a snake, the render MUST show a snake. Never genericize.
+- Flag uncertainty rather than hallucinate hidden structure.
+- Keep analysis clinical and precise, not flowery.`;
 
   const userContent = b64
     ? [
         { type: 'image', source: { type: 'base64', media_type: s2iImageType, data: b64 } },
-        { type: 'text',  text: `User-specified material specs: ${specStr}\n\nAnalyze this jewelry sketch and produce the vision analysis, extracted specs JSON, and render prompt as instructed.` }
+        { type: 'text',  text: `User-specified material specs: ${specStr}\n\nAnalyze this jewelry sketch with surgical precision. Extract the spec, describe the geometry, and build a LOCKED render prompt that preserves every design detail. The sketch is the source of truth — do not redesign or reinterpret.` }
       ]
-    : [{ type: 'text', text: `No image uploaded. User-specified material specs: ${specStr}\n\nSince no sketch was provided, acknowledge this and still generate a descriptive render prompt based on the specs alone. Note that in production a sketch would refine this further.` }];
+    : [{ type: 'text', text: `No image uploaded. User-specified material specs: ${specStr}\n\nNo sketch provided. Build the best render prompt from specs alone, but note that a sketch would dramatically improve geometry fidelity.` }];
 
   try {
     const res = await claudeAPI({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 800,
+        max_tokens: 1500,
         system: systemPrompt,
         messages: [{ role: 'user', content: userContent }]
       });
@@ -3145,36 +3191,93 @@ Keep analysis to 2-3 sentences. Be specific and technical.`;
     const data = await res.json();
     const text = data.content?.[0]?.text || '';
 
-    // Parse sections
-    const specsMatch  = text.match(/\[SPECS\]([\s\S]*?)\[\/SPECS\]/);
-    const promptMatch = text.match(/\[PROMPT\]([\s\S]*?)\[\/PROMPT\]/);
+    // Parse structured sections
+    const specMatch     = text.match(/\[SPEC\]([\s\S]*?)\[\/SPEC\]/);
+    const geomMatch     = text.match(/\[GEOMETRY\]([\s\S]*?)\[\/GEOMETRY\]/);
+    const promptMatch   = text.match(/\[PROMPT\]([\s\S]*?)\[\/PROMPT\]/);
+    // Backward compat: also try old [SPECS] tag
+    const specsMatchOld = !specMatch ? text.match(/\[SPECS\]([\s\S]*?)\[\/SPECS\]/) : null;
 
-    // Everything before [SPECS] is the analysis
-    const analysisText = text.replace(/\[SPECS\][\s\S]*?\[\/SPECS\]/g,'').replace(/\[PROMPT\][\s\S]*?\[\/PROMPT\]/g,'').trim();
+    // Everything before structured tags is the visual analysis
+    const analysisText = text
+      .replace(/\[SPEC\][\s\S]*?\[\/SPEC\]/g,'')
+      .replace(/\[SPECS\][\s\S]*?\[\/SPECS\]/g,'')
+      .replace(/\[GEOMETRY\][\s\S]*?\[\/GEOMETRY\]/g,'')
+      .replace(/\[PROMPT\][\s\S]*?\[\/PROMPT\]/g,'')
+      .trim();
 
-    // Render analysis
     document.getElementById('s2i-analysis-text').textContent = analysisText || '(No analysis text returned)';
 
-    // Render specs chips
+    // Parse spec JSON
+    let specObj = {};
+    const specRaw = specMatch || specsMatchOld;
+    if (specRaw) {
+      try { specObj = JSON.parse(specRaw[1].trim()); } catch(e) {}
+    }
+
+    // Parse geometry JSON
+    let geomObj = {};
+    if (geomMatch) {
+      try { geomObj = JSON.parse(geomMatch[1].trim()); } catch(e) {}
+    }
+
+    // Store for fidelity grader
+    window._s2iSpec = specObj;
+    window._s2iGeom = geomObj;
+
+    // Render specs chips — show key extracted data
     const specsEl = document.getElementById('s2i-specs');
     specsEl.innerHTML = '';
-    let specsObj = {};
-    if (specsMatch) {
-      try { specsObj = JSON.parse(specsMatch[1].trim()); } catch(e) {}
-    }
-    // Merge with user-selected values
-    if (metal)   specsObj['metal']   = specsObj['metal']   || metal;
-    if (stone)   specsObj['stone']   = specsObj['stone']   || stone;
-    if (setting) specsObj['setting'] = specsObj['setting'] || setting;
-    if (finish)  specsObj['finish']  = specsObj['finish']  || finish;
 
-    Object.entries(specsObj).forEach(([k, v]) => {
+    // Flatten spec into displayable chips
+    const chipData = [];
+    if (specObj.jewelry_type) chipData.push(['type', specObj.jewelry_type]);
+    if (specObj.materials?.metal) chipData.push(['metal', specObj.materials.metal]);
+    if (specObj.materials?.finish) chipData.push(['finish', specObj.materials.finish]);
+    if (specObj.gemstones?.length) {
+      specObj.gemstones.forEach(g => {
+        chipData.push(['stone', (g.count_estimate > 1 ? g.count_estimate + 'x ' : '') + (g.shape || '') + ' ' + (g.type || 'unknown')]);
+        if (g.setting) chipData.push(['setting', g.setting]);
+      });
+    }
+    if (specObj.design_elements?.length) {
+      specObj.design_elements.forEach(d => chipData.push([d.category || 'detail', d.description]));
+    }
+    // Merge user-selected values if not already present
+    if (metal && !chipData.find(c => c[0] === 'metal'))     chipData.push(['metal', metal]);
+    if (stone && !chipData.find(c => c[0] === 'stone'))     chipData.push(['stone', stone]);
+    if (setting && !chipData.find(c => c[0] === 'setting')) chipData.push(['setting', setting]);
+    if (finish && !chipData.find(c => c[0] === 'finish'))   chipData.push(['finish', finish]);
+
+    chipData.forEach(([k, v]) => {
       const chip = document.createElement('div');
       chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;';
       chip.innerHTML = '<span style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;color:#3A3835;text-transform:uppercase;letter-spacing:1px;">' + k + '</span>'
-        + '<span style="font-family:\'DM Sans\',sans-serif;font-size:9.5px;color:#CFB584;font-weight:500;">' + v + '</span>';
+        + '<span style="font-family:\'DM Sans\',sans-serif;font-size:9.5px;color:#CFB584;font-weight:500;">' + String(v).substring(0,80) + '</span>';
       specsEl.appendChild(chip);
     });
+
+    // Show geometry must-preserve rules as green chips
+    if (geomObj.must_preserve?.length) {
+      geomObj.must_preserve.forEach(rule => {
+        const chip = document.createElement('div');
+        chip.style.cssText = 'display:inline-flex;padding:3px 10px;background:rgba(76,175,112,.08);border:1px solid rgba(76,175,112,.18);border-radius:12px;font-family:\'DM Sans\',sans-serif;font-size:9px;color:#4CAF70;font-weight:500;';
+        chip.textContent = '\u{1F512} ' + rule;
+        specsEl.appendChild(chip);
+      });
+    }
+
+    // Show uncertainties as amber chips
+    const uncertainties = specObj.uncertainties || [];
+    if (uncertainties.length) {
+      uncertainties.forEach(u => {
+        const chip = document.createElement('div');
+        chip.style.cssText = 'display:inline-flex;padding:3px 10px;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.18);border-radius:12px;font-family:\'DM Sans\',sans-serif;font-size:9px;color:#CFB584;font-weight:500;';
+        chip.textContent = '\u26A0 ' + u;
+        specsEl.appendChild(chip);
+      });
+    }
+
     if (specsEl.children.length === 0) {
       specsEl.innerHTML = '<span style="font-family:\'DM Sans\',sans-serif;font-size:10px;color:#2A2825;">No specs extracted — add selections on the left</span>';
     }
@@ -3278,27 +3381,59 @@ async function analyzeC2R() {
   document.getElementById('c2r-spinner').style.display = 'flex';
   document.getElementById('c2r-analyze-btn').style.opacity = '.5';
 
-  const systemPrompt = `You are ZipJeweler's CAD to Render AI. You read jewelry CAD wireframes and screenshots and convert them into detailed render prompts for photorealistic output.
+  const systemPrompt = `You are ZipJeweler's CAD-to-Render AI. You analyze jewelry CAD wireframes/screenshots with surgical precision and produce LOCKED render prompts that preserve exact geometry — no redesigning, no creative reinterpretation.
 
-When given a CAD image:
-1. DESCRIBE the geometry you see — piece type, form, symmetry, construction details, stone seats, prong positions, shank profile, surface areas. Be technical and specific. 2-3 sentences.
-2. LIST detected geometric features as a JSON array under [FEATURES]...[/FEATURES] — e.g. ["solitaire setting","4-prong basket","tapered shank","knife-edge profile","stone seat visible"]
-3. LIST applied materials as a JSON object under [MATERIALS]...[/MATERIALS]
-4. WRITE a full render prompt under [PROMPT]...[/PROMPT] — ultra-detailed, photorealistic, production-ready. Translate the CAD geometry faithfully: describe the shape in words as if instructing a render artist. Include: piece type, exact construction details from the geometry, all user-specified materials, lighting, angle, background, quality tags (8K, macro, luxury jewelry photography, ultra-sharp, ray-traced reflections).
+When given a CAD image, produce these sections in order:
 
-If no image is uploaded, acknowledge it briefly and still build the prompt from the user specs.`;
+1. GEOMETRY ANALYSIS — 2-3 sentences. Describe piece type, form, symmetry, construction details, stone seats, prong positions, shank profile, gallery structure, surface areas. Be technical and precise.
+
+2. [SPEC]{...}[/SPEC] — Strict JSON:
+{
+  "jewelry_type": "ring|pendant|earring|bracelet|necklace|brooch|other",
+  "materials": { "metal": "...", "finish": "..." },
+  "gemstones": [{ "zone_id": "center_1", "type": "...", "shape": "...", "setting": "...", "count_estimate": 1, "size_estimate_mm": "..." }],
+  "design_elements": [{ "element_id": "...", "category": "head|shank|halo|gallery|basket|shoulder|bezel_wall|motif|fringe|clasp", "description": "..." }],
+  "critical_fidelity_rules": ["Preserve exact silhouette.", ...],
+  "uncertainties": ["...", ...]
+}
+
+3. [GEOMETRY]{...}[/GEOMETRY] — Strict JSON:
+{
+  "overall_view": "front|side|top|3_4|multi_view",
+  "symmetry": "symmetrical|asymmetrical|likely_symmetrical|unknown",
+  "silhouette_notes": "...",
+  "proportion_rules": ["Head width is approximately 1.8x band width.", ...],
+  "zone_relationships": [{ "from": "shank", "to": "head_1", "relationship": "tapers_into" }],
+  "must_preserve": ["Negative space beneath center head", ...],
+  "risk_flags": ["...", ...]
+}
+
+4. [PROMPT]...[/PROMPT] — Locked render prompt with this structure:
+
+REFERENCE LOCK: Use the uploaded CAD image as the primary structural reference. Match silhouette, proportions, spatial relationships, element placement, stone seats, and negative space exactly.
+
+SUBJECT: [Describe the exact piece — lead with the distinctive form, not generic terms]
+STRUCTURE: [Faithfully translate every visible CAD element into render instructions — shank profile, head architecture, gallery openness, prong positions, stone seats]
+MATERIALS: [Apply user-specified materials to the CAD geometry]
+FORBIDDEN: Do not redesign. Do not add or remove elements. Do not change proportions. Do not alter setting type. Do not change stone count, spacing, or scale. Do not add ornamentation not in the CAD.
+CAMERA: [Match source perspective]
+SCENE: [Background, lighting, surface]
+QUALITY: Photorealistic luxury jewelry photography, 8K, macro detail, ray-traced reflections, controlled caustics.
+
+If no image is uploaded, acknowledge it and build from specs alone.`;
+
 
   const userContent = c2rImageB64
     ? [
         { type: 'image', source: { type: 'base64', media_type: c2rImageType, data: c2rImageB64 } },
-        { type: 'text', text: 'Material and scene settings: ' + specStr + '\n\nAnalyze this CAD screenshot and produce the geometry analysis, features list, materials object, and render prompt as instructed.' }
+        { type: 'text', text: 'Material and scene settings: ' + specStr + '\n\nAnalyze this CAD screenshot with surgical precision. Extract the spec, describe the geometry, and build a LOCKED render prompt that preserves every structural detail. The CAD geometry is the source of truth — do not redesign.' }
       ]
-    : [{ type: 'text', text: 'No CAD image uploaded. Material and scene settings: ' + specStr + '\n\nNo screenshot was provided — acknowledge this briefly, then build the best render prompt possible from the specifications alone. Note that uploading a CAD screenshot would let Claude read the exact geometry.' }];
+    : [{ type: 'text', text: 'No CAD image uploaded. Material and scene settings: ' + specStr + '\n\nNo screenshot provided. Build the best render prompt from specs alone, noting a CAD screenshot would dramatically improve fidelity.' }];
 
   try {
     const res = await claudeAPI({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 900,
+        max_tokens: 1500,
         system: systemPrompt,
         messages: [{ role: 'user', content: userContent }]
       });
@@ -3311,11 +3446,16 @@ If no image is uploaded, acknowledge it briefly and still build the prompt from 
     const data  = await res.json();
     const text  = data.content?.[0]?.text || '';
 
-    const featuresMatch  = text.match(/\[FEATURES\]([\s\S]*?)\[\/FEATURES\]/);
-    const materialsMatch = text.match(/\[MATERIALS\]([\s\S]*?)\[\/MATERIALS\]/);
+    const specMatch      = text.match(/\[SPEC\]([\s\S]*?)\[\/SPEC\]/);
+    const geomMatch      = text.match(/\[GEOMETRY\]([\s\S]*?)\[\/GEOMETRY\]/);
     const promptMatch    = text.match(/\[PROMPT\]([\s\S]*?)\[\/PROMPT\]/);
+    // Backward compat
+    const featuresMatch  = !specMatch ? text.match(/\[FEATURES\]([\s\S]*?)\[\/FEATURES\]/) : null;
+    const materialsMatch = !specMatch ? text.match(/\[MATERIALS\]([\s\S]*?)\[\/MATERIALS\]/) : null;
 
     const analysisText = text
+      .replace(/\[SPEC\][\s\S]*?\[\/SPEC\]/g, '')
+      .replace(/\[GEOMETRY\][\s\S]*?\[\/GEOMETRY\]/g, '')
       .replace(/\[FEATURES\][\s\S]*?\[\/FEATURES\]/g, '')
       .replace(/\[MATERIALS\][\s\S]*?\[\/MATERIALS\]/g, '')
       .replace(/\[PROMPT\][\s\S]*?\[\/PROMPT\]/g, '')
@@ -3323,11 +3463,23 @@ If no image is uploaded, acknowledge it briefly and still build the prompt from 
 
     document.getElementById('c2r-analysis-text').textContent = analysisText || '(No geometry analysis returned)';
 
-    // Features chips — coral tint
+    // Parse spec and geometry
+    let specObj = {};
+    if (specMatch) { try { specObj = JSON.parse(specMatch[1].trim()); } catch(e) {} }
+    let geomObj = {};
+    if (geomMatch) { try { geomObj = JSON.parse(geomMatch[1].trim()); } catch(e) {} }
+
+    // Store for fidelity grader
+    window._c2rSpec = specObj;
+    window._c2rGeom = geomObj;
+
+    // Features chips — from design_elements or fallback to old [FEATURES]
     const featEl = document.getElementById('c2r-features');
     featEl.innerHTML = '';
     let features = [];
-    if (featuresMatch) {
+    if (specObj.design_elements?.length) {
+      features = specObj.design_elements.map(d => (d.category ? d.category + ': ' : '') + d.description);
+    } else if (featuresMatch) {
       try { features = JSON.parse(featuresMatch[1].trim()); } catch(e) {}
     }
     if (!Array.isArray(features) || features.length === 0) {
@@ -3340,11 +3492,23 @@ If no image is uploaded, acknowledge it briefly and still build the prompt from 
       featEl.appendChild(chip);
     });
 
+    // Must-preserve rules as green chips
+    if (geomObj.must_preserve?.length) {
+      geomObj.must_preserve.forEach(rule => {
+        const chip = document.createElement('div');
+        chip.style.cssText = 'display:inline-flex;padding:3px 10px;background:rgba(76,175,112,.08);border:1px solid rgba(76,175,112,.18);border-radius:12px;font-family:\'DM Sans\',sans-serif;font-size:9px;color:#4CAF70;font-weight:500;';
+        chip.textContent = '\u{1F512} ' + rule;
+        featEl.appendChild(chip);
+      });
+    }
+
     // Materials chips — gold tint
     const matEl = document.getElementById('c2r-materials');
     matEl.innerHTML = '';
     let mats = {};
-    if (materialsMatch) {
+    if (specObj.materials) {
+      mats = { ...specObj.materials };
+    } else if (materialsMatch) {
       try { mats = JSON.parse(materialsMatch[1].trim()); } catch(e) {}
     }
     // Merge user selections
@@ -3354,6 +3518,12 @@ If no image is uploaded, acknowledge it briefly and still build the prompt from 
     if (bg)       mats['background'] = mats['background'] || bg;
     if (lighting) mats['lighting']   = mats['lighting']   || lighting;
     if (angle)    mats['angle']      = mats['angle']      || angle;
+    // Add gemstones from spec
+    if (specObj.gemstones?.length) {
+      specObj.gemstones.forEach((g, i) => {
+        mats['stone' + (i > 0 ? ' ' + (i+1) : '')] = (g.count_estimate > 1 ? g.count_estimate + 'x ' : '') + (g.shape || '') + ' ' + (g.type || 'unknown') + (g.setting ? ' (' + g.setting + ')' : '');
+      });
+    }
 
     Object.entries(mats).forEach(([k, v]) => {
       const chip = document.createElement('div');
@@ -3364,6 +3534,17 @@ If no image is uploaded, acknowledge it briefly and still build the prompt from 
     });
     if (matEl.children.length === 0) {
       matEl.innerHTML = '<span style="font-family:\'DM Sans\',sans-serif;font-size:10px;color:#2A2825;">No materials specified — add selections on the left</span>';
+    }
+
+    // Show uncertainties
+    const uncertainties = specObj.uncertainties || [];
+    if (uncertainties.length) {
+      uncertainties.forEach(u => {
+        const chip = document.createElement('div');
+        chip.style.cssText = 'display:inline-flex;padding:3px 10px;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.18);border-radius:12px;font-family:\'DM Sans\',sans-serif;font-size:9px;color:#CFB584;font-weight:500;';
+        chip.textContent = '\u26A0 ' + u;
+        matEl.appendChild(chip);
+      });
     }
 
     const promptText = promptMatch ? promptMatch[1].trim() : text.split('\n').slice(-4).join(' ').trim();
@@ -3978,7 +4159,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (r1) r1.classList.add('pf-render-selected');
 });
 
-/* ── Render from generated prompt (S2I) ── */
+/* ── Render from generated prompt (S2I) — sends sketch as input_image for img2img ── */
 async function renderS2I() {
   const prompt = document.getElementById('s2i-prompt-text')?.textContent;
   if (!prompt || prompt.length < 10) return;
@@ -3992,16 +4173,37 @@ async function renderS2I() {
   if (errEl) errEl.style.display = 'none';
   if (img) img.style.display = 'none';
   if (spinner) spinner.style.display = 'flex';
+
+  // Hide previous fidelity grade
+  const gradeEl = document.getElementById('s2i-fidelity-grade');
+  if (gradeEl) gradeEl.style.display = 'none';
+  const retryBtn = document.getElementById('s2i-retry-btn');
+  if (retryBtn) retryBtn.style.display = 'none';
+
   try {
+    // Build payload — include sketch image for image-to-image rendering
+    const payload = { prompt, aspect_ratio: '1:1' };
+    if (s2iImageB64) payload.input_image = s2iImageB64;
+
     const res = await fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, aspect_ratio: '1:1' })
+      body: JSON.stringify(payload)
     });
     const data = await res.json();
     if (spinner) spinner.style.display = 'none';
     if (!res.ok || !data.url) throw new Error(data.error || 'No image URL returned');
     if (img) { img.src = data.url; img.style.display = 'block'; }
+
+    // Store render URL for fidelity grading
+    window._s2iRenderUrl = data.url;
+    window._s2iRenderMode = data.mode || 'text-to-image';
+
+    // Auto-grade fidelity if we have a source sketch
+    if (s2iImageB64) {
+      gradeFidelity('s2i', s2iImageB64, s2iImageType, data.url, prompt);
+    }
+
   } catch(e) {
     if (spinner) spinner.style.display = 'none';
     if (errEl) { errEl.textContent = '\u26A0 ' + e.message; errEl.style.display = 'block'; }
@@ -4009,7 +4211,7 @@ async function renderS2I() {
   if (btn) btn.style.opacity = '1';
 }
 
-/* ── Render from generated prompt (C2R) ── */
+/* ── Render from generated prompt (C2R) — sends CAD as input_image for img2img ── */
 async function renderC2R() {
   const prompt = document.getElementById('c2r-prompt-text')?.textContent;
   if (!prompt || prompt.length < 10) return;
@@ -4023,21 +4225,189 @@ async function renderC2R() {
   if (errEl) errEl.style.display = 'none';
   if (img) img.style.display = 'none';
   if (spinner) spinner.style.display = 'flex';
+
+  // Hide previous fidelity grade
+  const gradeEl = document.getElementById('c2r-fidelity-grade');
+  if (gradeEl) gradeEl.style.display = 'none';
+  const retryBtn = document.getElementById('c2r-retry-btn');
+  if (retryBtn) retryBtn.style.display = 'none';
+
   try {
+    // Build payload — include CAD image for image-to-image rendering
+    const payload = { prompt, aspect_ratio: '1:1' };
+    if (c2rImageB64) payload.input_image = c2rImageB64;
+
     const res = await fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, aspect_ratio: '1:1' })
+      body: JSON.stringify(payload)
     });
     const data = await res.json();
     if (spinner) spinner.style.display = 'none';
     if (!res.ok || !data.url) throw new Error(data.error || 'No image URL returned');
     if (img) { img.src = data.url; img.style.display = 'block'; }
+
+    // Store render URL for fidelity grading
+    window._c2rRenderUrl = data.url;
+    window._c2rRenderMode = data.mode || 'text-to-image';
+
+    // Auto-grade fidelity if we have a source image
+    if (c2rImageB64) {
+      gradeFidelity('c2r', c2rImageB64, c2rImageType, data.url, prompt);
+    }
+
   } catch(e) {
     if (spinner) spinner.style.display = 'none';
     if (errEl) { errEl.textContent = '\u26A0 ' + e.message; errEl.style.display = 'block'; }
   }
   if (btn) btn.style.opacity = '1';
+}
+
+/* ── Fidelity Grader — auto-grades render against source sketch/CAD ── */
+async function gradeFidelity(tool, sourceB64, sourceType, renderUrl, originalPrompt) {
+  const gradeEl = document.getElementById(tool + '-fidelity-grade');
+  if (!gradeEl) return;
+
+  gradeEl.style.display = 'block';
+  gradeEl.innerHTML = '<div style="display:flex;align-items:center;gap:6px;"><div style="width:14px;height:14px;border:2px solid rgba(207,181,132,.15);border-top-color:#CFB584;border-radius:50%;animation:ispin .8s linear infinite;"></div><span style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#3A3835;">Grading fidelity…</span></div>';
+
+  try {
+    // Fetch the rendered image and convert to base64 for Claude vision
+    let renderB64 = null;
+    try {
+      const imgRes = await fetch(renderUrl);
+      const blob = await imgRes.blob();
+      renderB64 = await new Promise(resolve => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result.split(',')[1]);
+        r.readAsDataURL(blob);
+      });
+    } catch(e) { /* If we can't fetch the render, grade from URL description only */ }
+
+    const gradePrompt = `You are a jewelry render fidelity grader. Compare the SOURCE sketch/CAD (Image 1) against the AI RENDER (Image 2).
+
+Score each dimension from 0.0 to 1.0:
+- silhouette_match: Does the render preserve the exact outline/silhouette?
+- proportion_match: Are proportions (width ratios, thickness, taper) preserved?
+- stone_layout_match: Are stone count, placement, spacing, and size preserved?
+- setting_match: Is the setting type (prong, bezel, channel, etc.) preserved?
+- extra_element_penalty: 0.0 = no unwanted additions, higher = more hallucinated elements
+- material_accuracy: Does the metal color/finish match what was requested?
+
+Output ONLY this JSON — no other text:
+[GRADE]{"score_total":0.0,"scores":{"silhouette_match":0.0,"proportion_match":0.0,"stone_layout_match":0.0,"setting_match":0.0,"extra_element_penalty":0.0,"material_accuracy":0.0},"pass":true,"failure_modes":[],"correction_instructions":[]}[/GRADE]
+
+pass = true if score_total >= 0.75 and no single score below 0.5 (except extra_element_penalty which should be below 0.15).
+score_total = average of all scores (extra_element_penalty is inverted: 1.0 - penalty).
+failure_modes: use these exact terms if applicable: silhouette_drift, proportion_drift, stone_count_error, stone_scale_error, stone_placement_error, setting_type_error, added_ornamentation, missing_component, viewpoint_drift, material_error.
+correction_instructions: specific, actionable fixes for the next render pass.`;
+
+    const userContent = [];
+    // Image 1: source sketch
+    userContent.push({ type: 'image', source: { type: 'base64', media_type: sourceType || 'image/jpeg', data: sourceB64 } });
+    userContent.push({ type: 'text', text: 'Image 1 above is the SOURCE sketch/CAD reference.' });
+    // Image 2: render
+    if (renderB64) {
+      userContent.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: renderB64 } });
+      userContent.push({ type: 'text', text: 'Image 2 above is the AI RENDER output. Grade the fidelity of the render against the source.' });
+    } else {
+      userContent.push({ type: 'text', text: 'The render image could not be loaded for comparison. Grade as best you can from the prompt: ' + originalPrompt });
+    }
+
+    const res = await claudeAPI({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 500,
+      system: gradePrompt,
+      messages: [{ role: 'user', content: userContent }]
+    });
+
+    if (!res.ok) throw new Error('Grade API error');
+
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '';
+    const gradeMatch = text.match(/\[GRADE\]([\s\S]*?)\[\/GRADE\]/);
+    let grade = null;
+    if (gradeMatch) {
+      try { grade = JSON.parse(gradeMatch[1].trim()); } catch(e) {}
+    }
+
+    if (!grade) {
+      gradeEl.innerHTML = '<span style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#3A3835;">Could not parse fidelity grade</span>';
+      return;
+    }
+
+    // Store grade and correction instructions for retry
+    window['_' + tool + 'Grade'] = grade;
+
+    // Render grade chips
+    const scoreColor = (s, invert) => {
+      const v = invert ? (1 - s) : s;
+      return v >= 0.85 ? '#4CAF70' : v >= 0.6 ? '#CFB584' : '#C9534B';
+    };
+
+    let html = '<div style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:' + (grade.pass ? '#4CAF70' : '#C9534B') + ';font-weight:700;margin-bottom:6px;">'
+      + (grade.pass ? '\u2713 FIDELITY PASS' : '\u2717 FIDELITY FAIL') + ' — ' + (grade.score_total * 100).toFixed(0) + '%</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
+
+    const labels = { silhouette_match: 'Silhouette', proportion_match: 'Proportions', stone_layout_match: 'Stones', setting_match: 'Setting', extra_element_penalty: 'Extra Elements', material_accuracy: 'Material' };
+    Object.entries(grade.scores || {}).forEach(([k, v]) => {
+      const isInvert = k === 'extra_element_penalty';
+      const color = scoreColor(v, isInvert);
+      const display = isInvert ? (v === 0 ? '100%' : (100 - v * 100).toFixed(0) + '%') : (v * 100).toFixed(0) + '%';
+      html += '<div style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:rgba(255,255,255,.04);border:1px solid ' + color + '33;border-radius:10px;">'
+        + '<span style="font-family:\'DM Sans\',sans-serif;font-size:8px;color:#3A3835;text-transform:uppercase;letter-spacing:.5px;">' + (labels[k] || k) + '</span>'
+        + '<span style="font-family:\'DM Sans\',sans-serif;font-size:9.5px;color:' + color + ';font-weight:600;">' + display + '</span>'
+        + '</div>';
+    });
+    html += '</div>';
+
+    // Show failure modes
+    if (grade.failure_modes?.length) {
+      html += '<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:3px;">';
+      grade.failure_modes.forEach(f => {
+        html += '<span style="font-family:\'DM Sans\',sans-serif;font-size:8px;padding:2px 6px;background:rgba(201,83,75,.08);border:1px solid rgba(201,83,75,.15);border-radius:8px;color:#C9534B;">' + f + '</span>';
+      });
+      html += '</div>';
+    }
+
+    // Show correction instructions
+    if (grade.correction_instructions?.length) {
+      html += '<div style="margin-top:5px;font-family:\'DM Sans\',sans-serif;font-size:9px;color:#3A3835;line-height:1.5;">';
+      grade.correction_instructions.forEach(c => { html += '\u2022 ' + c + '<br>'; });
+      html += '</div>';
+    }
+
+    gradeEl.innerHTML = html;
+
+    // Show retry button if failed
+    if (!grade.pass) {
+      const retryBtn = document.getElementById(tool + '-retry-btn');
+      if (retryBtn) {
+        retryBtn.style.display = 'inline-flex';
+        retryBtn.onclick = () => retryRender(tool);
+      }
+    }
+
+  } catch(e) {
+    gradeEl.innerHTML = '<span style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#3A3835;">Fidelity grade error: ' + e.message + '</span>';
+  }
+}
+
+/* ── Retry render with correction instructions prepended ── */
+async function retryRender(tool) {
+  const grade = window['_' + tool + 'Grade'];
+  if (!grade?.correction_instructions?.length) return;
+
+  const promptEl = document.getElementById(tool + '-prompt-text');
+  const currentPrompt = promptEl?.textContent || '';
+
+  // Prepend corrections from the fidelity grader
+  const corrections = 'CORRECTIONS FROM PRIOR PASS:\n' + grade.correction_instructions.map(c => '- ' + c).join('\n') + '\n\n';
+  promptEl.textContent = corrections + currentPrompt;
+
+  // Re-trigger the appropriate render function
+  if (tool === 's2i') renderS2I();
+  else if (tool === 'c2r') renderC2R();
 }
 
 </script>

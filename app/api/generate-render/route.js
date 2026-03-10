@@ -1,5 +1,6 @@
 // app/api/generate-render/route.js
 // Next.js App Router API route — zero dependencies, native fetch (Node 18+)
+// Supports both text-to-image and image-to-image (sketch-conditioned) rendering
 
 export async function OPTIONS() {
   return new Response(null, {
@@ -28,7 +29,7 @@ export async function POST(request) {
   let body;
   try { body = await request.json(); } catch { body = {}; }
 
-  const { prompt, aspect_ratio = '1:1' } = body;
+  const { prompt, aspect_ratio = '1:1', input_image, input_image_2, input_image_3, input_image_4, render_mode = 'fidelity' } = body;
   if (!prompt || prompt.trim().length < 5) {
     return Response.json({ error: 'prompt is required' }, { status: 400, headers: corsHeaders });
   }
@@ -42,20 +43,61 @@ export async function POST(request) {
   const AUTH = `Key ${keyId}:${keySecret}`;
   const BASE = 'https://platform.higgsfield.ai';
 
-  // Submit job
+  // Determine if we should attempt image-to-image (sketch-conditioned rendering)
+  const hasInputImage = input_image && input_image.length > 100;
+
+  // Build the payload
+  const basePayload = { prompt: fullPrompt, aspect_ratio, safety_tolerance: 2, seed: Math.floor(Math.random() * 999999) };
+
+  // If we have an input image, try image-to-image first for geometry preservation
   let requestId;
-  try {
-    const submitRes = await fetch(`${BASE}/flux-pro/kontext/max/text-to-image`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': AUTH },
-      body: JSON.stringify({ prompt: fullPrompt, aspect_ratio, safety_tolerance: 2, seed: Math.floor(Math.random() * 999999) })
-    });
-    const submitData = await submitRes.json();
-    if (!submitRes.ok) return Response.json({ error: submitData?.detail || submitData?.error || 'Submit failed', raw: submitData }, { status: submitRes.status, headers: corsHeaders });
-    requestId = submitData?.id || submitData?.request_id;
-    if (!requestId) return Response.json({ error: 'No request ID returned', raw: submitData }, { status: 500, headers: corsHeaders });
-  } catch (e) {
-    return Response.json({ error: 'Submit error: ' + e.message }, { status: 500, headers: corsHeaders });
+  let usedMode = 'text-to-image';
+
+  if (hasInputImage) {
+    // Attempt 1: Higgsfield Kontext image-to-image endpoint
+    const img2imgPayload = {
+      ...basePayload,
+      input_image: input_image.startsWith('data:') ? input_image : `data:image/jpeg;base64,${input_image}`,
+    };
+    // Include additional reference images if provided (FLUX Kontext supports up to 4)
+    if (input_image_2) img2imgPayload.input_image_2 = input_image_2.startsWith('data:') ? input_image_2 : `data:image/jpeg;base64,${input_image_2}`;
+    if (input_image_3) img2imgPayload.input_image_3 = input_image_3.startsWith('data:') ? input_image_3 : `data:image/jpeg;base64,${input_image_3}`;
+    if (input_image_4) img2imgPayload.input_image_4 = input_image_4.startsWith('data:') ? input_image_4 : `data:image/jpeg;base64,${input_image_4}`;
+
+    try {
+      const submitRes = await fetch(`${BASE}/flux-pro/kontext/max/image-to-image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': AUTH },
+        body: JSON.stringify(img2imgPayload)
+      });
+
+      if (submitRes.ok) {
+        const submitData = await submitRes.json();
+        requestId = submitData?.id || submitData?.request_id;
+        if (requestId) usedMode = 'image-to-image';
+      }
+      // If 404 or other failure, fall through to text-to-image
+    } catch (e) {
+      // Silently fall through to text-to-image
+    }
+  }
+
+  // Fallback: text-to-image (no sketch conditioning)
+  if (!requestId) {
+    try {
+      const submitRes = await fetch(`${BASE}/flux-pro/kontext/max/text-to-image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': AUTH },
+        body: JSON.stringify(basePayload)
+      });
+      const submitData = await submitRes.json();
+      if (!submitRes.ok) return Response.json({ error: submitData?.detail || submitData?.error || 'Submit failed', raw: submitData }, { status: submitRes.status, headers: corsHeaders });
+      requestId = submitData?.id || submitData?.request_id;
+      if (!requestId) return Response.json({ error: 'No request ID returned', raw: submitData }, { status: 500, headers: corsHeaders });
+      usedMode = 'text-to-image';
+    } catch (e) {
+      return Response.json({ error: 'Submit error: ' + e.message }, { status: 500, headers: corsHeaders });
+    }
   }
 
   // Poll up to 55s
@@ -69,7 +111,7 @@ export async function POST(request) {
       if (status === 'completed' || status === 'succeeded') {
         const url = pollData?.images?.[0]?.url || pollData?.result?.images?.[0]?.url || pollData?.results?.raw?.url || pollData?.output?.[0] || pollData?.image_url;
         if (!url) return Response.json({ error: 'Completed but no image URL', raw: pollData }, { status: 500, headers: corsHeaders });
-        return Response.json({ url }, { headers: corsHeaders });
+        return Response.json({ url, mode: usedMode }, { headers: corsHeaders });
       }
       if (status === 'failed' || status === 'error' || status === 'cancelled' || status === 'nsfw') {
         return Response.json({ error: `Job ${status}`, raw: pollData }, { status: 500, headers: corsHeaders });
