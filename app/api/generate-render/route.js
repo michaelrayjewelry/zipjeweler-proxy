@@ -78,38 +78,32 @@ async function openaiGenerate({ openaiKey, prompt, hasInputImage, input_image, i
   const size = sizeMap[aspect_ratio] || '1024x1024';
 
   if (hasInputImage) {
-    // Image EDIT — send input image(s) + prompt instruction
-    const images = [];
-    if (input_image) {
-      const dataUrl = input_image.startsWith('data:') ? input_image : `data:image/png;base64,${input_image}`;
-      images.push({ type: 'image_url', image_url: dataUrl });
-    }
-    if (input_image_2) {
-      const dataUrl = input_image_2.startsWith('data:') ? input_image_2 : `data:image/png;base64,${input_image_2}`;
-      images.push({ type: 'image_url', image_url: dataUrl });
-    }
-    if (input_image_3) {
-      const dataUrl = input_image_3.startsWith('data:') ? input_image_3 : `data:image/png;base64,${input_image_3}`;
-      images.push({ type: 'image_url', image_url: dataUrl });
-    }
-    if (input_image_4) {
-      const dataUrl = input_image_4.startsWith('data:') ? input_image_4 : `data:image/png;base64,${input_image_4}`;
-      images.push({ type: 'image_url', image_url: dataUrl });
+    // Image EDIT — multipart/form-data per OpenAI docs
+    // Convert base64 images to Blobs for FormData upload
+    const formData = new FormData();
+    formData.append('model', 'gpt-image-1.5');
+    formData.append('prompt', prompt);
+    formData.append('size', size);
+    formData.append('quality', quality);
+    formData.append('input_fidelity', input_fidelity || 'high');
+
+    // Helper: convert base64 (with or without data: prefix) to a Blob
+    function base64ToBlob(b64str) {
+      const raw = b64str.startsWith('data:') ? b64str.split(',')[1] : b64str;
+      const bytes = Buffer.from(raw, 'base64');
+      return new Blob([bytes], { type: 'image/png' });
     }
 
-    const editBody = {
-      model: 'gpt-image-1.5',
-      prompt: prompt,
-      image: images,
-      size,
-      quality,
-      input_fidelity: input_fidelity || 'high',
-    };
+    // Append input images as image[] entries (matches curl -F "image[]=@file.png")
+    if (input_image) formData.append('image[]', base64ToBlob(input_image), 'input.png');
+    if (input_image_2) formData.append('image[]', base64ToBlob(input_image_2), 'input2.png');
+    if (input_image_3) formData.append('image[]', base64ToBlob(input_image_3), 'input3.png');
+    if (input_image_4) formData.append('image[]', base64ToBlob(input_image_4), 'input4.png');
 
     const res = await fetch('https://api.openai.com/v1/images/edits', {
       method: 'POST',
-      headers,
-      body: JSON.stringify(editBody),
+      headers: { 'Authorization': `Bearer ${openaiKey}` },
+      body: formData,
     });
 
     const data = await res.json();
