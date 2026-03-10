@@ -5,6 +5,7 @@ export async function GET() {
   return Response.json(
     {
       hasAnthropicKey: !!process.env.ANTHROPIC_API_KEY,
+      hasOpenAI: !!process.env.OPENAI_API_KEY,
       hasHiggsfield: !!(process.env.HIGGSFIELD_KEY_ID && process.env.HIGGSFIELD_KEY_SECRET),
     },
     {

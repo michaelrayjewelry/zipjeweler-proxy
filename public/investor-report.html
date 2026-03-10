@@ -990,15 +990,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                     </div>
                   </div>
 
-                  <!-- Analyze button -->
-                  <button id="s2i-analyze-btn" onclick="analyzeS2I()" style="padding:11px 0;background:#C9534B;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;box-shadow:0 2px 12px rgba(201,83,75,.25);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-                    Analyze Sketch → Generate Prompt
+                  <!-- Generate Render button — sends sketch directly to Responses API -->
+                  <button id="s2i-analyze-btn" onclick="renderS2IDirect()" style="padding:11px 0;background:#C9534B;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;box-shadow:0 2px 12px rgba(201,83,75,.25);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                    Generate Render
                   </button>
-
-                  <!-- Key required note -->
-                  <div id="s2i-key-note" style="display:none;text-align:center;font-family:'DM Sans',sans-serif;font-size:9.5px;color:#3A3835;line-height:1.6;padding:8px;background:rgba(201,83,75,.06);border-radius:8px;border:1px solid rgba(201,83,75,.12);">
-                    ⚠️ Enter your Anthropic key in the Imagine tool above to enable AI analysis
-                  </div>
 
                 </div>
               </div>
@@ -1008,7 +1003,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
 
                 <!-- Header -->
                 <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;">
-                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;">AI Analysis + Render Prompt</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;">Render Output</div>
                 </div>
 
                 <!-- Content area -->
@@ -1017,33 +1012,21 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                   <!-- Idle state -->
                   <div id="s2i-idle" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:200px;text-align:center;">
                     <div style="font-size:32px;opacity:.15;">✦</div>
-                    <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#2A2825;line-height:1.7;">Upload a sketch and set your specs,<br>then click <strong style="color:#3A3835;font-weight:600;">Analyze Sketch</strong> to see<br>Claude's vision analysis and the<br>full render prompt.</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#2A2825;line-height:1.7;">Upload a sketch and set your specs,<br>then click <strong style="color:#3A3835;font-weight:600;">Generate Render</strong> to create<br>a photorealistic product image.</div>
                   </div>
 
                   <!-- Analyzing spinner -->
                   <div id="s2i-spinner" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:200px;">
                     <div style="width:32px;height:32px;border:2px solid rgba(201,83,75,.15);border-top-color:#C9534B;border-radius:50%;animation:ispin .8s linear infinite;"></div>
-                    <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#3A3835;letter-spacing:.5px;">Analyzing sketch with Claude Vision…</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#3A3835;letter-spacing:.5px;">Generating render…</div>
                   </div>
 
                   <!-- Results -->
                   <div id="s2i-results" style="display:none;flex-direction:column;gap:14px;">
 
-                    <!-- Vision analysis block -->
+                    <!-- Render instruction sent -->
                     <div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:8px;">Claude Vision Analysis</div>
-                      <div id="s2i-analysis-text" style="font-family:'DM Sans',sans-serif;font-size:12px;color:#A8A49E;line-height:1.72;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:12px 14px;"></div>
-                    </div>
-
-                    <!-- Extracted specs -->
-                    <div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:8px;">Extracted Specs</div>
-                      <div id="s2i-specs" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
-                    </div>
-
-                    <!-- Render prompt -->
-                    <div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;margin-bottom:8px;">Generated Render Prompt</div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;margin-bottom:8px;">Render Instruction</div>
                       <div id="s2i-prompt-text" style="font-family:'DM Sans',sans-serif;font-size:11.5px;color:#CFB584;line-height:1.7;background:rgba(207,181,132,.06);border:1px solid rgba(207,181,132,.15);border-radius:8px;padding:12px 14px;font-style:italic;word-break:break-word;"></div>
                     </div>
 
@@ -1051,7 +1034,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                     <div>
                       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
                         <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;">AI Render</div>
-                        <button id="s2i-render-btn" onclick="renderS2I()" style="padding:5px 14px;background:rgba(207,181,132,.12);border:1px solid rgba(207,181,132,.25);border-radius:14px;color:#CFB584;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(207,181,132,.2)'" onmouseout="this.style.background='rgba(207,181,132,.12)'">✦ Generate Render</button>
+                        <button id="s2i-render-btn" onclick="renderS2IDirect()" style="padding:5px 14px;background:rgba(207,181,132,.12);border:1px solid rgba(207,181,132,.25);border-radius:14px;color:#CFB584;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(207,181,132,.2)'" onmouseout="this.style.background='rgba(207,181,132,.12)'">&#10022; Re-Render</button>
                       </div>
                       <div id="s2i-render-wrap" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;">
                         <div id="s2i-render-placeholder" style="text-align:center;padding:16px;">
@@ -1065,6 +1048,9 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                         <div id="s2i-render-error" style="display:none;text-align:center;padding:16px;font-family:'DM Sans',sans-serif;font-size:10px;color:#C9534B;line-height:1.6;"></div>
                         <img id="s2i-render-img" style="display:none;width:100%;height:100%;object-fit:cover;" alt="AI render" />
                       </div>
+                      <!-- Fidelity Grade -->
+                      <div id="s2i-fidelity-grade" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;"></div>
+                      <button id="s2i-retry-btn" onclick="retryRender('s2i')" style="display:none;margin-top:6px;padding:5px 14px;background:rgba(201,83,75,.12);border:1px solid rgba(201,83,75,.25);border-radius:14px;color:#C9534B;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(201,83,75,.2)'" onmouseout="this.style.background='rgba(201,83,75,.12)'">\u21BB Retry with Corrections</button>
                     </div>
                   </div>
                 </div>
@@ -1252,14 +1238,14 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                     </div>
                   </div>
 
-                  <!-- Analyze button -->
-                  <button id="c2r-analyze-btn" onclick="analyzeC2R()" style="padding:11px 0;background:#C9534B;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;box-shadow:0 2px 12px rgba(201,83,75,.25);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-                    Analyze CAD → Generate Render Prompt
+                  <!-- Render button — single action, no Claude analysis step -->
+                  <button id="c2r-render-btn" onclick="renderC2RDirect()" style="padding:11px 0;background:#C9534B;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;box-shadow:0 2px 12px rgba(201,83,75,.25);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                    ✦ Render with Materials
                   </button>
 
-                  <!-- Key required note -->
+                  <!-- Higgsfield key required note -->
                   <div id="c2r-key-note" style="display:none;text-align:center;font-family:'DM Sans',sans-serif;font-size:9.5px;color:#3A3835;line-height:1.6;padding:8px;background:rgba(201,83,75,.06);border-radius:8px;border:1px solid rgba(201,83,75,.12);">
-                    ⚠️ Enter your Anthropic key in the Imagine tool above to enable AI analysis
+                    ⚠️ Higgsfield render keys required — configure in deployment settings
                   </div>
 
                 </div>
@@ -1270,7 +1256,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
 
                 <!-- Header -->
                 <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;">
-                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;">Geometry Analysis + Render Prompt</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;">Render Output</div>
                 </div>
 
                 <!-- Content -->
@@ -1278,54 +1264,30 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
 
                   <!-- Idle -->
                   <div id="c2r-idle" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:200px;text-align:center;">
-                    <div style="font-size:32px;opacity:.15;">🖥</div>
-                    <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#2A2825;line-height:1.7;">Upload a CAD screenshot and set<br>your materials, then click<br><strong style="color:#3A3835;font-weight:600;">Analyze CAD</strong> to see Claude's<br>geometry read and render prompt.</div>
+                    <div style="font-size:32px;opacity:.15;">📐</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#2A2825;line-height:1.7;">Upload a CAD screenshot, set your<br>materials and scene, then click<br><strong style="color:#3A3835;font-weight:600;">Render with Materials</strong> to convert<br>it into a photorealistic image.</div>
                   </div>
 
                   <!-- Spinner -->
                   <div id="c2r-spinner" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:200px;">
                     <div style="width:32px;height:32px;border:2px solid rgba(201,83,75,.15);border-top-color:#C9534B;border-radius:50%;animation:ispin .8s linear infinite;"></div>
-                    <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#3A3835;letter-spacing:.5px;">Reading geometry with Claude Vision…</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#3A3835;letter-spacing:.5px;">Applying materials & rendering…</div>
                   </div>
 
-                  <!-- Results -->
+                  <!-- Results — render output only, no analysis -->
                   <div id="c2r-results" style="display:none;flex-direction:column;gap:14px;">
 
-                    <!-- Geometry read -->
+                    <!-- Material instruction (collapsible, small) -->
                     <div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:8px;">Geometry Analysis</div>
-                      <div id="c2r-analysis-text" style="font-family:'DM Sans',sans-serif;font-size:12px;color:#A8A49E;line-height:1.72;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:12px 14px;"></div>
-                    </div>
-
-                    <!-- Detected features chips -->
-                    <div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:8px;">Detected Features</div>
-                      <div id="c2r-features" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
-                    </div>
-
-                    <!-- Applied materials -->
-                    <div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:8px;">Applied Materials</div>
-                      <div id="c2r-materials" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
-                    </div>
-
-                    <!-- Render prompt -->
-                    <div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;margin-bottom:8px;">Generated Render Prompt</div>
-                      <div id="c2r-prompt-text" style="font-family:'DM Sans',sans-serif;font-size:11.5px;color:#CFB584;line-height:1.7;background:rgba(207,181,132,.06);border:1px solid rgba(207,181,132,.15);border-radius:8px;padding:12px 14px;font-style:italic;word-break:break-word;"></div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:6px;">Material Instruction</div>
+                      <div id="c2r-instruction-text" style="font-family:'DM Sans',sans-serif;font-size:10px;color:#47453F;line-height:1.6;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:8px 12px;word-break:break-word;max-height:60px;overflow-y:auto;"></div>
                     </div>
 
                     <!-- Render output -->
                     <div>
-                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                        <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;">AI Render</div>
-                        <button id="c2r-render-btn" onclick="renderC2R()" style="padding:5px 14px;background:rgba(207,181,132,.12);border:1px solid rgba(207,181,132,.25);border-radius:14px;color:#CFB584;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(207,181,132,.2)'" onmouseout="this.style.background='rgba(207,181,132,.12)'">✦ Generate Render</button>
-                      </div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;margin-bottom:8px;">AI Render</div>
                       <div id="c2r-render-wrap" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;">
-                        <div id="c2r-render-placeholder" style="text-align:center;padding:16px;">
-                          <div style="font-size:22px;margin-bottom:6px;opacity:.25;">✦</div>
-                          <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:#2A2825;line-height:1.6;">Click Generate Render to create<br>a photorealistic image from<br>the prompt above</div>
-                        </div>
+                        <div id="c2r-render-placeholder" style="display:none;"></div>
                         <div id="c2r-render-spinner" style="display:none;flex-direction:column;align-items:center;gap:8px;">
                           <div style="width:28px;height:28px;border:2px solid rgba(207,181,132,.15);border-top-color:#CFB584;border-radius:50%;animation:ispin .8s linear infinite;"></div>
                           <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:#3A3835;">Generating render...</div>
@@ -1333,6 +1295,9 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                         <div id="c2r-render-error" style="display:none;text-align:center;padding:16px;font-family:'DM Sans',sans-serif;font-size:10px;color:#C9534B;line-height:1.6;"></div>
                         <img id="c2r-render-img" style="display:none;width:100%;height:100%;object-fit:cover;" alt="AI render" />
                       </div>
+                      <!-- Fidelity Grade -->
+                      <div id="c2r-fidelity-grade" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;"></div>
+                      <button id="c2r-retry-btn" onclick="retryRender('c2r')" style="display:none;margin-top:6px;padding:5px 14px;background:rgba(201,83,75,.12);border:1px solid rgba(201,83,75,.25);border-radius:14px;color:#C9534B;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(201,83,75,.2)'" onmouseout="this.style.background='rgba(201,83,75,.12)'">\u21BB Retry with Corrections</button>
                     </div>
                   </div>
                 </div>
@@ -1550,6 +1515,22 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                   </div>
                 </div>
                 <div style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;">
+
+                  <!-- Image Upload Zone -->
+                  <div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:6px;">Reference Image <span style="color:#2E2C28;font-weight:400;letter-spacing:0;text-transform:none;">(optional)</span></div>
+                    <label for="est-file" id="est-drop" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:1.5px dashed rgba(255,255,255,.1);border-radius:10px;padding:16px 12px;cursor:pointer;transition:border-color .2s;min-height:90px;position:relative;" onmouseover="this.style.borderColor='rgba(201,83,75,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)'">
+                      <div id="est-upload-ph" style="text-align:center;">
+                        <div style="font-size:22px;margin-bottom:4px;opacity:.4;">📷</div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#4A4845;line-height:1.5;">Drop a photo to auto-detect specs<br><span style="color:#C9534B;font-weight:500;">or click to browse</span></div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#2E2C28;margin-top:3px;">AI will identify piece type, metal, stones & more</div>
+                      </div>
+                      <img id="est-preview-img" style="display:none;max-width:100%;max-height:120px;border-radius:6px;object-fit:contain;" />
+                      <div id="est-img-scanning" style="display:none;font-family:'DM Sans',sans-serif;font-size:9px;color:#C9534B;margin-top:4px;letter-spacing:.5px;">Scanning image…</div>
+                    </label>
+                    <input id="est-file" type="file" accept="image/*" style="display:none;" onchange="handleEstUpload(this)" />
+                  </div>
+
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                     <div>
                       <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Piece Type</div>
@@ -1574,21 +1555,21 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                       <input id="est-weight" type="number" min="0" step="0.5" placeholder="e.g. 8" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='rgba(201,83,75,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.09)'" />
                     </div>
                     <div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Center Stone</div>
-                      <select id="est-stone" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
-                        <option value="">None</option>
-                        <option>Diamond 0.5ct</option><option>Diamond 1.0ct</option><option>Diamond 1.5ct</option><option>Diamond 2.0ct</option>
-                        <option>Sapphire 1ct</option><option>Emerald 1ct</option><option>Ruby 1ct</option><option>Morganite 2ct</option>
-                      </select>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Stone(s)</div>
+                      <input id="est-stone" type="text" placeholder="e.g. Diamond 0.5ct VS2, 12 accent sapphires" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='rgba(201,83,75,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.09)'" />
                     </div>
                   </div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
                     <div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Labor Hours (est.)</div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Stone Cost ($)</div>
+                      <input id="est-stone-cost" type="number" min="0" step="10" placeholder="e.g. 350" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='rgba(201,83,75,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.09)'" />
+                    </div>
+                    <div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Labor Hours</div>
                       <input id="est-labor" type="number" min="0" step="0.5" placeholder="e.g. 4" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='rgba(201,83,75,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.09)'" />
                     </div>
                     <div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Target Margin %</div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Margin %</div>
                       <select id="est-margin" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
                         <option>40%</option><option>50%</option><option selected>60%</option><option>65%</option><option>70%</option>
                       </select>
@@ -2534,6 +2515,8 @@ const PAGES = {
 const PROXY_URL = '/api/generate-render';
 const CHAT_URL  = '/api/chat';
 let useServerKeys = false;
+let serverHasHiggsfield = false;
+let serverHasOpenAI = false;
 
 // Helper: route Anthropic calls through server proxy or direct
 async function claudeAPI(body) {
@@ -2592,6 +2575,7 @@ const FIELDS = [
   {k:'deliveryMethod',  l:'Delivery',            g:'Order'},
   {k:'referenceNotes',  l:'Reference Notes',     g:'Files'},
   {k:'productionNotes', l:'Production Notes',    g:'Files'},
+  {k:'designDescription',l:'Design Concept',      g:'Design'},
   {k:'renderStyle',     l:'Render Style',        g:'Render'},
   {k:'renderAngle',     l:'Render Angle',        g:'Render'},
   {k:'renderBackground',l:'Background',          g:'Render'},
@@ -2605,6 +2589,7 @@ RULES:
 - Acknowledge what they said before asking the next thing.
 - Priority order: piece type > metal > stones/setting > dimensions > client > budget > timeline > render style.
 - When you have enough design info, ask about render preferences (style, angle, background).
+- Pay close attention to ALL design details the user describes — motifs, shapes, themes, textures, sculptural elements, symbolic meaning, animal forms, architectural elements, etc. These are critical for accurate renders.
 
 FIELD EXTRACTION — append to EVERY reply, no exceptions:
 [FIELDS]{"key":"value"}[/FIELDS]
@@ -2613,7 +2598,7 @@ Only include confidently extracted keys. Use exactly:
 projectName, collection, clientName, clientEmail, pieceType, metalType, metalWeight, finish,
 stoneType, stoneCount, stoneCaratWeight, settingStyle, ringSize, dimensions, engravingNotes,
 budget, timeline, status, priority, deliveryMethod, referenceNotes, productionNotes,
-renderStyle, renderAngle, renderBackground
+renderStyle, renderAngle, renderBackground, designDescription
 
 pieceType: ring|necklace|bracelet|earrings|pendant|brooch|bangle|cufflinks|anklet|other
 metalType: 14k yellow gold|14k white gold|14k rose gold|18k yellow gold|18k white gold|18k rose gold|platinum|sterling silver|palladium
@@ -2622,7 +2607,9 @@ priority: low|medium|high|urgent
 finish: high polish|matte|satin|hammered|brushed|sandblast|oxidized
 renderStyle: photorealistic|product studio|lifestyle|artistic sketch|3D render
 renderAngle: front|side|top-down|45 degree|flat lay|multi-angle
-renderBackground: white studio|black studio|velvet|marble|lifestyle|outdoor|bokeh`;
+renderBackground: white studio|black studio|velvet|marble|lifestyle|outdoor|bokeh
+
+designDescription: THIS IS THE MOST IMPORTANT FIELD. Accumulate a rich, detailed description of the FULL design concept as the conversation progresses. Include: motifs (eagle, snake, floral, geometric), sculptural details (spread wings, coiled body), textures (feathered, scaled, hammered), proportions, distinctive features, and any visual references the user mentions. Update this field in EVERY reply, building on previous details as the user adds more. This field will be used DIRECTLY to generate the render image, so it must be vivid and complete — not just "pendant" but "large eagle pendant with spread wings, detailed individual feathers, diamond-set eyes, clutching a branch in talons, art nouveau style".`;
 
 let anthropicKey = '';
 let higgsKey     = '';
@@ -2664,10 +2651,16 @@ function startWithKey(auto) {
     const res = await fetch('/api/config');
     if (!res.ok) return;
     const cfg = await res.json();
+    if (cfg.hasOpenAI) serverHasOpenAI = true;
+    if (cfg.hasHiggsfield) serverHasHiggsfield = true;
     if (cfg.hasAnthropicKey) {
       useServerKeys = true;
       // Auto-launch Imagine without requiring key entry
-      document.addEventListener('DOMContentLoaded', () => startWithKey(true));
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => startWithKey(true));
+      } else {
+        startWithKey(true);
+      }
     }
   } catch(e) { /* server not available, user enters keys manually */ }
 })();
@@ -2676,12 +2669,11 @@ function startWithKey(auto) {
 function resetImagine() {
   isStarted = isLoading = false;
   history = []; fieldValues = {};
-  anthropicKey = ''; higgsKey = '';
+  if (!useServerKeys) { anthropicKey = ''; higgsKey = ''; }
   document.getElementById('imagine-msgs').innerHTML = '';
   document.getElementById('imagine-msgs').style.display = 'none';
   document.getElementById('imagine-inputbar').style.display = 'none';
   document.getElementById('imagine-typing').style.display = 'none';
-  document.getElementById('ik-prompt').style.display = 'flex';
   document.getElementById('ik-input').value = '';
   document.getElementById('hf-input').value = '';
   document.getElementById('render-btn').style.display = 'none';
@@ -2691,6 +2683,12 @@ function resetImagine() {
   document.getElementById('render-img').style.display = 'none';
   document.getElementById('render-no-key').style.display = 'none';
   buildFields(); updateScore();
+  // If server keys available, auto-restart without showing key prompt
+  if (useServerKeys) {
+    startWithKey(true);
+  } else {
+    document.getElementById('ik-prompt').style.display = 'flex';
+  }
 }
 
 /* ── Build fields panel ── */
@@ -2745,41 +2743,99 @@ function updateScore() {
 function checkRenderReady() {
   const designReady = fieldValues.pieceType && fieldValues.metalType;
   const btn = document.getElementById('render-btn');
-  if (designReady && higgsKey) {
+  const hasRenderKey = higgsKey || serverHasHiggsfield || serverHasOpenAI;
+  if (designReady && hasRenderKey) {
     btn.style.display = 'inline-flex';
-  } else if (designReady && !higgsKey) {
+    document.getElementById('render-no-key').style.display = 'none';
+  } else if (designReady && !hasRenderKey) {
     document.getElementById('render-no-key').style.display = 'block';
   }
 }
 
-/* ── Build render prompt from brief ── */
-function buildRenderPrompt() {
-  const parts = [];
+/* ── Build render prompt from conversation using Claude ── */
+async function buildRenderPrompt() {
+  // Gather all design context from the conversation
   const v = fieldValues;
-  if (v.renderStyle) parts.push(v.renderStyle);
-  parts.push('photograph of a fine jewelry piece');
-  if (v.pieceType)       parts.push(v.pieceType);
+
+  // Build a context summary from all extracted fields
+  const fieldSummary = Object.entries(v)
+    .filter(([k, val]) => val && val !== 'null')
+    .map(([k, val]) => {
+      const field = FIELDS.find(f => f.k === k);
+      return (field ? field.l : k) + ': ' + val;
+    }).join('\n');
+
+  // Get the last several conversation messages for context
+  const recentMsgs = history.slice(-10).map(m => m.role + ': ' + m.content).join('\n\n');
+
+  // Use Claude to synthesize everything into an optimal image generation prompt
+  try {
+    const res = await claudeAPI({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 400,
+      system: `You write image generation prompts for FLUX, a text-to-image AI. Your job is to translate a jewelry design conversation into a single, highly specific image prompt.
+
+CRITICAL RULES:
+1. The prompt must describe EXACTLY what the user described — every motif, shape, material, texture, and design element.
+2. Lead with the most distinctive visual element (e.g., "Eagle pendant with spread wings" NOT "fine jewelry pendant").
+3. Include ALL design details: animal/nature motifs, sculptural forms, textures, stone placement, metalwork style.
+4. Specify the metal color and finish explicitly (e.g., "polished 18k yellow gold" not just "gold").
+5. Include stones with their specific placement (e.g., "ruby eyes, pavé diamond wing feathers").
+6. End with photography direction: lighting, angle, background.
+7. Do NOT be generic. Do NOT say "fine jewelry piece" when the user described a specific design.
+8. The prompt should be 2-4 sentences, dense with visual detail.
+
+Output ONLY the prompt text. No labels, no quotes, no explanation.`,
+      messages: [{
+        role: 'user',
+        content: `Here is the jewelry design conversation and extracted fields. Write a precise image generation prompt that captures EVERY design detail discussed.
+
+EXTRACTED FIELDS:
+${fieldSummary}
+
+RECENT CONVERSATION:
+${recentMsgs}
+
+Write the FLUX image generation prompt now.`
+      }]
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return (data.content?.[0]?.text || '').trim();
+    }
+  } catch(e) { /* fall through to fallback */ }
+
+  // Fallback: use designDescription + fields if Claude call fails
+  const parts = [];
+  if (v.designDescription) {
+    parts.push(v.designDescription);
+  } else {
+    if (v.renderStyle) parts.push(v.renderStyle);
+    parts.push('photograph of');
+    if (v.pieceType) parts.push('a ' + v.pieceType);
+    else parts.push('a fine jewelry piece');
+  }
   if (v.metalType)       parts.push('in ' + v.metalType);
+  if (v.finish)          parts.push('with ' + v.finish + ' finish');
   if (v.settingStyle)    parts.push(v.settingStyle + ' setting');
-  if (v.stoneType)       parts.push('set with ' + (v.stoneCount||'') + ' ' + v.stoneType);
+  if (v.stoneType)       parts.push('set with ' + (v.stoneCount ? v.stoneCount + ' ' : '') + v.stoneType);
   if (v.stoneCaratWeight)parts.push(v.stoneCaratWeight + ' total carat weight');
-  if (v.finish)          parts.push(v.finish + ' finish');
+  if (v.engravingNotes)  parts.push(v.engravingNotes);
+  if (v.referenceNotes)  parts.push(v.referenceNotes);
   if (v.renderAngle)     parts.push(v.renderAngle + ' view');
   const bg = v.renderBackground || 'white studio';
-  parts.push(bg + ' background');
-  parts.push('ultra high resolution, luxury jewelry photography, 8K, macro detail');
+  parts.push(bg + ' background, luxury jewelry photography, 8K macro detail');
   return parts.join(', ');
 }
 
 /* ── Render — requires server-side backend ── */
 async function generateRender() {
-  const prompt = buildRenderPrompt();
-
   // No proxy configured yet — show helpful message
   if (!PROXY_URL) {
     document.getElementById('render-placeholder').style.display = 'none';
     document.getElementById('render-backend-msg').style.display = 'flex';
-    addBubble('assistant', '\u2139\ufe0f Proxy not yet configured. Set PROXY_URL in the HTML to your Vercel deployment URL.\n\nRender prompt ready to send:\n\n\u201C' + prompt + '\u201D');
+    addBubble('assistant', '\u2139\ufe0f Render proxy not configured.');
     return;
   }
 
@@ -2788,21 +2844,29 @@ async function generateRender() {
   document.getElementById('render-backend-msg').style.display = 'none';
   document.getElementById('render-img').style.display = 'none';
   const wrap = document.getElementById('render-img-wrap');
-  // Spinner
   let spinnerDiv = document.getElementById('render-spinner-imagine');
   if (!spinnerDiv) {
     spinnerDiv = document.createElement('div');
     spinnerDiv.id = 'render-spinner-imagine';
     spinnerDiv.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:100%;padding:20px;';
-    spinnerDiv.innerHTML = '<div style="width:28px;height:28px;border:2px solid rgba(207,181,132,.15);border-top-color:#CFB584;border-radius:50%;animation:ispin .8s linear infinite;"></div><div style="font-family:\'DM Sans\',sans-serif;font-size:9.5px;color:#3A3835;">Generating render…</div>';
+    spinnerDiv.innerHTML = '<div style="width:28px;height:28px;border:2px solid rgba(207,181,132,.15);border-top-color:#CFB584;border-radius:50%;animation:ispin .8s linear infinite;"></div><div style="font-family:\'DM Sans\',sans-serif;font-size:9.5px;color:#3A3835;">Building render prompt…</div>';
     wrap.appendChild(spinnerDiv);
   }
   spinnerDiv.style.display = 'flex';
+  spinnerDiv.querySelector('div:last-child').textContent = 'Building render prompt…';
 
   const btn = document.getElementById('render-btn');
   if (btn) btn.style.opacity = '.5';
 
   try {
+    // Step 1: Build prompt from conversation using Claude
+    const prompt = await buildRenderPrompt();
+    if (!prompt || prompt.length < 10) throw new Error('Could not build render prompt');
+
+    // Step 2: Send to Higgsfield
+    spinnerDiv.querySelector('div:last-child').textContent = 'Generating render…';
+    addBubble('assistant', '\u2728 Generating render with prompt:\n\n\u201C' + prompt + '\u201D');
+
     const res = await fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2816,16 +2880,15 @@ async function generateRender() {
       throw new Error(data.error || 'No image URL returned');
     }
 
-    // Show the rendered image
     const img = document.getElementById('render-img');
     img.src = data.url;
     img.style.display = 'block';
-    addBubble('assistant', '\u2728 Render complete! Image generated via Higgsfield FLUX.\n\nPrompt used:\n\u201C' + prompt + '\u201D');
+    addBubble('assistant', '\u2728 Render complete!');
 
   } catch(e) {
     spinnerDiv.style.display = 'none';
     document.getElementById('render-backend-msg').style.display = 'flex';
-    addBubble('assistant', '\u26a0\ufe0f Render failed: ' + e.message + '\n\nPrompt was:\n\u201C' + prompt + '\u201D');
+    addBubble('assistant', '\u26a0\ufe0f Render failed: ' + e.message);
   }
 
   if (btn) btn.style.opacity = '1';
@@ -2932,6 +2995,7 @@ let s2iOpen = false;
 let s2iImageB64 = null;
 let s2iImageType = 'image/jpeg';
 let s2iAnalyzing = false;
+let s2iResponseId = null;  // Track Responses API response ID for multi-turn
 
 function toggleS2I() {
   s2iOpen = !s2iOpen;
@@ -2943,7 +3007,7 @@ function toggleS2I() {
 }
 
 function resetS2I() {
-  s2iImageB64 = null;
+  s2iImageB64 = null; s2iResponseId = null;
   document.getElementById('s2i-file').value = '';
   document.getElementById('s2i-upload-ph').style.display = 'block';
   document.getElementById('s2i-preview-img').style.display = 'none';
@@ -2976,124 +3040,121 @@ function handleS2IUpload(input) {
 
 // Also allow clicking drop zone to open file picker - handled by label
 
-async function analyzeS2I() {
-  if (s2iAnalyzing) return;
-
-  // Check for API key (reuse anthropicKey from Imagine)
-  if (!anthropicKey) {
-    document.getElementById('s2i-key-note').style.display = 'block';
-    return;
-  }
-  document.getElementById('s2i-key-note').style.display = 'none';
-
-  if (!s2iImageB64) {
-    // No image — still useful: build a prompt from specs only with a note
-    runS2IAnalysis(null);
-    return;
-  }
-  runS2IAnalysis(s2iImageB64);
-}
-
-async function runS2IAnalysis(b64) {
-  s2iAnalyzing = true;
-  document.getElementById('s2i-idle').style.display = 'none';
-  document.getElementById('s2i-results').style.display = 'none';
-  document.getElementById('s2i-spinner').style.display = 'flex';
-  document.getElementById('s2i-analyze-btn').style.opacity = '.5';
-
+/* ── Build S2I instruction from specs — mirrors C2R's buildC2RInstruction ── */
+function buildS2IInstruction(corrections) {
   const metal   = document.getElementById('s2i-metal').value;
   const stone   = document.getElementById('s2i-stone').value;
   const setting = document.getElementById('s2i-setting').value;
   const finish  = document.getElementById('s2i-finish').value;
   const notes   = document.getElementById('s2i-notes').value.trim();
 
-  const specStr = [
-    metal   ? 'Metal: ' + metal   : '',
-    stone   ? 'Stone: ' + stone   : '',
-    setting ? 'Setting: ' + setting : '',
-    finish  ? 'Finish: ' + finish  : '',
-    notes   ? 'Notes: ' + notes   : '',
-  ].filter(Boolean).join(' | ') || 'No specs specified';
+  let prompt = 'Edit this image. This is a hand-drawn jewelry sketch. ';
+  prompt += 'Make it look like a photorealistic product photo. ';
+  prompt += 'Keep the EXACT same design — same shape, same silhouette, same proportions, same angle, same stone count and placement. ';
+  prompt += 'Only change the surface materials and environment.\n\n';
 
-  const systemPrompt = `You are ZipJeweler\'s Sketch to Image AI. Analyze jewelry sketches and produce structured render prompts.
+  if (corrections) prompt += 'Fix these issues: ' + corrections + '\n\n';
 
-When given a sketch/image:
-1. DESCRIBE what you see in the sketch (shape, form, style, visible details)
-2. LIST extracted specs as a JSON object under [SPECS]...[/SPECS]
-3. WRITE a detailed render prompt under [PROMPT]...[/PROMPT]
+  // Materials — keep descriptions brief
+  const parts = [];
+  if (metal) parts.push('Metal: ' + metal + (finish ? ', ' + finish.toLowerCase() + ' finish' : ''));
+  if (stone && stone !== 'No stone') parts.push('Stones: ' + stone + (setting ? ' in ' + setting.toLowerCase() + ' setting' : ''));
+  if (parts.length) prompt += 'Materials: ' + parts.join('. ') + '.\n';
 
-The render prompt should be highly detailed, photorealistic, and ready to send to an image generation model. Include: jewelry type, metal, stones, setting, finish, angle (front 3/4 view), background (white studio), lighting (soft diffused jewelry lighting), quality modifiers.
+  // Scene — always studio lighting + white background
+  prompt += 'Scene: white studio background, soft studio lighting.\n';
 
-Keep analysis to 2-3 sentences. Be specific and technical.`;
+  if (notes) prompt += notes + '\n';
 
-  const userContent = b64
-    ? [
-        { type: 'image', source: { type: 'base64', media_type: s2iImageType, data: b64 } },
-        { type: 'text',  text: `User-specified material specs: ${specStr}\n\nAnalyze this jewelry sketch and produce the vision analysis, extracted specs JSON, and render prompt as instructed.` }
-      ]
-    : [{ type: 'text', text: `No image uploaded. User-specified material specs: ${specStr}\n\nSince no sketch was provided, acknowledge this and still generate a descriptive render prompt based on the specs alone. Note that in production a sketch would refine this further.` }];
+  return prompt;
+}
+
+/* ── S2I render — sends sketch directly to Responses API with action:"edit" (same as C2R) ── */
+async function renderS2IDirect(correctionText) {
+  if (s2iAnalyzing) return;
+
+  // Require an image — sketch IS the design
+  if (!s2iImageB64) {
+    const idleEl = document.getElementById('s2i-idle');
+    if (idleEl) {
+      idleEl.style.display = 'flex';
+      idleEl.querySelector('div:last-child').textContent = 'Upload a sketch first — the image is required for rendering.';
+    }
+    return;
+  }
+
+  s2iAnalyzing = true;
+  document.getElementById('s2i-idle').style.display = 'none';
+  document.getElementById('s2i-results').style.display = 'none';
+  document.getElementById('s2i-spinner').style.display = 'flex';
+  document.getElementById('s2i-analyze-btn').style.opacity = '.5';
+
+  // Hide previous fidelity grade
+  const gradeEl = document.getElementById('s2i-fidelity-grade');
+  if (gradeEl) gradeEl.style.display = 'none';
+  const retryBtn = document.getElementById('s2i-retry-btn');
+  if (retryBtn) retryBtn.style.display = 'none';
+
+  // Build material instruction from dropdowns (same pattern as C2R)
+  const prompt = correctionText || buildS2IInstruction(null);
+
+  // Show the instruction being sent
+  const promptEl = document.getElementById('s2i-prompt-text');
+  if (promptEl) promptEl.textContent = prompt;
+
+  // Use Responses API endpoint with action:"edit" to force image editing
+  const responsesUrl = (PROXY_URL || '').replace('/api/generate-render', '/api/generate-image');
 
   try {
-    const res = await claudeAPI({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 800,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userContent }]
-      });
+    const payload = {
+      prompt,
+      action: 'edit',           // Force EDIT mode — preserve sketch structure
+      quality: 'high',
+      input_fidelity: 'high',   // Preserve fine details from sketch
+      size: 'auto',
+    };
 
-    if (!res.ok) {
-      const err = await res.json().catch(()=>({}));
-      throw new Error(err?.error?.message || 'HTTP ' + res.status);
+    // First render: send the sketch image
+    // Correction renders: chain via previous_response_id (image already in context)
+    if (s2iResponseId && correctionText) {
+      payload.previous_response_id = s2iResponseId;
+    } else {
+      payload.input_image = s2iImageB64;
+      s2iResponseId = null;
     }
 
-    const data = await res.json();
-    const text = data.content?.[0]?.text || '';
-
-    // Parse sections
-    const specsMatch  = text.match(/\[SPECS\]([\s\S]*?)\[\/SPECS\]/);
-    const promptMatch = text.match(/\[PROMPT\]([\s\S]*?)\[\/PROMPT\]/);
-
-    // Everything before [SPECS] is the analysis
-    const analysisText = text.replace(/\[SPECS\][\s\S]*?\[\/SPECS\]/g,'').replace(/\[PROMPT\][\s\S]*?\[\/PROMPT\]/g,'').trim();
-
-    // Render analysis
-    document.getElementById('s2i-analysis-text').textContent = analysisText || '(No analysis text returned)';
-
-    // Render specs chips
-    const specsEl = document.getElementById('s2i-specs');
-    specsEl.innerHTML = '';
-    let specsObj = {};
-    if (specsMatch) {
-      try { specsObj = JSON.parse(specsMatch[1].trim()); } catch(e) {}
-    }
-    // Merge with user-selected values
-    if (metal)   specsObj['metal']   = specsObj['metal']   || metal;
-    if (stone)   specsObj['stone']   = specsObj['stone']   || stone;
-    if (setting) specsObj['setting'] = specsObj['setting'] || setting;
-    if (finish)  specsObj['finish']  = specsObj['finish']  || finish;
-
-    Object.entries(specsObj).forEach(([k, v]) => {
-      const chip = document.createElement('div');
-      chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;';
-      chip.innerHTML = '<span style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;color:#3A3835;text-transform:uppercase;letter-spacing:1px;">' + k + '</span>'
-        + '<span style="font-family:\'DM Sans\',sans-serif;font-size:9.5px;color:#CFB584;font-weight:500;">' + v + '</span>';
-      specsEl.appendChild(chip);
+    const res = await fetch(responsesUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
-    if (specsEl.children.length === 0) {
-      specsEl.innerHTML = '<span style="font-family:\'DM Sans\',sans-serif;font-size:10px;color:#2A2825;">No specs extracted — add selections on the left</span>';
-    }
-
-    // Render prompt
-    const promptText = promptMatch ? promptMatch[1].trim() : text.split('\n').slice(-3).join(' ').trim();
-    document.getElementById('s2i-prompt-text').textContent = promptText;
+    const data = await res.json();
 
     document.getElementById('s2i-spinner').style.display = 'none';
+    if (!res.ok || !data.url) throw new Error(data.error || 'No image URL returned');
+
+    // Show results
     document.getElementById('s2i-results').style.display = 'flex';
+    const img = document.getElementById('s2i-render-img');
+    if (img) { img.src = data.url; img.style.display = 'block'; }
+    const placeholder = document.getElementById('s2i-render-placeholder');
+    if (placeholder) placeholder.style.display = 'none';
+
+    // Store response_id for multi-turn corrections
+    if (data.response_id) s2iResponseId = data.response_id;
+
+    window._s2iRenderUrl = data.url;
+    window._s2iRenderMode = data.mode || 'responses-api-edit';
+
+    // Auto-grade fidelity if we have a source sketch
+    if (s2iImageB64 && (anthropicKey || useServerKeys)) {
+      gradeFidelity('s2i', s2iImageB64, s2iImageType, data.url, prompt);
+    }
 
   } catch(e) {
     document.getElementById('s2i-spinner').style.display = 'none';
     document.getElementById('s2i-idle').style.display = 'flex';
-    document.getElementById('s2i-idle').querySelector('div:last-child').textContent = '\u26A0\uFE0F ' + e.message;
+    document.getElementById('s2i-idle').querySelector('div:last-child').textContent = e.message;
   }
 
   s2iAnalyzing = false;
@@ -3108,6 +3169,7 @@ let c2rOpen     = false;
 let c2rImageB64 = null;
 let c2rImageType= 'image/jpeg';
 let c2rBusy     = false;
+let c2rResponseId = null;  // Responses API ID for multi-turn corrections
 
 function toggleC2R() {
   c2rOpen = !c2rOpen;
@@ -3119,7 +3181,8 @@ function toggleC2R() {
 }
 
 function resetC2R() {
-  c2rImageB64 = null; c2rBusy = false;
+  c2rImageB64 = null; c2rBusy = false; c2rResponseId = null;
+  window._c2rCorrections = null;
   document.getElementById('c2r-file').value = '';
   document.getElementById('c2r-upload-ph').style.display = 'block';
   document.getElementById('c2r-preview-img').style.display = 'none';
@@ -3131,7 +3194,15 @@ function resetC2R() {
   document.getElementById('c2r-spinner').style.display = 'none';
   document.getElementById('c2r-results').style.display = 'none';
   document.getElementById('c2r-key-note').style.display = 'none';
-  document.getElementById('c2r-analyze-btn').style.opacity = '1';
+  document.getElementById('c2r-render-btn').style.opacity = '1';
+  const gradeEl = document.getElementById('c2r-fidelity-grade');
+  if (gradeEl) gradeEl.style.display = 'none';
+  const retryBtn = document.getElementById('c2r-retry-btn');
+  if (retryBtn) retryBtn.style.display = 'none';
+  const renderImg = document.getElementById('c2r-render-img');
+  if (renderImg) renderImg.style.display = 'none';
+  const errEl = document.getElementById('c2r-render-error');
+  if (errEl) errEl.style.display = 'none';
 }
 
 function handleC2RUpload(input) {
@@ -3150,14 +3221,10 @@ function handleC2RUpload(input) {
   reader.readAsDataURL(file);
 }
 
-async function analyzeC2R() {
-  if (c2rBusy) return;
-  if (!anthropicKey) {
-    document.getElementById('c2r-key-note').style.display = 'block';
-    return;
-  }
-  document.getElementById('c2r-key-note').style.display = 'none';
-
+/* ── Build C2R prompt — short, direct, material-only ── */
+/* The Responses API with action:"edit" already knows to preserve the image. */
+/* A concise prompt prevents the model from over-interpreting. */
+function buildC2RInstruction(corrections) {
   const metal    = document.getElementById('c2r-metal').value;
   const stone    = document.getElementById('c2r-stone').value;
   const finish   = document.getElementById('c2r-finish').value;
@@ -3166,124 +3233,130 @@ async function analyzeC2R() {
   const angle    = document.getElementById('c2r-angle').value;
   const notes    = document.getElementById('c2r-notes').value.trim();
 
-  const specStr = [
-    metal    ? 'Metal: ' + metal       : '',
-    stone    ? 'Stone: ' + stone       : '',
-    finish   ? 'Finish: ' + finish     : '',
-    bg       ? 'Background: ' + bg     : '',
-    lighting ? 'Lighting: ' + lighting : '',
-    angle    ? 'Angle: ' + angle       : '',
-    notes    ? 'Notes: ' + notes       : '',
-  ].filter(Boolean).join(' | ') || 'No materials specified';
+  // Keep the prompt short and direct — long prompts cause the model to redesign
+  let prompt = 'Edit this image. This is a CAD render of a jewelry piece. ';
+  prompt += 'Make it look like a photorealistic product photo. ';
+  prompt += 'Keep the EXACT same design — same shape, same silhouette, same proportions, same angle. ';
+  prompt += 'Only change the surface materials and environment.\n\n';
+
+  if (corrections) prompt += 'Fix these issues: ' + corrections + '\n\n';
+
+  // Materials — keep descriptions brief
+  const parts = [];
+  if (metal) parts.push('Metal: ' + metal + (finish ? ', ' + finish.toLowerCase() + ' finish' : ''));
+  if (stone && stone !== 'No stone') parts.push('Stones: ' + stone);
+  if (parts.length) prompt += 'Materials: ' + parts.join('. ') + '.\n';
+
+  // Scene
+  if (bg || lighting) {
+    const scene = [];
+    if (bg) scene.push(bg.toLowerCase() + ' background');
+    if (lighting) scene.push(lighting.toLowerCase() + ' lighting');
+    prompt += 'Scene: ' + scene.join(', ') + '.\n';
+  }
+
+  if (notes) prompt += notes + '\n';
+
+  return prompt;
+}
+
+/* ── C2R render — uses Responses API with action:"edit" to force image editing ── */
+async function renderC2RDirect(correctionText) {
+  if (c2rBusy) return;
+
+  // Require an image — CAD image IS the design
+  if (!c2rImageB64) {
+    const errEl = document.getElementById('c2r-render-error');
+    if (errEl) { errEl.textContent = '\u26A0 Upload a CAD screenshot first — the image is required for rendering.'; errEl.style.display = 'block'; }
+    return;
+  }
+
+  // Check for proxy
+  if (!PROXY_URL) {
+    const errEl = document.getElementById('c2r-render-error');
+    if (errEl) { errEl.textContent = '\u26A0 Render proxy not configured.'; errEl.style.display = 'block'; }
+    return;
+  }
 
   c2rBusy = true;
   document.getElementById('c2r-idle').style.display = 'none';
-  document.getElementById('c2r-results').style.display = 'none';
-  document.getElementById('c2r-spinner').style.display = 'flex';
-  document.getElementById('c2r-analyze-btn').style.opacity = '.5';
+  document.getElementById('c2r-render-btn').style.opacity = '.5';
 
-  const systemPrompt = `You are ZipJeweler's CAD to Render AI. You read jewelry CAD wireframes and screenshots and convert them into detailed render prompts for photorealistic output.
+  const spinner = document.getElementById('c2r-spinner');
+  const errEl = document.getElementById('c2r-render-error');
+  const img = document.getElementById('c2r-render-img');
+  const renderWrap = document.getElementById('c2r-render-wrap');
+  if (spinner) spinner.style.display = 'flex';
+  if (errEl) errEl.style.display = 'none';
+  if (img) img.style.display = 'none';
+  if (renderWrap) renderWrap.style.display = 'flex';
 
-When given a CAD image:
-1. DESCRIBE the geometry you see — piece type, form, symmetry, construction details, stone seats, prong positions, shank profile, surface areas. Be technical and specific. 2-3 sentences.
-2. LIST detected geometric features as a JSON array under [FEATURES]...[/FEATURES] — e.g. ["solitaire setting","4-prong basket","tapered shank","knife-edge profile","stone seat visible"]
-3. LIST applied materials as a JSON object under [MATERIALS]...[/MATERIALS]
-4. WRITE a full render prompt under [PROMPT]...[/PROMPT] — ultra-detailed, photorealistic, production-ready. Translate the CAD geometry faithfully: describe the shape in words as if instructing a render artist. Include: piece type, exact construction details from the geometry, all user-specified materials, lighting, angle, background, quality tags (8K, macro, luxury jewelry photography, ultra-sharp, ray-traced reflections).
+  // Show render results container
+  document.getElementById('c2r-results').style.display = 'flex';
 
-If no image is uploaded, acknowledge it briefly and still build the prompt from the user specs.`;
+  // Hide previous fidelity grade
+  const gradeEl = document.getElementById('c2r-fidelity-grade');
+  if (gradeEl) gradeEl.style.display = 'none';
+  const retryBtn = document.getElementById('c2r-retry-btn');
+  if (retryBtn) retryBtn.style.display = 'none';
 
-  const userContent = c2rImageB64
-    ? [
-        { type: 'image', source: { type: 'base64', media_type: c2rImageType, data: c2rImageB64 } },
-        { type: 'text', text: 'Material and scene settings: ' + specStr + '\n\nAnalyze this CAD screenshot and produce the geometry analysis, features list, materials object, and render prompt as instructed.' }
-      ]
-    : [{ type: 'text', text: 'No CAD image uploaded. Material and scene settings: ' + specStr + '\n\nNo screenshot was provided — acknowledge this briefly, then build the best render prompt possible from the specifications alone. Note that uploading a CAD screenshot would let Claude read the exact geometry.' }];
+  // Build material instruction from dropdowns
+  const prompt = correctionText || buildC2RInstruction(window._c2rCorrections || null);
+  window._c2rCorrections = null; // clear after use
+
+  // Show the instruction being sent
+  const instrEl = document.getElementById('c2r-instruction-text');
+  if (instrEl) instrEl.textContent = prompt;
+
+  // Use Responses API endpoint with action:"edit" to force image editing
+  const responsesUrl = (PROXY_URL || '').replace('/api/generate-render', '/api/generate-image');
 
   try {
-    const res = await claudeAPI({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 900,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userContent }]
-      });
+    const payload = {
+      prompt,
+      action: 'edit',           // Force EDIT mode — do not generate a new image
+      quality: 'high',
+      input_fidelity: 'high',   // Preserve fine details from CAD image
+      size: 'auto',
+    };
 
-    if (!res.ok) {
-      const err = await res.json().catch(()=>({}));
-      throw new Error(err?.error?.message || 'HTTP ' + res.status);
+    // First render: send the CAD image
+    // Correction renders: chain via previous_response_id (image already in context)
+    if (c2rResponseId && correctionText) {
+      payload.previous_response_id = c2rResponseId;
+    } else {
+      payload.input_image = c2rImageB64;
+      c2rResponseId = null;
     }
 
-    const data  = await res.json();
-    const text  = data.content?.[0]?.text || '';
-
-    const featuresMatch  = text.match(/\[FEATURES\]([\s\S]*?)\[\/FEATURES\]/);
-    const materialsMatch = text.match(/\[MATERIALS\]([\s\S]*?)\[\/MATERIALS\]/);
-    const promptMatch    = text.match(/\[PROMPT\]([\s\S]*?)\[\/PROMPT\]/);
-
-    const analysisText = text
-      .replace(/\[FEATURES\][\s\S]*?\[\/FEATURES\]/g, '')
-      .replace(/\[MATERIALS\][\s\S]*?\[\/MATERIALS\]/g, '')
-      .replace(/\[PROMPT\][\s\S]*?\[\/PROMPT\]/g, '')
-      .trim();
-
-    document.getElementById('c2r-analysis-text').textContent = analysisText || '(No geometry analysis returned)';
-
-    // Features chips — coral tint
-    const featEl = document.getElementById('c2r-features');
-    featEl.innerHTML = '';
-    let features = [];
-    if (featuresMatch) {
-      try { features = JSON.parse(featuresMatch[1].trim()); } catch(e) {}
-    }
-    if (!Array.isArray(features) || features.length === 0) {
-      features = ['Upload a CAD screenshot for geometry detection'];
-    }
-    features.forEach(f => {
-      const chip = document.createElement('div');
-      chip.style.cssText = 'display:inline-flex;padding:3px 10px;background:rgba(201,83,75,.08);border:1px solid rgba(201,83,75,.18);border-radius:12px;font-family:\'DM Sans\',sans-serif;font-size:9.5px;color:#C9534B;font-weight:500;';
-      chip.textContent = f;
-      featEl.appendChild(chip);
+    const res = await fetch(responsesUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
+    const data = await res.json();
+    if (spinner) spinner.style.display = 'none';
+    if (!res.ok || !data.url) throw new Error(data.error || 'No image URL returned');
+    if (img) { img.src = data.url; img.style.display = 'block'; }
 
-    // Materials chips — gold tint
-    const matEl = document.getElementById('c2r-materials');
-    matEl.innerHTML = '';
-    let mats = {};
-    if (materialsMatch) {
-      try { mats = JSON.parse(materialsMatch[1].trim()); } catch(e) {}
+    // Store response_id for multi-turn corrections
+    if (data.response_id) c2rResponseId = data.response_id;
+
+    window._c2rRenderUrl = data.url;
+    window._c2rRenderMode = data.mode || 'responses-api-edit';
+
+    // Auto-grade fidelity
+    if (c2rImageB64 && (anthropicKey || useServerKeys)) {
+      gradeFidelity('c2r', c2rImageB64, c2rImageType, data.url, prompt);
     }
-    // Merge user selections
-    if (metal)    mats['metal']      = mats['metal']      || metal;
-    if (stone)    mats['stone']      = mats['stone']      || stone;
-    if (finish)   mats['finish']     = mats['finish']     || finish;
-    if (bg)       mats['background'] = mats['background'] || bg;
-    if (lighting) mats['lighting']   = mats['lighting']   || lighting;
-    if (angle)    mats['angle']      = mats['angle']      || angle;
-
-    Object.entries(mats).forEach(([k, v]) => {
-      const chip = document.createElement('div');
-      chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;';
-      chip.innerHTML = '<span style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;color:#3A3835;text-transform:uppercase;letter-spacing:1px;">' + k + '</span>'
-        + '<span style="font-family:\'DM Sans\',sans-serif;font-size:9.5px;color:#CFB584;font-weight:500;">' + v + '</span>';
-      matEl.appendChild(chip);
-    });
-    if (matEl.children.length === 0) {
-      matEl.innerHTML = '<span style="font-family:\'DM Sans\',sans-serif;font-size:10px;color:#2A2825;">No materials specified — add selections on the left</span>';
-    }
-
-    const promptText = promptMatch ? promptMatch[1].trim() : text.split('\n').slice(-4).join(' ').trim();
-    document.getElementById('c2r-prompt-text').textContent = promptText;
-
-    document.getElementById('c2r-spinner').style.display = 'none';
-    document.getElementById('c2r-results').style.display = 'flex';
 
   } catch(e) {
-    document.getElementById('c2r-spinner').style.display = 'none';
-    document.getElementById('c2r-idle').style.display = 'flex';
-    document.getElementById('c2r-idle').querySelector('div:last-child').textContent = '\u26A0\uFE0F ' + e.message;
+    if (spinner) spinner.style.display = 'none';
+    if (errEl) { errEl.textContent = '\u26A0 ' + e.message; errEl.style.display = 'block'; }
   }
 
   c2rBusy = false;
-  document.getElementById('c2r-analyze-btn').style.opacity = '1';
+  document.getElementById('c2r-render-btn').style.opacity = '1';
 }
 
 
@@ -3328,7 +3401,7 @@ function handleMktUpload(input) {
 }
 async function generateMkt() {
   if (mktBusy) return;
-  if (!anthropicKey) { document.getElementById('mkt-key-note').style.display = 'block'; return; }
+  if (!anthropicKey && !useServerKeys) { document.getElementById('mkt-key-note').style.display = 'block'; return; }
   document.getElementById('mkt-key-note').style.display = 'none';
   mktBusy = true;
   document.getElementById('mkt-idle').style.display = 'none';
@@ -3391,6 +3464,116 @@ If an image is provided, describe what you see and let it inform the copy. Be sp
    TOOL 05 — QUICK ESTIMATE
 ══════════════════════════════════════════════════════ */
 let estOpen = false, estBusy = false;
+let estImageB64 = null, estImageType = 'image/jpeg';
+
+function handleEstUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  estImageType = file.type || 'image/jpeg';
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    estImageB64 = dataUrl.split(',')[1];
+    const img = document.getElementById('est-preview-img');
+    img.src = dataUrl;
+    img.style.display = 'block';
+    document.getElementById('est-upload-ph').style.display = 'none';
+    // Auto-scan if we have API access
+    if (anthropicKey || useServerKeys) scanEstImage();
+  };
+  reader.readAsDataURL(file);
+}
+
+async function scanEstImage() {
+  if (!estImageB64) return;
+  const scanEl = document.getElementById('est-img-scanning');
+  scanEl.style.display = 'block';
+  try {
+    const res = await claudeAPI({
+      model: 'claude-sonnet-4-20250514', max_tokens: 800,
+      system: `You are an experienced jewelry bench jeweler and appraiser estimating MANUFACTURING COST (not retail). Analyze the image carefully.
+
+Look closely at:
+- PIECE TYPE: What is it? (ring, pendant, earrings, bracelet, etc.)
+- METAL: Color tells you gold vs white gold vs rose gold vs silver vs platinum. Assess karat from context/quality cues.
+- METAL WEIGHT: Estimate grams by assessing band width, thickness, shank profile, overall piece volume. Be realistic:
+  * Thin solitaire ring: 2-4g. Standard engagement ring: 4-6g. Heavy men's band: 8-12g.
+  * Delicate pendant: 1-3g. Substantial pendant: 4-8g. Bracelet: 10-25g. Necklace chain: 5-15g.
+- STONES: Describe EXACTLY what you see. Count visible stones. Estimate sizes realistically:
+  * Tiny accent/pavé stones are typically 1-2mm (~0.01-0.03ct each)
+  * Small side stones 2-3mm (~0.05-0.10ct each)
+  * Medium center stones 4-5mm (~0.25-0.50ct)
+  * Large center stones 6mm+ (~0.75ct+)
+  * Note: most jewelry has small stones, not large ones. Don't overestimate.
+- STONE COST at WHOLESALE (jeweler cost, NOT retail):
+  * Small diamond accents/pavé: ~$30-80 per stone depending on quality
+  * 0.25ct diamond SI1-VS2 G-H: ~$200-400
+  * 0.50ct diamond SI1-VS2 G-H: ~$500-900
+  * 0.75ct diamond SI1-VS2 G-H: ~$1,200-2,000
+  * 1.0ct diamond SI1-VS2 G-H: ~$2,000-3,500
+  * Small sapphire/ruby/emerald accents: ~$15-50 each
+  * 0.5-1ct sapphire/ruby: ~$100-500
+  * Lab-grown diamonds cost 70-85% less than natural
+  * CZ/simulants: negligible cost
+  * Estimate TOTAL stone cost for all stones combined
+- LABOR: Assess complexity honestly:
+  * Simple band, no stones: 1-2 hrs
+  * Solitaire ring, basic setting: 2-3 hrs
+  * Ring with pavé/channel set: 3-5 hrs
+  * Complex multi-stone, filigree, or hand-engraved: 5-8 hrs
+  * Intricate custom piece: 8-12 hrs
+- NOTES: Describe what makes this piece distinctive — setting style, texture, engraving, construction method.
+
+Return ONLY a JSON object:
+{"piece_type":"...","metal":"...","metal_weight_g":N,"stone_desc":"...","stone_cost":N,"labor_hours":N,"notes":"..."}
+
+piece_type: Engagement Ring | Wedding Band | Pendant | Earrings (pair) | Bracelet | Necklace | Brooch
+metal: 18k Yellow Gold | 18k White Gold | 18k Rose Gold | 14k Yellow Gold | 14k White Gold | Platinum | Sterling Silver
+stone_desc: detailed free-text (e.g. "1 round diamond ~0.40ct center, 14 pavé diamonds ~0.20ct total")
+stone_cost: estimated WHOLESALE cost in USD for ALL stones combined (integer)
+metal_weight_g: realistic weight estimate
+labor_hours: realistic hours for a skilled bench jeweler
+
+Be conservative. Real jewelry is usually simpler and less expensive than people assume. Return ONLY valid JSON.`,
+      messages: [{ role: 'user', content: [
+        { type: 'image', source: { type: 'base64', media_type: estImageType, data: estImageB64 } },
+        { type: 'text', text: 'Analyze this jewelry piece in detail for a manufacturing cost estimate. Describe exactly what you see — stone sizes, metal weight, complexity.' }
+      ]}]
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '';
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const specs = JSON.parse(jsonMatch[0]);
+      if (specs.piece_type) setSelectVal('est-piece', specs.piece_type);
+      if (specs.metal)      setSelectVal('est-metal', specs.metal);
+      if (specs.metal_weight_g) document.getElementById('est-weight').value = specs.metal_weight_g;
+      if (specs.stone_desc) document.getElementById('est-stone').value = specs.stone_desc;
+      if (specs.stone_cost != null) document.getElementById('est-stone-cost').value = specs.stone_cost;
+      if (specs.labor_hours) document.getElementById('est-labor').value = specs.labor_hours;
+      if (specs.notes)      document.getElementById('est-notes').value = specs.notes;
+    }
+  } catch(e) { /* silent fail — user can still fill manually */ }
+  scanEl.style.display = 'none';
+}
+
+// Helper to set a <select> value, matching option text if value attr isn't set
+function setSelectVal(id, val) {
+  const sel = document.getElementById(id);
+  if (!sel || !val) return;
+  // Try exact value match first
+  for (const opt of sel.options) {
+    if (opt.value === val || opt.textContent === val) { sel.value = opt.value || opt.textContent; return; }
+  }
+  // Try partial match
+  const lower = val.toLowerCase();
+  for (const opt of sel.options) {
+    if (opt.textContent.toLowerCase().includes(lower) || lower.includes(opt.textContent.toLowerCase())) {
+      sel.value = opt.value || opt.textContent; return;
+    }
+  }
+}
 
 // Approximate spot prices (USD) — production uses live API
 const SPOT = { gold18k:58, gold14k:45, platinum:33, silver:0.8 };
@@ -3402,10 +3585,7 @@ function metalSpot(m) {
   if (m.includes('Silver')) return SPOT.silver;
   return 50;
 }
-const STONE_COST = {
-  'Diamond 0.5ct':900,'Diamond 1.0ct':3500,'Diamond 1.5ct':6800,'Diamond 2.0ct':11000,
-  'Sapphire 1ct':400,'Emerald 1ct':600,'Ruby 1ct':700,'Morganite 2ct':200
-};
+// Stone cost now comes from AI scan or manual entry via est-stone-cost field
 
 function toggleEst() {
   estOpen = !estOpen;
@@ -3417,8 +3597,14 @@ function toggleEst() {
 }
 function resetEst() {
   estOpen = false; estBusy = false;
-  ['est-piece','est-metal','est-stone','est-margin'].forEach(id => document.getElementById(id).value = id === 'est-margin' ? '60%' : '');
-  ['est-weight','est-labor'].forEach(id => document.getElementById(id).value = '');
+  estImageB64 = null;
+  document.getElementById('est-file').value = '';
+  document.getElementById('est-upload-ph').style.display = 'block';
+  document.getElementById('est-preview-img').style.display = 'none';
+  document.getElementById('est-img-scanning').style.display = 'none';
+  ['est-piece','est-metal','est-margin'].forEach(id => document.getElementById(id).value = id === 'est-margin' ? '60%' : '');
+  ['est-weight','est-labor','est-stone-cost'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('est-stone').value = '';
   document.getElementById('est-notes').value = '';
   document.getElementById('est-idle').style.display = 'flex';
   document.getElementById('est-spinner').style.display = 'none';
@@ -3428,7 +3614,7 @@ function resetEst() {
 }
 async function generateEst() {
   if (estBusy) return;
-  if (!anthropicKey) { document.getElementById('est-key-note').style.display = 'block'; return; }
+  if (!anthropicKey && !useServerKeys) { document.getElementById('est-key-note').style.display = 'block'; return; }
   document.getElementById('est-key-note').style.display = 'none';
   estBusy = true;
   document.getElementById('est-idle').style.display = 'none';
@@ -3436,38 +3622,67 @@ async function generateEst() {
   document.getElementById('est-spinner').style.display = 'flex';
   document.getElementById('est-gen-btn').style.opacity = '.5';
 
-  const piece  = document.getElementById('est-piece').value  || 'Jewelry piece';
-  const metal  = document.getElementById('est-metal').value  || '';
-  const weight = parseFloat(document.getElementById('est-weight').value) || 0;
-  const stone  = document.getElementById('est-stone').value  || '';
-  const labor  = parseFloat(document.getElementById('est-labor').value) || 0;
-  const margin = document.getElementById('est-margin').value || '60%';
-  const notes  = document.getElementById('est-notes').value.trim();
+  const piece     = document.getElementById('est-piece').value  || 'Jewelry piece';
+  const metal     = document.getElementById('est-metal').value  || '';
+  const weight    = parseFloat(document.getElementById('est-weight').value) || 0;
+  const stoneDesc = document.getElementById('est-stone').value.trim();
+  const stoneCost = parseFloat(document.getElementById('est-stone-cost').value) || 0;
+  const labor     = parseFloat(document.getElementById('est-labor').value) || 0;
+  const margin    = document.getElementById('est-margin').value || '60%';
+  const notes     = document.getElementById('est-notes').value.trim();
 
   const spotPerG   = metalSpot(metal) || 50;
   const metalCost  = +(weight * spotPerG).toFixed(2);
-  const stoneCost  = STONE_COST[stone] || 0;
-  const laborCost  = +(labor * 85).toFixed(2);  // $85/hr estimate
-  const overhead   = +((metalCost + stoneCost + laborCost) * 0.15).toFixed(2);
+  const laborCost  = +(labor * 75).toFixed(2);  // $75/hr bench jeweler rate
+  const overhead   = +((metalCost + stoneCost + laborCost) * 0.10).toFixed(2);
   const baseCost   = metalCost + stoneCost + laborCost + overhead;
   const marginPct  = parseInt(margin) / 100;
   const retailBase = +(baseCost / (1 - marginPct)).toFixed(0);
 
-  const sys = `You are ZipJeweler's pricing engine. Generate a clear, professional Good/Better/Best estimate.
+  const sys = `You are ZipJeweler's pricing engine. You produce accurate, realistic jewelry estimates based on ACTUAL manufacturing costs.
 
-Given cost breakdown, produce three tiers:
-[SUMMARY]...[/SUMMARY] — 1-2 sentence overview of the estimate and what drives the price range.
-[TIERS]...[/TIERS] — A JSON array of exactly 3 objects: [{tier:"Good",price:NNNN,label:"...",details:"..."},{tier:"Better",...},{tier:"Best",...}]
+CRITICAL PRICING RULES:
+- Prices must reflect real-world wholesale/manufacturing costs, NOT inflated retail markups.
+- Metal cost = weight × spot price per gram. This is straightforward.
+- Stone costs should reflect WHOLESALE JEWELER prices, not retail. Most accent stones are cheap ($30-80 each). Only large, high-quality center stones are expensive.
+- Labor at $75/hr for skilled bench work. Simple pieces: 1-3 hrs. Complex pieces: 4-8 hrs.
+- Overhead covers shop costs at 10% of (metal + stone + labor).
+- The "Better" tier should match the base cost calculation provided. Do NOT inflate it.
+- "Good" tier: 10-15% below — achieved by using slightly lower-grade materials or simpler execution.
+- "Best" tier: 15-25% above — premium upgrades (better stone clarity/color, finer finish, extra detail).
 
-The Good tier should be ~10-15% below the base retail. Better is the base retail. Best is 20-35% above with premium upgrades noted.
-In "details" briefly describe what distinguishes each tier (1-2 sentences, e.g. "14k white gold with VS2 diamond" vs "18k with VS1").
-Return ONLY valid JSON inside [TIERS]...[/TIERS] — no markdown, no extra keys.`;
+If an image is provided, use what you actually see to validate/correct the numbers. Most jewelry pieces are simpler and less costly than people expect. A typical gold ring with small accent stones retails for $500-$2,000, not $5,000+. Only large center diamonds or heavy gold pieces reach the thousands.
 
-  const userMsg = `Project: ${piece}\nMetal: ${metal||'unspecified'} @ ~$${spotPerG}/g × ${weight}g = $${metalCost}\nStone: ${stone||'none'} ~$${stoneCost}\nLabor: ${labor}hrs × $85 = $${laborCost}\nOverhead (15%): $${overhead}\nBase cost: $${baseCost.toFixed(0)}\nTarget margin: ${margin}\nEstimated retail: $${retailBase}\nNotes: ${notes||'none'}\n\nGenerate the summary and three pricing tiers.`;
+Output format:
+[SUMMARY]...[/SUMMARY] — 1-2 sentences on cost drivers and the price range.
+[TIERS]...[/TIERS] — JSON array of 3 objects: [{tier:"Good",price:NNN,label:"...",details:"..."},{tier:"Better",...},{tier:"Best",...}]
+
+"label": short tier name (e.g. "Standard", "Classic", "Premium")
+"details": 1-2 sentences on what distinguishes this tier — specific materials and quality grades.
+Return ONLY valid JSON in [TIERS]. No markdown.`;
+
+  const userText = `Project: ${piece}
+Metal: ${metal||'unspecified'} @ ~$${spotPerG}/g × ${weight}g = $${metalCost}
+Stone(s): ${stoneDesc||'none'} — wholesale cost ~$${stoneCost}
+Labor: ${labor}hrs × $75/hr = $${laborCost}
+Overhead (10%): $${overhead}
+Base manufacturing cost: $${baseCost.toFixed(0)}
+Target margin: ${margin}
+Calculated retail: $${retailBase}
+Notes: ${notes||'none'}
+
+Generate the summary and three pricing tiers. The Better tier should be close to $${retailBase}.`;
+
+  const userContent = estImageB64
+    ? [
+        { type: 'image', source: { type: 'base64', media_type: estImageType, data: estImageB64 } },
+        { type: 'text', text: userText + '\n\nReference image attached. Cross-check the calculated costs against what you see — if the piece looks simpler or more modest than the numbers suggest, adjust the tiers DOWN to be realistic.' }
+      ]
+    : userText;
 
   try {
     const res = await claudeAPI({ model:'claude-sonnet-4-20250514', max_tokens:700, system:sys,
-        messages:[{role:'user',content:userMsg}] });
+        messages:[{role:'user',content:userContent}] });
     if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e?.error?.message||'HTTP '+res.status); }
     const data = await res.json();
     const text = data.content?.[0]?.text || '';
@@ -3548,7 +3763,7 @@ function handleP3DUpload(input) {
 }
 async function generateP3D() {
   if (p3dBusy) return;
-  if (!anthropicKey) { document.getElementById('p3d-key-note').style.display = 'block'; return; }
+  if (!anthropicKey && !useServerKeys) { document.getElementById('p3d-key-note').style.display = 'block'; return; }
   document.getElementById('p3d-key-note').style.display = 'none';
   p3dBusy = true;
   document.getElementById('p3d-idle').style.display = 'none';
@@ -3740,66 +3955,166 @@ document.addEventListener('DOMContentLoaded', () => {
   if (r1) r1.classList.add('pf-render-selected');
 });
 
-/* ── Render from generated prompt (S2I) ── */
-async function renderS2I() {
-  const prompt = document.getElementById('s2i-prompt-text')?.textContent;
-  if (!prompt || prompt.length < 10) return;
-  const btn = document.getElementById('s2i-render-btn');
-  const placeholder = document.getElementById('s2i-render-placeholder');
-  const spinner = document.getElementById('s2i-render-spinner');
-  const errEl = document.getElementById('s2i-render-error');
-  const img = document.getElementById('s2i-render-img');
-  if (btn) btn.style.opacity = '.5';
-  if (placeholder) placeholder.style.display = 'none';
-  if (errEl) errEl.style.display = 'none';
-  if (img) img.style.display = 'none';
-  if (spinner) spinner.style.display = 'flex';
+/* ── Render from generated prompt (S2I) — uses Responses API for multi-turn editing ── */
+/* ── renderS2I() is now an alias for renderS2IDirect() ── */
+async function renderS2I(correctionText) { return renderS2IDirect(correctionText); }
+
+/* ── renderC2R() is now an alias for renderC2RDirect() ── */
+async function renderC2R() { return renderC2RDirect(); }
+
+/* ── Fidelity Grader — auto-grades render against source sketch/CAD ── */
+async function gradeFidelity(tool, sourceB64, sourceType, renderUrl, originalPrompt) {
+  const gradeEl = document.getElementById(tool + '-fidelity-grade');
+  if (!gradeEl) return;
+
+  gradeEl.style.display = 'block';
+  gradeEl.innerHTML = '<div style="display:flex;align-items:center;gap:6px;"><div style="width:14px;height:14px;border:2px solid rgba(207,181,132,.15);border-top-color:#CFB584;border-radius:50%;animation:ispin .8s linear infinite;"></div><span style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#3A3835;">Grading fidelity…</span></div>';
+
   try {
-    const res = await fetch(PROXY_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, aspect_ratio: '1:1' })
+    // Fetch the rendered image and convert to base64 for Claude vision
+    let renderB64 = null;
+    try {
+      const imgRes = await fetch(renderUrl);
+      const blob = await imgRes.blob();
+      renderB64 = await new Promise(resolve => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result.split(',')[1]);
+        r.readAsDataURL(blob);
+      });
+    } catch(e) { /* If we can't fetch the render, grade from URL description only */ }
+
+    const gradePrompt = `You are a jewelry render fidelity grader. Compare the SOURCE sketch/CAD (Image 1) against the AI RENDER (Image 2).
+
+Score each dimension from 0.0 to 1.0:
+- silhouette_match: Does the render preserve the exact outline/silhouette?
+- proportion_match: Are proportions (width ratios, thickness, taper) preserved?
+- stone_layout_match: Are stone count, placement, spacing, and size preserved?
+- setting_match: Is the setting type (prong, bezel, channel, etc.) preserved?
+- extra_element_penalty: 0.0 = no unwanted additions, higher = more hallucinated elements
+- material_accuracy: Does the metal color/finish match what was requested?
+
+Output ONLY this JSON — no other text:
+[GRADE]{"score_total":0.0,"scores":{"silhouette_match":0.0,"proportion_match":0.0,"stone_layout_match":0.0,"setting_match":0.0,"extra_element_penalty":0.0,"material_accuracy":0.0},"pass":true,"failure_modes":[],"correction_instructions":[]}[/GRADE]
+
+pass = true if score_total >= 0.75 and no single score below 0.5 (except extra_element_penalty which should be below 0.15).
+score_total = average of all scores (extra_element_penalty is inverted: 1.0 - penalty).
+failure_modes: use these exact terms if applicable: silhouette_drift, proportion_drift, stone_count_error, stone_scale_error, stone_placement_error, setting_type_error, added_ornamentation, missing_component, viewpoint_drift, material_error.
+correction_instructions: specific, actionable fixes for the next render pass.`;
+
+    const userContent = [];
+    // Image 1: source sketch
+    userContent.push({ type: 'image', source: { type: 'base64', media_type: sourceType || 'image/jpeg', data: sourceB64 } });
+    userContent.push({ type: 'text', text: 'Image 1 above is the SOURCE sketch/CAD reference.' });
+    // Image 2: render
+    if (renderB64) {
+      userContent.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: renderB64 } });
+      userContent.push({ type: 'text', text: 'Image 2 above is the AI RENDER output. Grade the fidelity of the render against the source.' });
+    } else {
+      userContent.push({ type: 'text', text: 'The render image could not be loaded for comparison. Grade as best you can from the prompt: ' + originalPrompt });
+    }
+
+    const res = await claudeAPI({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 500,
+      system: gradePrompt,
+      messages: [{ role: 'user', content: userContent }]
     });
+
+    if (!res.ok) throw new Error('Grade API error');
+
     const data = await res.json();
-    if (spinner) spinner.style.display = 'none';
-    if (!res.ok || !data.url) throw new Error(data.error || 'No image URL returned');
-    if (img) { img.src = data.url; img.style.display = 'block'; }
+    const text = data.content?.[0]?.text || '';
+    const gradeMatch = text.match(/\[GRADE\]([\s\S]*?)\[\/GRADE\]/);
+    let grade = null;
+    if (gradeMatch) {
+      try { grade = JSON.parse(gradeMatch[1].trim()); } catch(e) {}
+    }
+
+    if (!grade) {
+      gradeEl.innerHTML = '<span style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#3A3835;">Could not parse fidelity grade</span>';
+      return;
+    }
+
+    // Store grade and correction instructions for retry
+    window['_' + tool + 'Grade'] = grade;
+
+    // Render grade chips
+    const scoreColor = (s, invert) => {
+      const v = invert ? (1 - s) : s;
+      return v >= 0.85 ? '#4CAF70' : v >= 0.6 ? '#CFB584' : '#C9534B';
+    };
+
+    let html = '<div style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:' + (grade.pass ? '#4CAF70' : '#C9534B') + ';font-weight:700;margin-bottom:6px;">'
+      + (grade.pass ? '\u2713 FIDELITY PASS' : '\u2717 FIDELITY FAIL') + ' — ' + (grade.score_total * 100).toFixed(0) + '%</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
+
+    const labels = { silhouette_match: 'Silhouette', proportion_match: 'Proportions', stone_layout_match: 'Stones', setting_match: 'Setting', extra_element_penalty: 'Extra Elements', material_accuracy: 'Material' };
+    Object.entries(grade.scores || {}).forEach(([k, v]) => {
+      const isInvert = k === 'extra_element_penalty';
+      const color = scoreColor(v, isInvert);
+      const display = isInvert ? (v === 0 ? '100%' : (100 - v * 100).toFixed(0) + '%') : (v * 100).toFixed(0) + '%';
+      html += '<div style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:rgba(255,255,255,.04);border:1px solid ' + color + '33;border-radius:10px;">'
+        + '<span style="font-family:\'DM Sans\',sans-serif;font-size:8px;color:#3A3835;text-transform:uppercase;letter-spacing:.5px;">' + (labels[k] || k) + '</span>'
+        + '<span style="font-family:\'DM Sans\',sans-serif;font-size:9.5px;color:' + color + ';font-weight:600;">' + display + '</span>'
+        + '</div>';
+    });
+    html += '</div>';
+
+    // Show failure modes
+    if (grade.failure_modes?.length) {
+      html += '<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:3px;">';
+      grade.failure_modes.forEach(f => {
+        html += '<span style="font-family:\'DM Sans\',sans-serif;font-size:8px;padding:2px 6px;background:rgba(201,83,75,.08);border:1px solid rgba(201,83,75,.15);border-radius:8px;color:#C9534B;">' + f + '</span>';
+      });
+      html += '</div>';
+    }
+
+    // Show correction instructions
+    if (grade.correction_instructions?.length) {
+      html += '<div style="margin-top:5px;font-family:\'DM Sans\',sans-serif;font-size:9px;color:#3A3835;line-height:1.5;">';
+      grade.correction_instructions.forEach(c => { html += '\u2022 ' + c + '<br>'; });
+      html += '</div>';
+    }
+
+    gradeEl.innerHTML = html;
+
+    // Show retry button if failed
+    if (!grade.pass) {
+      const retryBtn = document.getElementById(tool + '-retry-btn');
+      if (retryBtn) {
+        retryBtn.style.display = 'inline-flex';
+        retryBtn.onclick = () => retryRender(tool);
+      }
+    }
+
   } catch(e) {
-    if (spinner) spinner.style.display = 'none';
-    if (errEl) { errEl.textContent = '\u26A0 ' + e.message; errEl.style.display = 'block'; }
+    gradeEl.innerHTML = '<span style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#3A3835;">Fidelity grade error: ' + e.message + '</span>';
   }
-  if (btn) btn.style.opacity = '1';
 }
 
-/* ── Render from generated prompt (C2R) ── */
-async function renderC2R() {
-  const prompt = document.getElementById('c2r-prompt-text')?.textContent;
-  if (!prompt || prompt.length < 10) return;
-  const btn = document.getElementById('c2r-render-btn');
-  const placeholder = document.getElementById('c2r-render-placeholder');
-  const spinner = document.getElementById('c2r-render-spinner');
-  const errEl = document.getElementById('c2r-render-error');
-  const img = document.getElementById('c2r-render-img');
-  if (btn) btn.style.opacity = '.5';
-  if (placeholder) placeholder.style.display = 'none';
-  if (errEl) errEl.style.display = 'none';
-  if (img) img.style.display = 'none';
-  if (spinner) spinner.style.display = 'flex';
-  try {
-    const res = await fetch(PROXY_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, aspect_ratio: '1:1' })
-    });
-    const data = await res.json();
-    if (spinner) spinner.style.display = 'none';
-    if (!res.ok || !data.url) throw new Error(data.error || 'No image URL returned');
-    if (img) { img.src = data.url; img.style.display = 'block'; }
-  } catch(e) {
-    if (spinner) spinner.style.display = 'none';
-    if (errEl) { errEl.textContent = '\u26A0 ' + e.message; errEl.style.display = 'block'; }
+/* ── Retry render with correction instructions ── */
+async function retryRender(tool) {
+  const grade = window['_' + tool + 'Grade'];
+  if (!grade?.correction_instructions?.length) return;
+
+  const corrections = grade.correction_instructions.map(c => '- ' + c).join('\n');
+
+  if (tool === 's2i') {
+    // S2I with Responses API: send corrections as a follow-up turn
+    // The previous_response_id chains to the last render, so the model
+    // sees the original sketch + prior render and applies corrections
+    const correctionPrompt = buildS2IInstruction(corrections
+      + '\n\nPreserve the exact silhouette, proportions, stone count, and structure from the original sketch.');
+    renderS2IDirect(correctionPrompt);
+  } else if (tool === 'c2r') {
+    // C2R with Responses API: send corrections as a follow-up turn
+    // The previous_response_id chains to the last render, so the model
+    // sees the original CAD image + prior render and applies corrections
+    const correctionPrompt = 'Fix these issues in the previous render. '
+      + 'Keep the exact same jewelry design — only correct these specific problems:\n\n'
+      + corrections;
+    renderC2RDirect(correctionPrompt);
   }
-  if (btn) btn.style.opacity = '1';
 }
 
 </script>
