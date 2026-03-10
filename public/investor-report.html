@@ -494,7 +494,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
   #pf-card .pf-render-thumb{height:80px;}
 }
 </style>
-<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.1.0/dist/model-viewer.min.js"></script>
 </head>
 <body>
 
@@ -1974,6 +1974,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                           style="width:100%;height:100%;"
                           camera-controls
                           auto-rotate
+                          loading="eager"
                           shadow-intensity="1"
                           environment-image="neutral"
                           exposure="1.2"
@@ -4667,9 +4668,29 @@ function p3dShowResults(data) {
   const thumbnail = document.getElementById('p3d-thumbnail');
 
   if (modelUrls.glb) {
-    viewer.setAttribute('src', modelUrls.glb);
+    // Proxy the GLB through our server to avoid CORS issues with model-viewer
+    const proxyBase = window.location.origin || '';
+    const proxiedGlb = proxyBase + '/api/proxy-asset?url=' + encodeURIComponent(modelUrls.glb);
+    viewer.setAttribute('src', proxiedGlb);
     viewer.style.display = 'block';
     thumbnail.style.display = 'none';
+
+    // Error handling: fall back to thumbnail if model-viewer fails to load
+    viewer.addEventListener('error', function onViewerError() {
+      viewer.removeEventListener('error', onViewerError);
+      console.warn('model-viewer failed to load GLB, trying direct URL...');
+      // Retry with direct URL in case proxy is the issue
+      viewer.setAttribute('src', modelUrls.glb);
+      viewer.addEventListener('error', function onDirectError() {
+        viewer.removeEventListener('error', onDirectError);
+        console.warn('model-viewer failed with direct URL too, showing thumbnail');
+        if (data.thumbnail_url) {
+          thumbnail.src = data.thumbnail_url;
+          thumbnail.style.display = 'block';
+          viewer.style.display = 'none';
+        }
+      });
+    });
   } else if (data.thumbnail_url) {
     // Fallback: show thumbnail if no GLB
     thumbnail.src = data.thumbnail_url;
