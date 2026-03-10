@@ -2,7 +2,7 @@
 // Next.js App Router API route — Meshy.ai Image-to-3D generation
 // Supports: submit task, poll status, retrieve model URLs
 
-const MESHY_BASE = 'https://api.meshy.ai/openapi/v2';
+const MESHY_BASE = 'https://api.meshy.ai/openapi/v1';
 
 export async function OPTIONS() {
   return new Response(null, {
@@ -68,8 +68,10 @@ async function handleCreate(body, meshyKey, corsHeaders) {
 
   const payload = {
     image_url,
+    ai_model: 'meshy-6',
     enable_pbr,
     should_remesh: true,
+    should_texture: true,
     topology,
     target_polycount,
   };
