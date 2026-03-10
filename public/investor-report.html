@@ -1550,6 +1550,22 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                   </div>
                 </div>
                 <div style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;">
+
+                  <!-- Image Upload Zone -->
+                  <div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:6px;">Reference Image <span style="color:#2E2C28;font-weight:400;letter-spacing:0;text-transform:none;">(optional)</span></div>
+                    <label for="est-file" id="est-drop" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:1.5px dashed rgba(255,255,255,.1);border-radius:10px;padding:16px 12px;cursor:pointer;transition:border-color .2s;min-height:90px;position:relative;" onmouseover="this.style.borderColor='rgba(201,83,75,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)'">
+                      <div id="est-upload-ph" style="text-align:center;">
+                        <div style="font-size:22px;margin-bottom:4px;opacity:.4;">📷</div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#4A4845;line-height:1.5;">Drop a photo to auto-detect specs<br><span style="color:#C9534B;font-weight:500;">or click to browse</span></div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#2E2C28;margin-top:3px;">AI will identify piece type, metal, stones & more</div>
+                      </div>
+                      <img id="est-preview-img" style="display:none;max-width:100%;max-height:120px;border-radius:6px;object-fit:contain;" />
+                      <div id="est-img-scanning" style="display:none;font-family:'DM Sans',sans-serif;font-size:9px;color:#C9534B;margin-top:4px;letter-spacing:.5px;">Scanning image…</div>
+                    </label>
+                    <input id="est-file" type="file" accept="image/*" style="display:none;" onchange="handleEstUpload(this)" />
+                  </div>
+
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                     <div>
                       <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Piece Type</div>
@@ -3404,6 +3420,84 @@ If an image is provided, describe what you see and let it inform the copy. Be sp
    TOOL 05 — QUICK ESTIMATE
 ══════════════════════════════════════════════════════ */
 let estOpen = false, estBusy = false;
+let estImageB64 = null, estImageType = 'image/jpeg';
+
+function handleEstUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  estImageType = file.type || 'image/jpeg';
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    estImageB64 = dataUrl.split(',')[1];
+    const img = document.getElementById('est-preview-img');
+    img.src = dataUrl;
+    img.style.display = 'block';
+    document.getElementById('est-upload-ph').style.display = 'none';
+    // Auto-scan if we have API access
+    if (anthropicKey || useServerKeys) scanEstImage();
+  };
+  reader.readAsDataURL(file);
+}
+
+async function scanEstImage() {
+  if (!estImageB64) return;
+  const scanEl = document.getElementById('est-img-scanning');
+  scanEl.style.display = 'block';
+  try {
+    const res = await claudeAPI({
+      model: 'claude-sonnet-4-20250514', max_tokens: 500,
+      system: `You are a jewelry appraiser AI. Analyze the image and identify specs for a cost estimate.
+Return ONLY a JSON object with these fields (omit any you cannot determine):
+{"piece_type":"...","metal":"...","metal_weight_g":N,"stone":"...","labor_hours":N,"notes":"..."}
+
+piece_type must be one of: Engagement Ring, Wedding Band, Pendant, Earrings (pair), Bracelet, Necklace, Brooch
+metal must be one of: 18k Yellow Gold, 18k White Gold, 18k Rose Gold, 14k Yellow Gold, 14k White Gold, Platinum, Sterling Silver
+stone must be one of: Diamond 0.5ct, Diamond 1.0ct, Diamond 1.5ct, Diamond 2.0ct, Sapphire 1ct, Emerald 1ct, Ruby 1ct, Morganite 2ct, or empty string if none visible
+metal_weight_g: estimated weight in grams based on piece size/type
+labor_hours: estimated labor hours for this complexity
+notes: brief description of notable features (e.g. pavé, engraving, filigree)
+
+Return ONLY valid JSON, no markdown, no explanation.`,
+      messages: [{ role: 'user', content: [
+        { type: 'image', source: { type: 'base64', media_type: estImageType, data: estImageB64 } },
+        { type: 'text', text: 'Identify this jewelry piece and estimate its specs for a cost quote.' }
+      ]}]
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '';
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const specs = JSON.parse(jsonMatch[0]);
+      // Autofill form fields
+      if (specs.piece_type) setSelectVal('est-piece', specs.piece_type);
+      if (specs.metal)      setSelectVal('est-metal', specs.metal);
+      if (specs.metal_weight_g) document.getElementById('est-weight').value = specs.metal_weight_g;
+      if (specs.stone)      setSelectVal('est-stone', specs.stone);
+      if (specs.labor_hours) document.getElementById('est-labor').value = specs.labor_hours;
+      if (specs.notes)      document.getElementById('est-notes').value = specs.notes;
+    }
+  } catch(e) { /* silent fail — user can still fill manually */ }
+  scanEl.style.display = 'none';
+}
+
+// Helper to set a <select> value, matching option text if value attr isn't set
+function setSelectVal(id, val) {
+  const sel = document.getElementById(id);
+  if (!sel || !val) return;
+  // Try exact value match first
+  for (const opt of sel.options) {
+    if (opt.value === val || opt.textContent === val) { sel.value = opt.value || opt.textContent; return; }
+  }
+  // Try partial match
+  const lower = val.toLowerCase();
+  for (const opt of sel.options) {
+    if (opt.textContent.toLowerCase().includes(lower) || lower.includes(opt.textContent.toLowerCase())) {
+      sel.value = opt.value || opt.textContent; return;
+    }
+  }
+}
 
 // Approximate spot prices (USD) — production uses live API
 const SPOT = { gold18k:58, gold14k:45, platinum:33, silver:0.8 };
@@ -3430,6 +3524,11 @@ function toggleEst() {
 }
 function resetEst() {
   estOpen = false; estBusy = false;
+  estImageB64 = null;
+  document.getElementById('est-file').value = '';
+  document.getElementById('est-upload-ph').style.display = 'block';
+  document.getElementById('est-preview-img').style.display = 'none';
+  document.getElementById('est-img-scanning').style.display = 'none';
   ['est-piece','est-metal','est-stone','est-margin'].forEach(id => document.getElementById(id).value = id === 'est-margin' ? '60%' : '');
   ['est-weight','est-labor'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('est-notes').value = '';
@@ -3476,11 +3575,18 @@ The Good tier should be ~10-15% below the base retail. Better is the base retail
 In "details" briefly describe what distinguishes each tier (1-2 sentences, e.g. "14k white gold with VS2 diamond" vs "18k with VS1").
 Return ONLY valid JSON inside [TIERS]...[/TIERS] — no markdown, no extra keys.`;
 
-  const userMsg = `Project: ${piece}\nMetal: ${metal||'unspecified'} @ ~$${spotPerG}/g × ${weight}g = $${metalCost}\nStone: ${stone||'none'} ~$${stoneCost}\nLabor: ${labor}hrs × $85 = $${laborCost}\nOverhead (15%): $${overhead}\nBase cost: $${baseCost.toFixed(0)}\nTarget margin: ${margin}\nEstimated retail: $${retailBase}\nNotes: ${notes||'none'}\n\nGenerate the summary and three pricing tiers.`;
+  const userText = `Project: ${piece}\nMetal: ${metal||'unspecified'} @ ~$${spotPerG}/g × ${weight}g = $${metalCost}\nStone: ${stone||'none'} ~$${stoneCost}\nLabor: ${labor}hrs × $85 = $${laborCost}\nOverhead (15%): $${overhead}\nBase cost: $${baseCost.toFixed(0)}\nTarget margin: ${margin}\nEstimated retail: $${retailBase}\nNotes: ${notes||'none'}\n\nGenerate the summary and three pricing tiers.`;
+
+  const userContent = estImageB64
+    ? [
+        { type: 'image', source: { type: 'base64', media_type: estImageType, data: estImageB64 } },
+        { type: 'text', text: userText + '\n\nA reference image of the piece is attached — use visible details (complexity, stone count, metalwork) to refine your estimate.' }
+      ]
+    : userText;
 
   try {
     const res = await claudeAPI({ model:'claude-sonnet-4-20250514', max_tokens:700, system:sys,
-        messages:[{role:'user',content:userMsg}] });
+        messages:[{role:'user',content:userContent}] });
     if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e?.error?.message||'HTTP '+res.status); }
     const data = await res.json();
     const text = data.content?.[0]?.text || '';
