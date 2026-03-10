@@ -38,7 +38,7 @@ export async function POST(request) {
   const fullPrompt = qualityPrefix + prompt.trim();
 
   const AUTH = `Key ${keyId}:${keySecret}`;
-  const BASE = 'https://api.cloud.higgsfield.ai';
+  const BASE = 'https://platform.higgsfield.ai';
 
   // Submit job
   let requestId;
@@ -65,11 +65,11 @@ export async function POST(request) {
       const pollData = await pollRes.json();
       const status = pollData?.status;
       if (status === 'completed' || status === 'succeeded') {
-        const url = pollData?.result?.images?.[0]?.url || pollData?.results?.raw?.url || pollData?.output?.[0] || pollData?.image_url;
+        const url = pollData?.images?.[0]?.url || pollData?.result?.images?.[0]?.url || pollData?.results?.raw?.url || pollData?.output?.[0] || pollData?.image_url;
         if (!url) return Response.json({ error: 'Completed but no image URL', raw: pollData }, { status: 500, headers: corsHeaders });
         return Response.json({ url }, { headers: corsHeaders });
       }
-      if (status === 'failed' || status === 'error' || status === 'cancelled') {
+      if (status === 'failed' || status === 'error' || status === 'cancelled' || status === 'nsfw') {
         return Response.json({ error: `Job ${status}`, raw: pollData }, { status: 500, headers: corsHeaders });
       }
     } catch (e) {
