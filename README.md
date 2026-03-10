@@ -14,7 +14,7 @@ SDK explicitly blocks browser calls.
 ```
 zipjeweler-proxy/
 ├── api/
-│   └── generate-render.js   ← the only serverless function
+│   └── generate-render.mjs  ← the only serverless function
 ├── package.json
 ├── vercel.json              ← CORS headers + 60s timeout
 └── README.md
