@@ -2510,7 +2510,7 @@ const PAGES = {
 
 // ── ZipJeweler Render Proxy ───────────────────────────────
 // Set this to your Vercel deployment URL after deploying zipjeweler-proxy
-const PROXY_URL = ''; // e.g. 'https://zipjeweler-proxy.vercel.app/api/generate-render'
+const PROXY_URL = 'https://zipjeweler-proxy.vercel.app/api/generate-render'; // e.g. 'https://zipjeweler-proxy.vercel.app/api/generate-render'
 
 function go(id) {
   Object.values(PAGES).forEach(p => { const e = document.getElementById(p); if(e) e.classList.remove('on'); });
