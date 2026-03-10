@@ -113,8 +113,21 @@ async function responsesGenerate({ openaiKey, prompt, hasInputImage, input_image
   // Build input content
   let input;
 
-  if (previous_response_id) {
-    // Multi-turn correction: images already in context from previous response
+  if (previous_response_id && mask_image) {
+    // Multi-turn with mask: send mask image + descriptive prompt
+    const maskDataUrl = mask_image.startsWith('data:')
+      ? mask_image
+      : `data:image/png;base64,${mask_image}`;
+    const maskPrompt = prompt + '\n\nThe attached image is an editing mask. White regions indicate areas to modify. Black regions must be preserved exactly as they are in the previous image.';
+    input = [{
+      role: 'user',
+      content: [
+        { type: 'input_image', image_url: maskDataUrl },
+        { type: 'input_text', text: maskPrompt },
+      ]
+    }];
+  } else if (previous_response_id) {
+    // Multi-turn correction without mask: images already in context from previous response
     input = prompt;
   } else if (hasInputImage) {
     // First turn with image(s): include them in the user message
@@ -134,14 +147,7 @@ async function responsesGenerate({ openaiKey, prompt, hasInputImage, input_image
     if (input_image_3) addImage(input_image_3);
     if (input_image_4) addImage(input_image_4);
 
-    // Add mask description if provided (Responses API doesn't use mask directly,
-    // but we can describe it in the prompt for the model's understanding)
-    let fullPrompt = prompt;
-    if (mask_image) {
-      fullPrompt += '\n\nA mask has been provided — edit only the masked (transparent) region of the image while preserving everything else.';
-    }
-
-    content.push({ type: 'input_text', text: fullPrompt });
+    content.push({ type: 'input_text', text: prompt });
 
     input = [{ role: 'user', content }];
   } else {
@@ -163,8 +169,10 @@ async function responsesGenerate({ openaiKey, prompt, hasInputImage, input_image
   // action: "edit" forces editing the input image
   // action: "generate" forces generating a new image
   // action: "auto" lets the model decide (default)
-  if (action && action !== 'auto') {
-    toolConfig.action = action;
+  // Force edit when mask is provided
+  const effectiveAction = mask_image ? 'edit' : action;
+  if (effectiveAction && effectiveAction !== 'auto') {
+    toolConfig.action = effectiveAction;
   }
 
   const requestBody = {

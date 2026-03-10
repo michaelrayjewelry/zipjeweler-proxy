@@ -29,6 +29,7 @@ export async function POST(request) {
   const {
     prompt,
     input_image,            // base64 image (CAD screenshot or sketch)
+    mask_image,             // mask for targeted editing (white = change, black = keep)
     previous_response_id,   // for multi-turn corrections
     action = 'auto',        // "edit" = force edit input image, "generate" = new image, "auto" = model decides
     quality = 'high',
@@ -50,6 +51,7 @@ export async function POST(request) {
       openaiKey,
       prompt: prompt.trim(),
       input_image,
+      mask_image,
       previous_response_id,
       action,
       quality,
@@ -63,7 +65,7 @@ export async function POST(request) {
   }
 }
 
-async function responsesGenerate({ openaiKey, prompt, input_image, previous_response_id, action, quality, size, input_fidelity }) {
+async function responsesGenerate({ openaiKey, prompt, input_image, mask_image, previous_response_id, action, quality, size, input_fidelity }) {
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${openaiKey}`,
@@ -72,7 +74,20 @@ async function responsesGenerate({ openaiKey, prompt, input_image, previous_resp
   // Build input content — image + text prompt
   let input;
 
-  if (previous_response_id) {
+  if (previous_response_id && mask_image) {
+    // Multi-turn with mask: send mask image + descriptive prompt
+    const maskDataUrl = mask_image.startsWith('data:')
+      ? mask_image
+      : `data:image/png;base64,${mask_image}`;
+    const maskPrompt = prompt + '\n\nThe attached image is an editing mask. White regions indicate areas to modify. Black regions must be preserved exactly as they are in the previous image.';
+    input = [{
+      role: 'user',
+      content: [
+        { type: 'input_image', image_url: maskDataUrl },
+        { type: 'input_text', text: maskPrompt },
+      ]
+    }];
+  } else if (previous_response_id) {
     // Multi-turn correction: image is already in context from the previous response
     input = prompt;
   } else if (input_image) {
@@ -112,9 +127,10 @@ async function responsesGenerate({ openaiKey, prompt, input_image, previous_resp
   // action: "edit" forces the model to edit the input image
   // action: "generate" forces generating a new image
   // action: "auto" lets the model decide (default)
-  // Only set action for gpt-image-1.5 / chatgpt-image-latest compatible models
-  if (action && action !== 'auto') {
-    toolConfig.action = action;
+  // Force edit when mask is provided
+  const effectiveAction = mask_image ? 'edit' : action;
+  if (effectiveAction && effectiveAction !== 'auto') {
+    toolConfig.action = effectiveAction;
   }
 
   const requestBody = {

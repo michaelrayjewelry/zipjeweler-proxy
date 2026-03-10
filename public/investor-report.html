@@ -374,6 +374,19 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
 .ifield-row{transition:background .3s;}
 .ifield-row.lit{animation:ifield-flash .7s ease;}
 
+/* ══ MASK EDITOR ══════════════════════════════════════════════════════ */
+#mask-canvas{position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;touch-action:none;}
+#mask-toolbar{display:none;padding:8px 12px;background:#141410;border-top:1px solid rgba(255,255,255,.06);gap:8px;align-items:center;flex-wrap:wrap;font-family:'DM Sans',sans-serif;font-size:9px;color:#9A958D;}
+#mask-toolbar button{padding:4px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#D0CCC5;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;cursor:pointer;transition:all .15s;letter-spacing:.5px;}
+#mask-toolbar button:hover{background:rgba(255,255,255,.1);}
+#mask-toolbar button.active{background:rgba(207,181,132,.15);border-color:rgba(207,181,132,.35);color:#CFB584;}
+#mask-toolbar .mask-separator{width:1px;height:18px;background:rgba(255,255,255,.06);}
+#evolve-btn{padding:6px 16px !important;background:rgba(207,181,132,.12) !important;border:1px solid rgba(207,181,132,.25) !important;color:#CFB584 !important;letter-spacing:1.5px !important;text-transform:uppercase;}
+#evolve-btn:hover{background:rgba(207,181,132,.22) !important;}
+#mask-toolbar input[type=range]{width:60px;accent-color:#CFB584;height:3px;}
+#evolve-prompt{flex:1;min-width:120px;padding:5px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#E8E4DD;font-family:'DM Sans',sans-serif;font-size:9.5px;outline:none;}
+#evolve-prompt:focus{border-color:rgba(207,181,132,.4);}
+
 /* Key input prompt */
 #ik-prompt{padding:40px 28px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0F0F0D;min-height:300px;}
 #ik-prompt label{font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#5A5650;font-weight:600;}
@@ -818,7 +831,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                     <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;">AI Render</div>
                     <button id="render-btn" onclick="generateRender()" style="display:none;padding:5px 12px;background:rgba(207,181,132,.12);border:1px solid rgba(207,181,132,.25);border-radius:14px;color:#CFB584;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(207,181,132,.2)'" onmouseout="this.style.background='rgba(207,181,132,.12)'">✦ Generate</button>
                   </div>
-                  <div id="render-img-wrap" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;">
+                  <div id="render-img-wrap" style="position:relative;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;">
                     <div id="render-placeholder" style="text-align:center;padding:16px;">
                       <div style="font-size:22px;margin-bottom:6px;opacity:.25;">✦</div>
                       <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:#2A2825;line-height:1.6;">Render generates after<br>brief is ready</div>
@@ -830,6 +843,21 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                       <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;color:#2A2825;margin-top:2px;">The render prompt is shown in chat ↙</div>
                     </div>
                     <img id="render-img" style="display:none;width:100%;height:100%;object-fit:cover;" alt="AI render" />
+                    <canvas id="mask-canvas" style="display:none;"></canvas>
+                  </div>
+                  <!-- Mask editor toolbar -->
+                  <div id="mask-toolbar">
+                    <button id="mask-mode-change" class="active" onclick="setMaskMode('change')">Mark Changes</button>
+                    <button id="mask-mode-keep" onclick="setMaskMode('keep')">Mark Keep</button>
+                    <div class="mask-separator"></div>
+                    <button id="mask-eraser-btn" onclick="toggleMaskEraser()">Eraser</button>
+                    <input type="range" id="mask-brush-size" min="5" max="80" value="30" oninput="maskBrushSize=+this.value" title="Brush size" />
+                    <div class="mask-separator"></div>
+                    <button onclick="maskUndo()">Undo</button>
+                    <button onclick="maskClear()">Clear</button>
+                    <div class="mask-separator"></div>
+                    <input type="text" id="evolve-prompt" placeholder="e.g. 'Change center stone to emerald'" />
+                    <button id="evolve-btn" onclick="evolveRender()">✦ Evolve Concept</button>
                   </div>
                   <div id="render-no-key" style="display:none;margin-top:6px;font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;text-align:center;line-height:1.5;">Add a Higgsfield key to enable renders</div>
                 </div>
@@ -2619,6 +2647,17 @@ let isLoading= false;
 let history  = [];
 let fieldValues = {};
 
+/* ── Mask editor state ── */
+let maskCtx = null;
+let maskMode = 'change';        // 'change' or 'keep'
+let maskBrushSize = 30;
+let maskDrawing = false;
+let maskEraser = false;
+let maskHistory = [];            // ImageData snapshots for undo
+let lastResponseId = null;       // from generate-render response
+let lastRenderedImageB64 = null; // store for mask compositing
+let maskHasStrokes = false;
+
 /* ── Toggle ── */
 function toggleImagine() {
   const p = document.getElementById('imagine-preview');
@@ -2829,6 +2868,258 @@ Write the FLUX image generation prompt now.`
   return parts.join(', ');
 }
 
+/* ══ MASK EDITOR — zone-based inpainting ══════════════════════════════ */
+
+function initMaskCanvas() {
+  const canvas = document.getElementById('mask-canvas');
+  const img = document.getElementById('render-img');
+  if (!canvas || !img) return;
+
+  // Size canvas to match displayed image
+  const rect = img.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+  canvas.style.display = 'block';
+  maskCtx = canvas.getContext('2d');
+  maskCtx.lineCap = 'round';
+  maskCtx.lineJoin = 'round';
+  maskHistory = [];
+  maskHasStrokes = false;
+  maskEraser = false;
+  document.getElementById('mask-eraser-btn').classList.remove('active');
+
+  // Show toolbar
+  document.getElementById('mask-toolbar').style.display = 'flex';
+
+  // Pointer events for drawing
+  canvas.onpointerdown = function(e) {
+    e.preventDefault();
+    maskDrawing = true;
+    // Save state for undo before stroke
+    maskHistory.push(maskCtx.getImageData(0, 0, canvas.width, canvas.height));
+    if (maskHistory.length > 30) maskHistory.shift();
+    const pos = getMaskPos(e);
+    maskCtx.beginPath();
+    maskCtx.moveTo(pos.x, pos.y);
+    drawMaskDot(pos.x, pos.y);
+  };
+  canvas.onpointermove = function(e) {
+    if (!maskDrawing) return;
+    e.preventDefault();
+    const pos = getMaskPos(e);
+    drawMaskLine(pos.x, pos.y);
+  };
+  canvas.onpointerup = function(e) {
+    maskDrawing = false;
+    maskHasStrokes = true;
+  };
+  canvas.onpointerleave = function(e) {
+    maskDrawing = false;
+  };
+
+  // Handle resize
+  if (window._maskResizeObs) window._maskResizeObs.disconnect();
+  window._maskResizeObs = new ResizeObserver(() => {
+    const r = img.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0 && (canvas.width !== r.width || canvas.height !== r.height)) {
+      // Save current drawing, resize, restore
+      const data = maskCtx.getImageData(0, 0, canvas.width, canvas.height);
+      const tmpC = document.createElement('canvas');
+      tmpC.width = canvas.width; tmpC.height = canvas.height;
+      tmpC.getContext('2d').putImageData(data, 0, 0);
+      canvas.width = r.width; canvas.height = r.height;
+      maskCtx.drawImage(tmpC, 0, 0, tmpC.width, tmpC.height, 0, 0, canvas.width, canvas.height);
+      maskCtx.lineCap = 'round';
+      maskCtx.lineJoin = 'round';
+    }
+  });
+  window._maskResizeObs.observe(img);
+}
+
+function getMaskPos(e) {
+  const canvas = document.getElementById('mask-canvas');
+  const rect = canvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+function drawMaskDot(x, y) {
+  if (maskEraser) {
+    maskCtx.globalCompositeOperation = 'destination-out';
+    maskCtx.fillStyle = 'rgba(0,0,0,1)';
+  } else {
+    maskCtx.globalCompositeOperation = 'source-over';
+    maskCtx.fillStyle = maskMode === 'change' ? 'rgba(200,60,50,0.4)' : 'rgba(60,180,80,0.4)';
+  }
+  maskCtx.beginPath();
+  maskCtx.arc(x, y, maskBrushSize / 2, 0, Math.PI * 2);
+  maskCtx.fill();
+}
+
+function drawMaskLine(x, y) {
+  if (maskEraser) {
+    maskCtx.globalCompositeOperation = 'destination-out';
+    maskCtx.strokeStyle = 'rgba(0,0,0,1)';
+  } else {
+    maskCtx.globalCompositeOperation = 'source-over';
+    maskCtx.strokeStyle = maskMode === 'change' ? 'rgba(200,60,50,0.4)' : 'rgba(60,180,80,0.4)';
+  }
+  maskCtx.lineWidth = maskBrushSize;
+  maskCtx.lineTo(x, y);
+  maskCtx.stroke();
+  maskCtx.beginPath();
+  maskCtx.moveTo(x, y);
+}
+
+function setMaskMode(mode) {
+  maskMode = mode;
+  maskEraser = false;
+  document.getElementById('mask-mode-change').classList.toggle('active', mode === 'change');
+  document.getElementById('mask-mode-keep').classList.toggle('active', mode === 'keep');
+  document.getElementById('mask-eraser-btn').classList.remove('active');
+}
+
+function toggleMaskEraser() {
+  maskEraser = !maskEraser;
+  document.getElementById('mask-eraser-btn').classList.toggle('active', maskEraser);
+  if (maskEraser) {
+    document.getElementById('mask-mode-change').classList.remove('active');
+    document.getElementById('mask-mode-keep').classList.remove('active');
+  } else {
+    document.getElementById('mask-mode-' + maskMode).classList.add('active');
+  }
+}
+
+function maskUndo() {
+  if (!maskHistory.length || !maskCtx) return;
+  const prev = maskHistory.pop();
+  const canvas = document.getElementById('mask-canvas');
+  maskCtx.putImageData(prev, 0, 0);
+  if (!maskHistory.length) maskHasStrokes = false;
+}
+
+function maskClear() {
+  if (!maskCtx) return;
+  const canvas = document.getElementById('mask-canvas');
+  maskCtx.clearRect(0, 0, canvas.width, canvas.height);
+  maskHistory = [];
+  maskHasStrokes = false;
+}
+
+function hideMaskEditor() {
+  const canvas = document.getElementById('mask-canvas');
+  if (canvas) canvas.style.display = 'none';
+  document.getElementById('mask-toolbar').style.display = 'none';
+  maskClear();
+}
+
+/* ── Export mask as black/white PNG ── */
+function exportMask() {
+  const canvas = document.getElementById('mask-canvas');
+  if (!canvas || !maskCtx) return null;
+
+  const w = canvas.width, h = canvas.height;
+  const src = maskCtx.getImageData(0, 0, w, h);
+  const tmp = document.createElement('canvas');
+  tmp.width = w; tmp.height = h;
+  const ctx = tmp.getContext('2d');
+
+  // Detect which modes were used by checking pixel colors
+  let hasChange = false, hasKeep = false;
+  for (let i = 0; i < src.data.length; i += 4) {
+    if (src.data[i + 3] < 30) continue; // transparent = untouched
+    const r = src.data[i], g = src.data[i + 1];
+    if (r > 100 && g < 100) hasChange = true;  // red = change
+    if (g > 100 && r < 100) hasKeep = true;     // green = keep
+  }
+
+  // Fill black (keep everything by default)
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, w, h);
+
+  const out = ctx.getImageData(0, 0, w, h);
+  for (let i = 0; i < src.data.length; i += 4) {
+    if (src.data[i + 3] < 30) {
+      // Untouched pixel: if only "keep" mode was used, untouched = change (white)
+      if (hasKeep && !hasChange) {
+        out.data[i] = 255; out.data[i + 1] = 255; out.data[i + 2] = 255;
+      }
+      continue;
+    }
+    const r = src.data[i], g = src.data[i + 1];
+    if (r > 100 && g < 100) {
+      // Red zone = change → white
+      out.data[i] = 255; out.data[i + 1] = 255; out.data[i + 2] = 255;
+    }
+    // Green zone = keep → stays black
+    // If only keep was used, green = keep → stays black (correct)
+  }
+  ctx.putImageData(out, 0, 0);
+  return tmp.toDataURL('image/png');
+}
+
+/* ── Evolve Concept — re-render with mask ── */
+async function evolveRender() {
+  if (!lastResponseId) {
+    addBubble('assistant', 'Generate a render first before evolving.');
+    return;
+  }
+  if (!maskHasStrokes) {
+    addBubble('assistant', 'Draw on the image to mark areas you want to change or keep, then click Evolve.');
+    return;
+  }
+
+  const maskB64 = exportMask();
+  if (!maskB64) return;
+
+  const promptInput = document.getElementById('evolve-prompt');
+  const userPrompt = (promptInput.value || '').trim();
+  const prompt = userPrompt || 'Modify only the highlighted regions while preserving everything else. Maintain the same jewelry style, lighting, and composition.';
+
+  // Show loading
+  const btn = document.getElementById('evolve-btn');
+  btn.textContent = 'Evolving…';
+  btn.style.opacity = '.5';
+  btn.style.pointerEvents = 'none';
+
+  addBubble('assistant', '✦ Evolving concept' + (userPrompt ? ': "' + userPrompt + '"' : '…'));
+
+  try {
+    const res = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        mask_image: maskB64,
+        previous_response_id: lastResponseId,
+        action: 'edit',
+        aspect_ratio: '1:1',
+        quality: 'high'
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.url) throw new Error(data.error || 'No image returned');
+
+    // Update image
+    const img = document.getElementById('render-img');
+    img.src = data.url;
+    lastResponseId = data.response_id || lastResponseId;
+    lastRenderedImageB64 = data.url;
+
+    // Clear mask for next iteration
+    maskClear();
+    promptInput.value = '';
+    addBubble('assistant', '✦ Concept evolved!');
+
+  } catch (e) {
+    addBubble('assistant', '⚠️ Evolve failed: ' + e.message);
+  }
+
+  btn.textContent = '✦ Evolve Concept';
+  btn.style.opacity = '1';
+  btn.style.pointerEvents = 'auto';
+}
+
 /* ── Render — requires server-side backend ── */
 async function generateRender() {
   // No proxy configured yet — show helpful message
@@ -2883,12 +3174,21 @@ async function generateRender() {
     const img = document.getElementById('render-img');
     img.src = data.url;
     img.style.display = 'block';
-    addBubble('assistant', '\u2728 Render complete!');
+    addBubble('assistant', '\u2728 Render complete! Draw on the image to mark zones, then click Evolve Concept to refine.');
+
+    // Store response context for mask-based editing
+    lastResponseId = data.response_id || null;
+    lastRenderedImageB64 = data.url;
+
+    // Init mask editor after image loads
+    img.onload = function() { initMaskCanvas(); img.onload = null; };
+    if (img.complete) initMaskCanvas();
 
   } catch(e) {
     spinnerDiv.style.display = 'none';
     document.getElementById('render-backend-msg').style.display = 'flex';
     addBubble('assistant', '\u26a0\ufe0f Render failed: ' + e.message);
+    hideMaskEditor();
   }
 
   if (btn) btn.style.opacity = '1';
