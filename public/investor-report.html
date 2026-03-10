@@ -427,6 +427,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
   #s2i-shell > div:last-child{display:none;}
 }
 @media(max-width:720px){
+  #mod-shell{grid-template-columns:1fr !important;}
+  #mod-shell > div:last-child{display:none;}
+}
+@media(max-width:720px){
   #imagine-shell{grid-template-columns:1fr !important;}
   #imagine-brief-col{display:none !important;}
   .ic-header{grid-template-columns:1fr !important;}
@@ -2032,6 +2036,171 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
             <div class="tf">Clears the entire backlog of loose files and ideas from your phone or desktop</div>
           </div>
           <div class="tc-footer"><div class="tc-layer">AI Studio</div><span class="pill pill-build">◐ Building Now</span></div>
+        </div>
+
+        <!-- MODIFY — FULL WIDTH WITH LIVE PREVIEW -->
+        <div class="tc" id="mod-card" style="border-top:3px solid var(--coral);grid-column:1/-1;padding:28px 24px;">
+
+          <!-- Info header -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:start;margin-bottom:20px;">
+            <div>
+              <div class="tc-top" style="margin-bottom:12px;"><div class="tc-icon">🎨</div><div class="tc-num">Tool 09</div></div>
+              <div class="tc-name" style="font-size:20px;margin-bottom:8px;">Modify</div>
+              <div class="tc-desc">Upload any jewelry render or product photo and selectively edit specific areas using inpainting. Paint directly on the image to mark regions you want changed or preserved, describe what you want, and the AI regenerates only those zones — keeping everything else pixel-perfect.</div>
+            </div>
+            <div class="tc-feats" style="margin-bottom:0;padding-top:48px;">
+              <div class="tf">Paint masks directly on the image — red to change, green to keep</div>
+              <div class="tf">Describe modifications in plain language: swap stones, change metal, adjust details</div>
+              <div class="tf">Iterative editing — refine the same image across multiple rounds of changes</div>
+              <div class="tf">Brush size &amp; eraser tools for precise zone control</div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="tc-footer" style="margin-bottom:20px;">
+            <div class="tc-layer">AI Studio</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <button id="mod-toggle" onclick="toggleMod()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 18px;background:var(--coral);color:#fff;border:none;border-radius:20px;font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                <span id="mod-toggle-icon" style="font-size:12px;">&#9654;</span>
+                <span id="mod-toggle-txt">Try Modify</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Preview Panel -->
+          <div id="mod-preview" style="display:none;border-radius:14px;overflow:hidden;border:1px solid rgba(0,0,0,.15);box-shadow:0 12px 50px rgba(0,0,0,.22);">
+
+            <!-- Chrome bar -->
+            <div style="background:#141410;padding:11px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06);">
+              <div style="display:flex;gap:6px;flex-shrink:0;">
+                <div style="width:11px;height:11px;border-radius:50%;background:#FF5F57;"></div>
+                <div style="width:11px;height:11px;border-radius:50%;background:#FFBD2E;"></div>
+                <div style="width:11px;height:11px;border-radius:50%;background:#28C840;"></div>
+              </div>
+              <div style="flex:1;text-align:center;">
+                <span style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:3px 14px;">
+                  <span style="width:8px;height:8px;border-radius:50%;background:#C9534B;display:inline-block;opacity:.7;"></span>
+                  <span style="font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.5px;">zipjeweler.com/modify</span>
+                </span>
+              </div>
+              <button onclick="resetMod()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:5px;color:rgba(255,255,255,.35);cursor:pointer;font-size:12px;padding:3px 8px;font-family:'DM Sans',sans-serif;" onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">&#8635; Reset</button>
+            </div>
+
+            <!-- App Shell: upload+mask | output -->
+            <div id="mod-shell" style="display:grid;grid-template-columns:1fr 1fr;background:#0F0F0D;min-height:520px;">
+
+              <!-- LEFT: Upload + Mask + Controls -->
+              <div style="display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.05);overflow:hidden;">
+
+                <!-- Header -->
+                <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:12px;flex-shrink:0;">
+                  <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(201,83,75,.2),rgba(201,83,75,.07));border:1.5px solid rgba(201,83,75,.35);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">🎨</div>
+                  <div>
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;color:#E8E4DD;">Modify</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#47453F;margin-top:1px;">Upload Image → Paint Mask → Describe Changes</div>
+                  </div>
+                </div>
+
+                <div style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;">
+
+                  <!-- Upload zone -->
+                  <div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:8px;">Source Image</div>
+                    <label for="mod-file" id="mod-drop" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1.5px dashed rgba(255,255,255,.1);border-radius:10px;padding:24px 16px;cursor:pointer;transition:border-color .2s;min-height:140px;position:relative;" onmouseover="this.style.borderColor='rgba(201,83,75,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)'">
+                      <div id="mod-upload-ph" style="text-align:center;">
+                        <div style="font-size:28px;margin-bottom:6px;opacity:.4;">📷</div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:12px;color:#4A4845;line-height:1.6;">Drop a render or photo here<br><span style="color:#C9534B;font-weight:500;">or click to browse</span></div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:#2E2C28;margin-top:5px;">PNG, JPG, WEBP — any product image</div>
+                      </div>
+                      <img id="mod-preview-img" style="display:none;max-width:100%;max-height:200px;border-radius:6px;object-fit:contain;" />
+                    </label>
+                    <input id="mod-file" type="file" accept="image/*" style="display:none;" onchange="handleModUpload(this)" />
+                  </div>
+
+                  <!-- Mask editor area (shown after upload) -->
+                  <div id="mod-mask-section" style="display:none;">
+                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:8px;">Paint Mask on Image</div>
+                    <div id="mod-canvas-wrap" style="position:relative;width:100%;border-radius:10px;overflow:hidden;border:1px solid rgba(112,80,168,.15);background:#1A1A1A;">
+                      <img id="mod-mask-img" style="width:100%;display:block;" />
+                      <canvas id="mod-mask-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;touch-action:none;"></canvas>
+                    </div>
+                    <!-- Mask toolbar -->
+                    <div id="mod-mask-toolbar" style="display:flex;padding:8px 12px;background:#141410;border:1px solid rgba(255,255,255,.06);border-top:none;border-radius:0 0 10px 10px;gap:8px;align-items:center;flex-wrap:wrap;font-family:'DM Sans',sans-serif;font-size:9px;color:#9A958D;">
+                      <button id="mod-mode-change" class="active" onclick="setModMaskMode('change')" style="padding:4px 10px;background:rgba(200,60,50,.15);border:1px solid rgba(200,60,50,.35);border-radius:10px;color:#E07060;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;cursor:pointer;transition:all .15s;letter-spacing:.5px;">&#9679; Change</button>
+                      <button id="mod-mode-keep" onclick="setModMaskMode('keep')" style="padding:4px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#D0CCC5;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;cursor:pointer;transition:all .15s;letter-spacing:.5px;">&#9679; Keep</button>
+                      <div style="width:1px;height:18px;background:rgba(255,255,255,.06);"></div>
+                      <button id="mod-eraser-btn" onclick="toggleModEraser()" style="padding:4px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#D0CCC5;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;cursor:pointer;transition:all .15s;letter-spacing:.5px;">Eraser</button>
+                      <div style="width:1px;height:18px;background:rgba(255,255,255,.06);"></div>
+                      <span style="font-size:8px;">Size</span>
+                      <input type="range" id="mod-brush-size" min="5" max="80" value="30" oninput="modBrushSize=+this.value" style="width:60px;accent-color:#CFB584;height:3px;" />
+                      <div style="width:1px;height:18px;background:rgba(255,255,255,.06);"></div>
+                      <button onclick="modMaskUndo()" style="padding:4px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#D0CCC5;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;cursor:pointer;transition:all .15s;letter-spacing:.5px;">&#8617; Undo</button>
+                      <button onclick="modMaskClear()" style="padding:4px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#D0CCC5;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;cursor:pointer;transition:all .15s;letter-spacing:.5px;">Clear</button>
+                    </div>
+                  </div>
+
+                  <!-- Modification notes -->
+                  <div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:8px;">Modification Notes</div>
+                    <textarea id="mod-notes" placeholder="Describe what to change in the painted areas, e.g. swap the center stone to a sapphire, change the metal to rose gold, add milgrain detail to the band edges…" rows="3" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:8px 11px;resize:none;outline:none;line-height:1.5;" onfocus="this.style.borderColor='rgba(201,83,75,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.08)'"></textarea>
+                  </div>
+
+                  <!-- Apply button -->
+                  <button id="mod-apply-btn" onclick="applyModify()" style="padding:11px 0;background:#C9534B;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;box-shadow:0 2px 12px rgba(201,83,75,.25);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                    Apply Modifications
+                  </button>
+
+                </div>
+              </div>
+
+              <!-- RIGHT: Output -->
+              <div style="display:flex;flex-direction:column;background:#0C0C0A;overflow:hidden;">
+
+                <!-- Header -->
+                <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;">
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;">Modified Output</div>
+                </div>
+
+                <!-- Content area -->
+                <div style="flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px;">
+
+                  <!-- Idle state -->
+                  <div id="mod-idle" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:200px;text-align:center;">
+                    <div style="font-size:32px;opacity:.15;">✦</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#2A2825;line-height:1.7;">Upload an image, paint the areas<br>you want to modify, describe your<br>changes, then click <strong style="color:#3A3835;font-weight:600;">Apply Modifications</strong>.</div>
+                  </div>
+
+                  <!-- Spinner -->
+                  <div id="mod-spinner" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:200px;">
+                    <div style="width:32px;height:32px;border:2px solid rgba(201,83,75,.15);border-top-color:#C9534B;border-radius:50%;animation:ispin .8s linear infinite;"></div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#3A3835;letter-spacing:.5px;">Applying modifications…</div>
+                  </div>
+
+                  <!-- Results -->
+                  <div id="mod-results" style="display:none;flex-direction:column;gap:14px;">
+
+                    <!-- Prompt sent -->
+                    <div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;margin-bottom:8px;">Modification Prompt</div>
+                      <div id="mod-prompt-text" style="font-family:'DM Sans',sans-serif;font-size:11.5px;color:#CFB584;line-height:1.7;background:rgba(207,181,132,.06);border:1px solid rgba(207,181,132,.15);border-radius:8px;padding:12px 14px;font-style:italic;word-break:break-word;"></div>
+                    </div>
+
+                    <!-- Modified image -->
+                    <div>
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                        <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;">Modified Image</div>
+                        <button onclick="modUseAsSource()" style="padding:5px 14px;background:rgba(207,181,132,.12);border:1px solid rgba(207,181,132,.25);border-radius:14px;color:#CFB584;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(207,181,132,.2)'" onmouseout="this.style.background='rgba(207,181,132,.12)'">&#8634; Use as New Source</button>
+                      </div>
+                      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;">
+                        <img id="mod-result-img" style="display:none;width:100%;height:100%;object-fit:cover;" alt="Modified image" />
+                        <div id="mod-result-error" style="display:none;text-align:center;padding:16px;font-family:'DM Sans',sans-serif;font-size:10px;color:#C9534B;line-height:1.6;"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -4755,6 +4924,337 @@ function p3dShowResults(data) {
     }
     texturesSec.style.display = hasTextures ? 'block' : 'none';
   }
+}
+
+
+/* ══════════════════════════════════════════════════════
+   TOOL 09 — MODIFY (Inpainting Editor)
+══════════════════════════════════════════════════════ */
+let modOpen = false, modBusy = false;
+let modImageB64 = null, modImageType = 'image/jpeg';
+let modResponseId = null;
+let modMaskCtx = null, modMaskDrawing = false, modMaskMode = 'change';
+let modBrushSize = 30, modMaskEraser = false;
+let modMaskHistory = [], modMaskHasStrokes = false;
+
+function toggleMod() {
+  modOpen = !modOpen;
+  const p = document.getElementById('mod-preview');
+  p.style.display = modOpen ? 'block' : 'none';
+  document.getElementById('mod-toggle-icon').textContent = modOpen ? '\u25BE' : '\u25B6';
+  document.getElementById('mod-toggle-txt').textContent  = modOpen ? 'Close Preview' : 'Try Modify';
+  if (modOpen) setTimeout(() => p.scrollIntoView({behavior:'smooth', block:'nearest'}), 80);
+}
+
+function resetMod() {
+  modImageB64 = null; modResponseId = null;
+  modMaskHasStrokes = false; modMaskHistory = [];
+  document.getElementById('mod-file').value = '';
+  document.getElementById('mod-upload-ph').style.display = 'block';
+  document.getElementById('mod-preview-img').style.display = 'none';
+  document.getElementById('mod-mask-section').style.display = 'none';
+  document.getElementById('mod-notes').value = '';
+  document.getElementById('mod-idle').style.display = 'flex';
+  document.getElementById('mod-spinner').style.display = 'none';
+  document.getElementById('mod-results').style.display = 'none';
+}
+
+function handleModUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  modImageType = file.type || 'image/jpeg';
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    modImageB64 = dataUrl.split(',')[1];
+    // Show in upload zone
+    const img = document.getElementById('mod-preview-img');
+    img.src = dataUrl;
+    img.style.display = 'block';
+    document.getElementById('mod-upload-ph').style.display = 'none';
+    // Initialize mask canvas
+    const maskImg = document.getElementById('mod-mask-img');
+    maskImg.src = dataUrl;
+    maskImg.onload = () => initModMaskCanvas();
+    document.getElementById('mod-mask-section').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function initModMaskCanvas() {
+  const canvas = document.getElementById('mod-mask-canvas');
+  const img = document.getElementById('mod-mask-img');
+  if (!canvas || !img) return;
+  const rect = img.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+  canvas.style.display = 'block';
+  modMaskCtx = canvas.getContext('2d');
+  modMaskCtx.lineCap = 'round';
+  modMaskCtx.lineJoin = 'round';
+  modMaskHistory = [];
+  modMaskHasStrokes = false;
+  modMaskEraser = false;
+
+  canvas.onpointerdown = function(e) {
+    e.preventDefault();
+    modMaskDrawing = true;
+    modMaskHistory.push(modMaskCtx.getImageData(0, 0, canvas.width, canvas.height));
+    if (modMaskHistory.length > 30) modMaskHistory.shift();
+    const pos = getModMaskPos(e);
+    modMaskCtx.beginPath();
+    modMaskCtx.moveTo(pos.x, pos.y);
+    drawModDot(pos.x, pos.y);
+  };
+  canvas.onpointermove = function(e) {
+    if (!modMaskDrawing) return;
+    e.preventDefault();
+    drawModLine(e);
+  };
+  canvas.onpointerup = function() { modMaskDrawing = false; modMaskHasStrokes = true; };
+  canvas.onpointerleave = function() { modMaskDrawing = false; };
+
+  // Handle resize
+  if (window._modMaskResizeObs) window._modMaskResizeObs.disconnect();
+  window._modMaskResizeObs = new ResizeObserver(() => {
+    const r = img.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0 && (canvas.width !== r.width || canvas.height !== r.height)) {
+      const data = modMaskCtx.getImageData(0, 0, canvas.width, canvas.height);
+      const tmpC = document.createElement('canvas');
+      tmpC.width = canvas.width; tmpC.height = canvas.height;
+      tmpC.getContext('2d').putImageData(data, 0, 0);
+      canvas.width = r.width; canvas.height = r.height;
+      modMaskCtx.drawImage(tmpC, 0, 0, tmpC.width, tmpC.height, 0, 0, canvas.width, canvas.height);
+      modMaskCtx.lineCap = 'round'; modMaskCtx.lineJoin = 'round';
+    }
+  });
+  window._modMaskResizeObs.observe(img);
+}
+
+function getModMaskPos(e) {
+  const canvas = document.getElementById('mod-mask-canvas');
+  const rect = canvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+function drawModDot(x, y) {
+  if (modMaskEraser) {
+    modMaskCtx.globalCompositeOperation = 'destination-out';
+    modMaskCtx.fillStyle = 'rgba(0,0,0,1)';
+  } else {
+    modMaskCtx.globalCompositeOperation = 'source-over';
+    modMaskCtx.fillStyle = modMaskMode === 'change' ? 'rgba(200,60,50,0.4)' : 'rgba(60,180,80,0.4)';
+  }
+  modMaskCtx.beginPath();
+  modMaskCtx.arc(x, y, modBrushSize / 2, 0, Math.PI * 2);
+  modMaskCtx.fill();
+}
+
+function drawModLine(e) {
+  const pos = getModMaskPos(e);
+  if (modMaskEraser) {
+    modMaskCtx.globalCompositeOperation = 'destination-out';
+    modMaskCtx.strokeStyle = 'rgba(0,0,0,1)';
+  } else {
+    modMaskCtx.globalCompositeOperation = 'source-over';
+    modMaskCtx.strokeStyle = modMaskMode === 'change' ? 'rgba(200,60,50,0.4)' : 'rgba(60,180,80,0.4)';
+  }
+  modMaskCtx.lineWidth = modBrushSize;
+  modMaskCtx.lineTo(pos.x, pos.y);
+  modMaskCtx.stroke();
+  modMaskCtx.beginPath();
+  modMaskCtx.moveTo(pos.x, pos.y);
+}
+
+function setModMaskMode(mode) {
+  modMaskMode = mode;
+  modMaskEraser = false;
+  document.getElementById('mod-mode-change').classList.toggle('active', mode === 'change');
+  document.getElementById('mod-mode-keep').classList.toggle('active', mode === 'keep');
+  document.getElementById('mod-eraser-btn').classList.remove('active');
+  // Update button styles
+  const changeBtn = document.getElementById('mod-mode-change');
+  const keepBtn = document.getElementById('mod-mode-keep');
+  if (mode === 'change') {
+    changeBtn.style.background = 'rgba(200,60,50,.15)'; changeBtn.style.borderColor = 'rgba(200,60,50,.35)'; changeBtn.style.color = '#E07060';
+    keepBtn.style.background = 'rgba(255,255,255,.06)'; keepBtn.style.borderColor = 'rgba(255,255,255,.08)'; keepBtn.style.color = '#D0CCC5';
+  } else {
+    keepBtn.style.background = 'rgba(60,180,80,.15)'; keepBtn.style.borderColor = 'rgba(60,180,80,.35)'; keepBtn.style.color = '#60C070';
+    changeBtn.style.background = 'rgba(255,255,255,.06)'; changeBtn.style.borderColor = 'rgba(255,255,255,.08)'; changeBtn.style.color = '#D0CCC5';
+  }
+}
+
+function toggleModEraser() {
+  modMaskEraser = !modMaskEraser;
+  document.getElementById('mod-eraser-btn').classList.toggle('active', modMaskEraser);
+}
+
+function modMaskUndo() {
+  if (!modMaskHistory.length || !modMaskCtx) return;
+  const prev = modMaskHistory.pop();
+  const canvas = document.getElementById('mod-mask-canvas');
+  modMaskCtx.putImageData(prev, 0, 0);
+  if (!modMaskHistory.length) modMaskHasStrokes = false;
+}
+
+function modMaskClear() {
+  if (!modMaskCtx) return;
+  const canvas = document.getElementById('mod-mask-canvas');
+  modMaskCtx.clearRect(0, 0, canvas.width, canvas.height);
+  modMaskHistory = [];
+  modMaskHasStrokes = false;
+}
+
+function exportModMask() {
+  const canvas = document.getElementById('mod-mask-canvas');
+  if (!canvas || !modMaskCtx) return null;
+  const w = canvas.width, h = canvas.height;
+  const src = modMaskCtx.getImageData(0, 0, w, h);
+  const tmp = document.createElement('canvas');
+  tmp.width = w; tmp.height = h;
+  const ctx = tmp.getContext('2d');
+
+  let hasChange = false, hasKeep = false;
+  for (let i = 0; i < src.data.length; i += 4) {
+    if (src.data[i + 3] < 30) continue;
+    const r = src.data[i], g = src.data[i + 1];
+    if (r > 100 && g < 100) hasChange = true;
+    if (g > 100 && r < 100) hasKeep = true;
+  }
+
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, w, h);
+
+  const out = ctx.getImageData(0, 0, w, h);
+  for (let i = 0; i < src.data.length; i += 4) {
+    if (src.data[i + 3] < 30) {
+      if (hasKeep && !hasChange) {
+        out.data[i] = 255; out.data[i + 1] = 255; out.data[i + 2] = 255;
+      }
+      continue;
+    }
+    const r = src.data[i], g = src.data[i + 1];
+    if (r > 100 && g < 100) {
+      out.data[i] = 255; out.data[i + 1] = 255; out.data[i + 2] = 255;
+    }
+  }
+  ctx.putImageData(out, 0, 0);
+  return tmp.toDataURL('image/png');
+}
+
+async function applyModify() {
+  if (modBusy) return;
+  if (!modImageB64) {
+    alert('Please upload an image first.');
+    return;
+  }
+
+  const notes = document.getElementById('mod-notes').value.trim();
+  if (!notes && !modMaskHasStrokes) {
+    alert('Please paint mask areas and/or describe the changes you want.');
+    return;
+  }
+
+  modBusy = true;
+  document.getElementById('mod-idle').style.display = 'none';
+  document.getElementById('mod-results').style.display = 'none';
+  document.getElementById('mod-spinner').style.display = 'flex';
+  document.getElementById('mod-apply-btn').style.opacity = '.5';
+
+  // Build the prompt
+  let prompt = 'Edit this jewelry image. ';
+  if (modMaskHasStrokes) {
+    prompt += 'An inpainting mask is provided — white regions should be changed, black regions must be preserved exactly. ';
+  }
+  if (notes) {
+    prompt += 'Modification instructions: ' + notes + ' ';
+  } else {
+    prompt += 'Improve the highlighted regions while preserving the overall style, lighting, and composition. ';
+  }
+  prompt += 'Maintain photorealistic quality, accurate jewelry materials, and studio lighting.';
+
+  document.getElementById('mod-prompt-text').textContent = prompt;
+
+  // Build payload
+  const payload = {
+    prompt,
+    action: 'edit',
+    quality: 'high',
+    size: 'auto',
+    input_fidelity: 'high',
+  };
+
+  // Include mask if strokes were drawn
+  if (modMaskHasStrokes) {
+    const maskB64 = exportModMask();
+    if (maskB64) payload.mask_image = maskB64;
+  }
+
+  // First turn or iterative
+  if (modResponseId) {
+    payload.previous_response_id = modResponseId;
+  } else {
+    payload.input_image = modImageB64;
+  }
+
+  const apiUrl = (PROXY_URL || '').replace('/api/generate-render', '/api/generate-image');
+
+  try {
+    const res = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+
+    document.getElementById('mod-spinner').style.display = 'none';
+    if (!res.ok || !data.url) throw new Error(data.error || 'No image returned');
+
+    // Show result
+    document.getElementById('mod-results').style.display = 'flex';
+    const img = document.getElementById('mod-result-img');
+    img.src = data.url;
+    img.style.display = 'block';
+    document.getElementById('mod-result-error').style.display = 'none';
+
+    if (data.response_id) modResponseId = data.response_id;
+
+    // Clear mask for next iteration
+    modMaskClear();
+  } catch (e) {
+    document.getElementById('mod-spinner').style.display = 'none';
+    document.getElementById('mod-results').style.display = 'flex';
+    document.getElementById('mod-result-img').style.display = 'none';
+    const errEl = document.getElementById('mod-result-error');
+    errEl.textContent = 'Modification failed: ' + e.message;
+    errEl.style.display = 'block';
+  }
+
+  modBusy = false;
+  document.getElementById('mod-apply-btn').style.opacity = '1';
+}
+
+/* Use the modified output as the new source for another round */
+function modUseAsSource() {
+  const resultImg = document.getElementById('mod-result-img');
+  if (!resultImg.src) return;
+
+  // Update the source image
+  const dataUrl = resultImg.src;
+  modImageB64 = dataUrl.startsWith('data:') ? dataUrl.split(',')[1] : null;
+  if (!modImageB64) return;
+
+  // Update upload preview
+  document.getElementById('mod-preview-img').src = dataUrl;
+  // Update mask canvas source
+  const maskImg = document.getElementById('mod-mask-img');
+  maskImg.src = dataUrl;
+  maskImg.onload = () => initModMaskCanvas();
+
+  // Reset output side
+  document.getElementById('mod-results').style.display = 'none';
+  document.getElementById('mod-idle').style.display = 'flex';
+  document.getElementById('mod-notes').value = '';
 }
 
 
