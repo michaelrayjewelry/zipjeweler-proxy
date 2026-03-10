@@ -1,6 +1,8 @@
 // app/api/generate-image/route.js
-// OpenAI Responses API — multi-turn image generation with sketch reference
-// Used by S2I (Sketch-to-Image) for high-fidelity sketch→render conversion
+// OpenAI Responses API — image editing and generation with context
+// Used by:
+//   C2R: action="edit" — forces editing the input image (material conversion only)
+//   S2I: action="auto" — model decides whether to generate or edit based on context
 // Supports iterative corrections via previous_response_id
 
 export async function OPTIONS() {
@@ -26,8 +28,9 @@ export async function POST(request) {
 
   const {
     prompt,
-    input_image,           // base64 sketch image
-    previous_response_id,  // for multi-turn corrections
+    input_image,            // base64 image (CAD screenshot or sketch)
+    previous_response_id,   // for multi-turn corrections
+    action = 'auto',        // "edit" = force edit input image, "generate" = new image, "auto" = model decides
     quality = 'high',
     size = 'auto',
     input_fidelity = 'high',
@@ -48,6 +51,7 @@ export async function POST(request) {
       prompt: prompt.trim(),
       input_image,
       previous_response_id,
+      action,
       quality,
       size,
       input_fidelity,
@@ -59,23 +63,25 @@ export async function POST(request) {
   }
 }
 
-async function responsesGenerate({ openaiKey, prompt, input_image, previous_response_id, quality, size, input_fidelity }) {
+async function responsesGenerate({ openaiKey, prompt, input_image, previous_response_id, action, quality, size, input_fidelity }) {
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${openaiKey}`,
   };
 
-  // Build input content
-  const inputContent = [];
+  // Build input content — image + text prompt
+  let input;
 
-  // If we have a sketch image and this is the first turn (no previous response),
-  // include it as an input_image in the user message
-  if (input_image && !previous_response_id) {
+  if (previous_response_id) {
+    // Multi-turn correction: image is already in context from the previous response
+    input = prompt;
+  } else if (input_image) {
+    // First turn with an image: include it in the user message
     const dataUrl = input_image.startsWith('data:')
       ? input_image
       : `data:image/png;base64,${input_image}`;
 
-    inputContent.push({
+    input = {
       role: 'user',
       content: [
         {
@@ -87,37 +93,36 @@ async function responsesGenerate({ openaiKey, prompt, input_image, previous_resp
           text: prompt,
         },
       ],
-    });
+    };
   } else {
-    // Text-only input (either no image, or multi-turn where image is in context)
-    inputContent.push({
-      role: 'user',
-      content: [
-        {
-          type: 'input_text',
-          text: prompt,
-        },
-      ],
-    });
+    // Text-only (no image, no previous turn)
+    input = prompt;
   }
 
-  // Build the request body
-  const requestBody = {
-    model: 'gpt-4.1',  // Mainline model that supports image_generation tool
-    input: inputContent.length === 1 ? inputContent[0] : inputContent,
-    tools: [{
-      type: 'image_generation',
-      quality,
-      input_fidelity,
-      size,
-    }],
+  // Build the tool configuration
+  const toolConfig = {
+    type: 'image_generation',
+    quality,
+    input_fidelity,
+    size,
   };
 
-  // For multi-turn corrections, chain to the previous response
+  // action: "edit" forces the model to edit the input image
+  // action: "generate" forces generating a new image
+  // action: "auto" lets the model decide (default)
+  // Only set action for gpt-image-1.5 / chatgpt-image-latest compatible models
+  if (action && action !== 'auto') {
+    toolConfig.action = action;
+  }
+
+  const requestBody = {
+    model: 'gpt-4.1',
+    input,
+    tools: [toolConfig],
+  };
+
   if (previous_response_id) {
     requestBody.previous_response_id = previous_response_id;
-    // In multi-turn, input is just the correction text, not the full array
-    requestBody.input = prompt;
   }
 
   const res = await fetch('https://api.openai.com/v1/responses', {
@@ -134,14 +139,16 @@ async function responsesGenerate({ openaiKey, prompt, input_image, previous_resp
   // Extract the generated image from the response output
   const imageOutput = (data.output || []).find(o => o.type === 'image_generation_call');
   if (!imageOutput || !imageOutput.result) {
+    // Log full response for debugging
+    console.error('No image in response. Output types:', (data.output || []).map(o => o.type));
     throw new Error('No image generated in response');
   }
 
   return {
     url: `data:image/png;base64,${imageOutput.result}`,
-    mode: 'responses-api',
-    response_id: data.id,  // Return for multi-turn chaining
-    action: imageOutput.action || 'unknown',
+    mode: 'responses-api-' + (imageOutput.action || action || 'unknown'),
+    response_id: data.id,
+    action: imageOutput.action || action,
     revised_prompt: imageOutput.revised_prompt || null,
   };
 }

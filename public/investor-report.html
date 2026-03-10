@@ -3286,6 +3286,7 @@ let c2rOpen     = false;
 let c2rImageB64 = null;
 let c2rImageType= 'image/jpeg';
 let c2rBusy     = false;
+let c2rResponseId = null;  // Responses API ID for multi-turn corrections
 
 function toggleC2R() {
   c2rOpen = !c2rOpen;
@@ -3297,7 +3298,7 @@ function toggleC2R() {
 }
 
 function resetC2R() {
-  c2rImageB64 = null; c2rBusy = false;
+  c2rImageB64 = null; c2rBusy = false; c2rResponseId = null;
   window._c2rCorrections = null;
   document.getElementById('c2r-file').value = '';
   document.getElementById('c2r-upload-ph').style.display = 'block';
@@ -3337,111 +3338,9 @@ function handleC2RUpload(input) {
   reader.readAsDataURL(file);
 }
 
-/* ── Generate mask from CAD image: transparent alpha where jewelry is, opaque where background is ── */
-/* OpenAI mask: transparent (alpha=0) = area to EDIT, opaque (alpha=255) = area to KEEP */
-function generateC2RMask(b64Image) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const w = img.naturalWidth;
-      const h = img.naturalHeight;
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      const imageData = ctx.getImageData(0, 0, w, h);
-      const d = imageData.data;
-
-      // Sample corners to detect background color (most CAD screenshots have uniform bg)
-      const cornerSamples = [];
-      const sampleSize = Math.max(5, Math.floor(Math.min(w, h) * 0.02));
-      for (let y = 0; y < sampleSize; y++) {
-        for (let x = 0; x < sampleSize; x++) {
-          const i = (y * w + x) * 4;
-          cornerSamples.push([d[i], d[i+1], d[i+2]]);
-        }
-        for (let x = w - sampleSize; x < w; x++) {
-          const i = (y * w + x) * 4;
-          cornerSamples.push([d[i], d[i+1], d[i+2]]);
-        }
-      }
-      for (let y = h - sampleSize; y < h; y++) {
-        for (let x = 0; x < sampleSize; x++) {
-          const i = (y * w + x) * 4;
-          cornerSamples.push([d[i], d[i+1], d[i+2]]);
-        }
-        for (let x = w - sampleSize; x < w; x++) {
-          const i = (y * w + x) * 4;
-          cornerSamples.push([d[i], d[i+1], d[i+2]]);
-        }
-      }
-
-      // Average the corner samples to get background color
-      let bgR = 0, bgG = 0, bgB = 0;
-      cornerSamples.forEach(([r,g,b]) => { bgR += r; bgG += g; bgB += b; });
-      bgR = Math.round(bgR / cornerSamples.length);
-      bgG = Math.round(bgG / cornerSamples.length);
-      bgB = Math.round(bgB / cornerSamples.length);
-
-      // Create mask: compare each pixel to background color
-      // If pixel is close to bg color → opaque (keep/don't edit)
-      // If pixel is different from bg → transparent (edit this area = the jewelry)
-      const threshold = 60; // color distance threshold
-      const maskData = ctx.createImageData(w, h);
-      const md = maskData.data;
-
-      for (let i = 0; i < d.length; i += 4) {
-        const dr = d[i] - bgR;
-        const dg = d[i+1] - bgG;
-        const db = d[i+2] - bgB;
-        const dist = Math.sqrt(dr*dr + dg*dg + db*db);
-
-        if (dist < threshold) {
-          // Background pixel → opaque white (preserve, don't edit)
-          md[i] = 255; md[i+1] = 255; md[i+2] = 255; md[i+3] = 255;
-        } else {
-          // Jewelry pixel → transparent (edit this area)
-          md[i] = 0; md[i+1] = 0; md[i+2] = 0; md[i+3] = 0;
-        }
-      }
-
-      // Dilate the transparent (jewelry) region slightly to capture edges
-      const dilated = new Uint8ClampedArray(md);
-      const radius = Math.max(2, Math.floor(Math.min(w, h) * 0.005));
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          const idx = (y * w + x) * 4;
-          if (md[idx + 3] === 0) continue; // already transparent
-          // Check if any neighbor within radius is transparent
-          let nearTransparent = false;
-          for (let dy = -radius; dy <= radius && !nearTransparent; dy++) {
-            for (let dx = -radius; dx <= radius && !nearTransparent; dx++) {
-              const nx = x + dx, ny = y + dy;
-              if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-              if (md[(ny * w + nx) * 4 + 3] === 0) nearTransparent = true;
-            }
-          }
-          if (nearTransparent) {
-            dilated[idx] = 0; dilated[idx+1] = 0; dilated[idx+2] = 0; dilated[idx+3] = 0;
-          }
-        }
-      }
-
-      // Write dilated mask back
-      for (let i = 0; i < dilated.length; i++) maskData.data[i] = dilated[i];
-
-      ctx.putImageData(maskData, 0, 0);
-
-      // Export as PNG base64 (PNG preserves alpha channel)
-      const maskB64 = canvas.toDataURL('image/png').split(',')[1];
-      resolve(maskB64);
-    };
-    img.src = 'data:image/png;base64,' + b64Image;
-  });
-}
-
-/* ── Build material/scene instruction for C2R img2img (no Claude, no design prompt) ── */
+/* ── Build C2R prompt — short, direct, material-only ── */
+/* The Responses API with action:"edit" already knows to preserve the image. */
+/* A concise prompt prevents the model from over-interpreting. */
 function buildC2RInstruction(corrections) {
   const metal    = document.getElementById('c2r-metal').value;
   const stone    = document.getElementById('c2r-stone').value;
@@ -3451,78 +3350,35 @@ function buildC2RInstruction(corrections) {
   const angle    = document.getElementById('c2r-angle').value;
   const notes    = document.getElementById('c2r-notes').value.trim();
 
-  // Build a precise, structured material-conversion prompt
-  // The mask isolates the jewelry, so the prompt only needs to describe the target materials
-  let prompt = '';
+  // Keep the prompt short and direct — long prompts cause the model to redesign
+  let prompt = 'Edit this image. This is a CAD render of a jewelry piece. ';
+  prompt += 'Make it look like a photorealistic product photo. ';
+  prompt += 'Keep the EXACT same design — same shape, same silhouette, same proportions, same angle. ';
+  prompt += 'Only change the surface materials and environment.\n\n';
 
-  // IDENTITY LOCK — tell the model what it must NOT change
-  prompt += 'STRICT IDENTITY LOCK: This is a CAD/3D model of a jewelry piece. ';
-  prompt += 'The output MUST be the identical piece — same silhouette outline, same proportions, ';
-  prompt += 'same number and positions of stones, same prong/bezel/channel settings, ';
-  prompt += 'same band width and profile, same decorative elements. ';
-  prompt += 'Do NOT add, remove, resize, or reposition ANY structural element. ';
-  prompt += 'Do NOT change the viewing angle or perspective.\n\n';
+  if (corrections) prompt += 'Fix these issues: ' + corrections + '\n\n';
 
-  // MATERIAL CONVERSION — what TO change
-  prompt += 'MATERIAL CONVERSION ONLY:\n';
-  prompt += 'Replace the flat CAD/wireframe surface appearance with photorealistic materials:\n';
+  // Materials — keep descriptions brief
+  const parts = [];
+  if (metal) parts.push('Metal: ' + metal + (finish ? ', ' + finish.toLowerCase() + ' finish' : ''));
+  if (stone && stone !== 'No stone') parts.push('Stones: ' + stone);
+  if (parts.length) prompt += 'Materials: ' + parts.join('. ') + '.\n';
 
-  if (metal) {
-    prompt += '- METAL: ' + metal + ' with accurate color, reflectivity, and surface properties specific to this alloy. ';
-    if (metal.includes('Yellow Gold')) prompt += 'Warm yellow-gold metallic sheen. ';
-    else if (metal.includes('White Gold')) prompt += 'Cool silvery-white metallic sheen with slight warmth. ';
-    else if (metal.includes('Rose Gold')) prompt += 'Warm pink-copper metallic sheen. ';
-    else if (metal.includes('Platinum')) prompt += 'Bright cool white metallic with dense reflectivity. ';
-    else if (metal.includes('Silver')) prompt += 'Bright white metallic with slightly softer sheen than platinum. ';
-    prompt += '\n';
+  // Scene
+  if (bg || lighting) {
+    const scene = [];
+    if (bg) scene.push(bg.toLowerCase() + ' background');
+    if (lighting) scene.push(lighting.toLowerCase() + ' lighting');
+    prompt += 'Scene: ' + scene.join(', ') + '.\n';
   }
 
-  if (finish) {
-    prompt += '- SURFACE FINISH: ' + finish;
-    if (finish === 'High Polish') prompt += ' — mirror-like reflections, sharp specular highlights';
-    else if (finish === 'Matte') prompt += ' — soft diffuse light, minimal reflections, velvety surface';
-    else if (finish === 'Satin') prompt += ' — fine directional brushing, soft sheen, subtle linear highlights';
-    else if (finish === 'Hammered') prompt += ' — small dimpled texture, varied reflections from concave facets';
-    else if (finish === 'Brushed') prompt += ' — visible parallel micro-scratches, subdued reflectivity';
-    else if (finish === 'Sandblast') prompt += ' — uniform matte granular texture, no reflections';
-    prompt += '.\n';
-  }
+  if (notes) prompt += notes + '\n';
 
-  if (stone && stone !== 'No stone') {
-    prompt += '- STONES: ' + stone;
-    if (stone === 'Diamond') prompt += ' — brilliant cut with high fire, dispersion, and scintillation. Clear/white with prismatic light refraction.';
-    else if (stone === 'Sapphire') prompt += ' — deep royal blue, vitreous luster, visible pleochroism.';
-    else if (stone === 'Emerald') prompt += ' — rich green with characteristic garden inclusions, vitreous to resinous luster.';
-    else if (stone === 'Ruby') prompt += ' — deep pigeon-blood red, vitreous luster with subtle fluorescence.';
-    else if (stone === 'Morganite') prompt += ' — soft peachy-pink, transparent with vitreous luster.';
-    else if (stone === 'Aquamarine') prompt += ' — light blue to blue-green, transparent with glassy luster.';
-    else if (stone === 'Opal') prompt += ' — play of color with iridescent flashes, translucent with waxy luster.';
-    else if (stone === 'Pearl') prompt += ' — smooth nacre surface, soft orient overtone, lustrous sphere.';
-    prompt += ' Preserve exact count and placement of every stone.\n';
-  }
-
-  prompt += '\n';
-
-  if (corrections) prompt += 'CORRECTIONS FROM PRIOR PASS:\n' + corrections + '\n\n';
-
-  // SCENE
-  prompt += 'SCENE SETUP:\n';
-  if (bg) prompt += '- Background: ' + bg + '\n';
-  else prompt += '- Background: Clean white studio\n';
-  if (lighting) prompt += '- Lighting: ' + lighting + '\n';
-  else prompt += '- Lighting: Soft diffused studio lighting\n';
-  if (angle) prompt += '- Camera: ' + angle + ' (match the angle shown in the input image)\n';
-  else prompt += '- Camera: Match the exact angle and perspective from the input image\n';
-
-  if (notes) prompt += '- Notes: ' + notes + '\n';
-
-  prompt += '\nOUTPUT: Ultra-high-resolution photorealistic luxury jewelry product photograph, 8K macro detail, accurate metal reflections and stone refractions.';
-  prompt += ' The result should be indistinguishable from a professional product photo of this exact piece.';
   return prompt;
 }
 
-/* ── C2R direct render — sends CAD image + material instruction to img2img, no Claude ── */
-async function renderC2RDirect() {
+/* ── C2R render — uses Responses API with action:"edit" to force image editing ── */
+async function renderC2RDirect(correctionText) {
   if (c2rBusy) return;
 
   // Require an image — CAD image IS the design
@@ -3562,32 +3418,35 @@ async function renderC2RDirect() {
   if (retryBtn) retryBtn.style.display = 'none';
 
   // Build material instruction from dropdowns
-  const prompt = buildC2RInstruction(window._c2rCorrections || null);
+  const prompt = correctionText || buildC2RInstruction(window._c2rCorrections || null);
   window._c2rCorrections = null; // clear after use
 
   // Show the instruction being sent
   const instrEl = document.getElementById('c2r-instruction-text');
   if (instrEl) instrEl.textContent = prompt;
 
-  try {
-    // Generate auto-mask to isolate the jewelry object from background
-    // Mask tells OpenAI: transparent = edit (jewelry), opaque = keep (background)
-    let maskB64 = null;
-    try {
-      maskB64 = await generateC2RMask(c2rImageB64);
-    } catch(e) {
-      console.warn('Mask generation failed, proceeding without mask:', e.message);
-    }
+  // Use Responses API endpoint with action:"edit" to force image editing
+  const responsesUrl = (PROXY_URL || '').replace('/api/generate-render', '/api/generate-image');
 
+  try {
     const payload = {
       prompt,
-      input_image: c2rImageB64,
-      aspect_ratio: '1:1',
-      input_fidelity: 'high',
+      action: 'edit',           // Force EDIT mode — do not generate a new image
+      quality: 'high',
+      input_fidelity: 'high',   // Preserve fine details from CAD image
+      size: 'auto',
     };
-    if (maskB64) payload.mask_image = maskB64;
 
-    const res = await fetch(PROXY_URL, {
+    // First render: send the CAD image
+    // Correction renders: chain via previous_response_id (image already in context)
+    if (c2rResponseId && correctionText) {
+      payload.previous_response_id = c2rResponseId;
+    } else {
+      payload.input_image = c2rImageB64;
+      c2rResponseId = null;
+    }
+
+    const res = await fetch(responsesUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -3597,8 +3456,11 @@ async function renderC2RDirect() {
     if (!res.ok || !data.url) throw new Error(data.error || 'No image URL returned');
     if (img) { img.src = data.url; img.style.display = 'block'; }
 
+    // Store response_id for multi-turn corrections
+    if (data.response_id) c2rResponseId = data.response_id;
+
     window._c2rRenderUrl = data.url;
-    window._c2rRenderMode = data.mode || 'text-to-image';
+    window._c2rRenderMode = data.mode || 'responses-api-edit';
 
     // Auto-grade fidelity
     if (c2rImageB64 && (anthropicKey || useServerKeys)) {
@@ -4455,9 +4317,13 @@ async function retryRender(tool) {
       + '\n\nPreserve the exact silhouette, proportions, stone count, and structure from the original sketch.';
     renderS2I(correctionPrompt);
   } else if (tool === 'c2r') {
-    // C2R: store corrections and re-render (buildC2RInstruction reads them)
-    window._c2rCorrections = corrections;
-    renderC2RDirect();
+    // C2R with Responses API: send corrections as a follow-up turn
+    // The previous_response_id chains to the last render, so the model
+    // sees the original CAD image + prior render and applies corrections
+    const correctionPrompt = 'Fix these issues in the previous render. '
+      + 'Keep the exact same jewelry design — only correct these specific problems:\n\n'
+      + corrections;
+    renderC2RDirect(correctionPrompt);
   }
 }
 
