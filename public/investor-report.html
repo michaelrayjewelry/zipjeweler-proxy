@@ -2667,7 +2667,11 @@ function startWithKey(auto) {
     if (cfg.hasAnthropicKey) {
       useServerKeys = true;
       // Auto-launch Imagine without requiring key entry
-      document.addEventListener('DOMContentLoaded', () => startWithKey(true));
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => startWithKey(true));
+      } else {
+        startWithKey(true);
+      }
     }
   } catch(e) { /* server not available, user enters keys manually */ }
 })();
@@ -2676,12 +2680,11 @@ function startWithKey(auto) {
 function resetImagine() {
   isStarted = isLoading = false;
   history = []; fieldValues = {};
-  anthropicKey = ''; higgsKey = '';
+  if (!useServerKeys) { anthropicKey = ''; higgsKey = ''; }
   document.getElementById('imagine-msgs').innerHTML = '';
   document.getElementById('imagine-msgs').style.display = 'none';
   document.getElementById('imagine-inputbar').style.display = 'none';
   document.getElementById('imagine-typing').style.display = 'none';
-  document.getElementById('ik-prompt').style.display = 'flex';
   document.getElementById('ik-input').value = '';
   document.getElementById('hf-input').value = '';
   document.getElementById('render-btn').style.display = 'none';
@@ -2691,6 +2694,12 @@ function resetImagine() {
   document.getElementById('render-img').style.display = 'none';
   document.getElementById('render-no-key').style.display = 'none';
   buildFields(); updateScore();
+  // If server keys available, auto-restart without showing key prompt
+  if (useServerKeys) {
+    startWithKey(true);
+  } else {
+    document.getElementById('ik-prompt').style.display = 'flex';
+  }
 }
 
 /* ── Build fields panel ── */
@@ -2979,8 +2988,8 @@ function handleS2IUpload(input) {
 async function analyzeS2I() {
   if (s2iAnalyzing) return;
 
-  // Check for API key (reuse anthropicKey from Imagine)
-  if (!anthropicKey) {
+  // Check for API key (reuse anthropicKey from Imagine, or server keys)
+  if (!anthropicKey && !useServerKeys) {
     document.getElementById('s2i-key-note').style.display = 'block';
     return;
   }
@@ -3152,7 +3161,7 @@ function handleC2RUpload(input) {
 
 async function analyzeC2R() {
   if (c2rBusy) return;
-  if (!anthropicKey) {
+  if (!anthropicKey && !useServerKeys) {
     document.getElementById('c2r-key-note').style.display = 'block';
     return;
   }
@@ -3328,7 +3337,7 @@ function handleMktUpload(input) {
 }
 async function generateMkt() {
   if (mktBusy) return;
-  if (!anthropicKey) { document.getElementById('mkt-key-note').style.display = 'block'; return; }
+  if (!anthropicKey && !useServerKeys) { document.getElementById('mkt-key-note').style.display = 'block'; return; }
   document.getElementById('mkt-key-note').style.display = 'none';
   mktBusy = true;
   document.getElementById('mkt-idle').style.display = 'none';
@@ -3428,7 +3437,7 @@ function resetEst() {
 }
 async function generateEst() {
   if (estBusy) return;
-  if (!anthropicKey) { document.getElementById('est-key-note').style.display = 'block'; return; }
+  if (!anthropicKey && !useServerKeys) { document.getElementById('est-key-note').style.display = 'block'; return; }
   document.getElementById('est-key-note').style.display = 'none';
   estBusy = true;
   document.getElementById('est-idle').style.display = 'none';
@@ -3548,7 +3557,7 @@ function handleP3DUpload(input) {
 }
 async function generateP3D() {
   if (p3dBusy) return;
-  if (!anthropicKey) { document.getElementById('p3d-key-note').style.display = 'block'; return; }
+  if (!anthropicKey && !useServerKeys) { document.getElementById('p3d-key-note').style.display = 'block'; return; }
   document.getElementById('p3d-key-note').style.display = 'none';
   p3dBusy = true;
   document.getElementById('p3d-idle').style.display = 'none';
