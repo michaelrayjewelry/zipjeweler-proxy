@@ -1451,6 +1451,65 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                     </div>
                   </div>
                   <button id="mkt-gen-btn" onclick="generateMkt()" style="padding:11px 0;background:#7050A8;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;box-shadow:0 2px 12px rgba(112,80,168,.25);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Generate Marketing Copy</button>
+
+                  <!-- Photoshoot Section -->
+                  <div style="margin-top:10px;border-top:1px solid rgba(255,255,255,.06);padding-top:12px;">
+                    <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;margin-bottom:8px;">Product Photoshoot</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+                      <div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Scene Type</div>
+                        <select id="ps-scene" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
+                          <option value="studio">Studio Portrait</option>
+                          <option value="lifestyle">Lifestyle / Candid</option>
+                          <option value="editorial">Editorial / Fashion</option>
+                          <option value="outdoor">Outdoor Natural</option>
+                          <option value="evening">Evening / Gala</option>
+                          <option value="bridal">Bridal / Wedding</option>
+                          <option value="closeup">Product Close-up on Hand</option>
+                        </select>
+                      </div>
+                      <div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Camera Angle</div>
+                        <select id="ps-angle" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
+                          <option value="front">Front / Straight On</option>
+                          <option value="three-quarter">Three-Quarter View</option>
+                          <option value="side-profile">Side Profile</option>
+                          <option value="overhead">Overhead / Flat Lay</option>
+                          <option value="low-angle">Low Angle (Hero Shot)</option>
+                          <option value="macro">Macro / Detail Close-up</option>
+                        </select>
+                      </div>
+                      <div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Lighting</div>
+                        <select id="ps-lighting" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
+                          <option value="soft-studio">Soft Studio</option>
+                          <option value="dramatic">Dramatic / Rembrandt</option>
+                          <option value="natural-window">Natural Window Light</option>
+                          <option value="golden-hour">Golden Hour</option>
+                          <option value="high-key">High Key (Bright & Airy)</option>
+                          <option value="low-key">Low Key (Moody & Dark)</option>
+                          <option value="ring-light">Ring Light / Beauty</option>
+                        </select>
+                      </div>
+                      <div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Model</div>
+                        <select id="ps-model" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
+                          <option value="young-woman">Young Woman (20s-30s)</option>
+                          <option value="mature-woman">Mature Woman (40s-50s)</option>
+                          <option value="young-man">Young Man (20s-30s)</option>
+                          <option value="mature-man">Mature Man (40s-50s)</option>
+                          <option value="androgynous">Androgynous Model</option>
+                          <option value="hand-only">Hand / Body Part Only</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div style="margin-bottom:10px;">
+                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Additional Direction (optional)</div>
+                      <input id="ps-direction" type="text" placeholder="e.g. elegant updo hairstyle, minimal makeup, black dress…" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:8px 11px;outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='rgba(207,181,132,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.08)'" />
+                    </div>
+                    <button id="ps-gen-btn" onclick="generatePhotoshoot()" style="width:100%;padding:11px 0;background:linear-gradient(135deg,#CFB584,#A8956A);color:#0C0C0A;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;box-shadow:0 2px 12px rgba(207,181,132,.25);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Photoshoot</button>
+                  </div>
+
                   <div id="mkt-key-note" style="display:none;text-align:center;font-family:'DM Sans',sans-serif;font-size:9.5px;color:#3A3835;line-height:1.6;padding:8px;background:rgba(112,80,168,.06);border-radius:8px;border:1px solid rgba(112,80,168,.18);">⚠️ Enter your Anthropic key in the Imagine tool above to enable AI</div>
                 </div>
               </div>
@@ -1484,6 +1543,22 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                       <div id="mkt-listing" style="font-family:'DM Sans',sans-serif;font-size:12px;color:#CFB584;line-height:1.75;background:rgba(207,181,132,.05);border:1px solid rgba(207,181,132,.12);border-radius:8px;padding:12px 14px;white-space:pre-line;"></div>
                     </div>
                   </div>
+                  <!-- Photoshoot Result -->
+                  <div id="ps-result" style="display:none;flex-direction:column;gap:10px;">
+                    <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;margin-bottom:4px;">Product Photoshoot</div>
+                    <div id="ps-img-wrap" style="position:relative;width:100%;aspect-ratio:1;background:#111;border-radius:10px;overflow:hidden;border:1px solid rgba(207,181,132,.15);">
+                      <img id="ps-result-img" style="width:100%;height:100%;object-fit:contain;display:block;" />
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                      <button onclick="regeneratePhotoshoot()" style="flex:1;padding:8px 0;background:rgba(207,181,132,.12);color:#CFB584;border:1px solid rgba(207,181,132,.2);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;cursor:pointer;transition:opacity .15s;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">Re-shoot</button>
+                      <a id="ps-download" download="photoshoot.png" style="flex:1;padding:8px 0;background:rgba(207,181,132,.12);color:#CFB584;border:1px solid rgba(207,181,132,.2);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;cursor:pointer;transition:opacity .15s;text-align:center;text-decoration:none;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">Download</a>
+                    </div>
+                  </div>
+                  <div id="ps-spinner" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:200px;">
+                    <div style="width:32px;height:32px;border:2px solid rgba(207,181,132,.15);border-top-color:#CFB584;border-radius:50%;animation:ispin .8s linear infinite;"></div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#3A3835;letter-spacing:.5px;">Generating photoshoot…</div>
+                  </div>
+                  <div id="ps-error" style="display:none;text-align:center;font-family:'DM Sans',sans-serif;font-size:10px;color:#E74C3C;line-height:1.6;padding:12px;background:rgba(231,76,60,.06);border-radius:8px;border:1px solid rgba(231,76,60,.18);"></div>
                 </div>
               </div>
             </div>
@@ -3686,6 +3761,12 @@ function resetMkt() {
   document.getElementById('mkt-results').style.display = 'none';
   document.getElementById('mkt-key-note').style.display = 'none';
   document.getElementById('mkt-gen-btn').style.opacity = '1';
+  // Reset photoshoot state
+  psBusy = false; psResponseId = null;
+  document.getElementById('ps-result').style.display = 'none';
+  document.getElementById('ps-spinner').style.display = 'none';
+  document.getElementById('ps-error').style.display = 'none';
+  document.getElementById('ps-direction').value = '';
 }
 function handleMktUpload(input) {
   const file = input.files[0]; if (!file) return;
@@ -3759,6 +3840,144 @@ If an image is provided, describe what you see and let it inform the copy. Be sp
   mktBusy = false;
   document.getElementById('mkt-gen-btn').style.opacity = '1';
 }
+
+/* ══════════════════════════════════════════════════════
+   TOOL 04b — PHOTOSHOOT
+══════════════════════════════════════════════════════ */
+let psBusy = false, psResponseId = null;
+
+function buildPhotoshootPrompt() {
+  const scene = document.getElementById('ps-scene').value;
+  const angle = document.getElementById('ps-angle').value;
+  const lighting = document.getElementById('ps-lighting').value;
+  const model = document.getElementById('ps-model').value;
+  const direction = document.getElementById('ps-direction').value.trim();
+
+  // Product context from marketing form
+  const name  = document.getElementById('mkt-name').value.trim() || 'fine jewelry piece';
+  const metal = document.getElementById('mkt-metal').value;
+  const stone = document.getElementById('mkt-stone').value;
+
+  const sceneMap = {
+    'studio': 'a professional studio portrait setting with a clean, seamless backdrop',
+    'lifestyle': 'a candid lifestyle scene — a café, city street, or living room with natural ambiance',
+    'editorial': 'a high-fashion editorial setting, like a Vogue or Harper\'s Bazaar spread',
+    'outdoor': 'a beautiful outdoor natural setting with lush greenery or scenic background',
+    'evening': 'an elegant evening or gala setting — candlelight, champagne, luxurious atmosphere',
+    'bridal': 'a romantic bridal or wedding setting with soft florals and ethereal atmosphere',
+    'closeup': 'an extreme close-up shot of the jewelry being worn, showing exquisite detail'
+  };
+  const angleMap = {
+    'front': 'shot from the front, straight on',
+    'three-quarter': 'shot at a three-quarter angle for dimension and depth',
+    'side-profile': 'shot from the side profile',
+    'overhead': 'shot from overhead as a flat-lay composition',
+    'low-angle': 'shot from a low angle looking up (hero shot)',
+    'macro': 'an ultra-close macro shot showing fine detail and texture'
+  };
+  const lightingMap = {
+    'soft-studio': 'soft diffused studio lighting with gentle shadows',
+    'dramatic': 'dramatic Rembrandt lighting with strong directional shadows',
+    'natural-window': 'natural window light casting soft, authentic illumination',
+    'golden-hour': 'warm golden-hour sunlight with a romantic glow',
+    'high-key': 'bright high-key lighting that is airy and luminous',
+    'low-key': 'moody low-key lighting with deep shadows and rich contrast',
+    'ring-light': 'ring light beauty lighting with even illumination and catchlights'
+  };
+  const modelMap = {
+    'young-woman': 'a beautiful young woman in her 20s-30s',
+    'mature-woman': 'an elegant mature woman in her 40s-50s',
+    'young-man': 'a stylish young man in his 20s-30s',
+    'mature-man': 'a distinguished mature man in his 40s-50s',
+    'androgynous': 'an androgynous fashion model with striking features',
+    'hand-only': 'a well-manicured hand and wrist (no face needed)'
+  };
+
+  const productDesc = [name, metal, stone].filter(Boolean).join(', ');
+
+  let prompt = `Professional product photoshoot for a ${productDesc}. `;
+  prompt += `The jewelry is being worn by ${modelMap[model] || 'a model'} in ${sceneMap[scene] || 'a studio setting'}. `;
+  prompt += `${angleMap[angle] || 'Front shot'}. `;
+  prompt += `${lightingMap[lighting] || 'Soft studio lighting'}. `;
+  prompt += `The jewelry must be the clear hero of the image — prominently displayed and in sharp focus. `;
+  prompt += `Photorealistic, ultra-high quality, commercial jewelry photography. Shot on a Phase One IQ4 150MP. `;
+  prompt += `The image should look like it belongs in a luxury jewelry brand campaign.`;
+  if (direction) prompt += ` Additional direction: ${direction}.`;
+
+  return prompt;
+}
+
+async function generatePhotoshoot() {
+  if (psBusy) return;
+
+  // Need either an uploaded image or product details
+  const hasImage = !!mktImgB64;
+  const name = document.getElementById('mkt-name').value.trim();
+  if (!hasImage && !name) {
+    alert('Please upload a product image or enter a product name above before generating a photoshoot.');
+    return;
+  }
+
+  psBusy = true;
+  document.getElementById('ps-gen-btn').style.opacity = '.5';
+  document.getElementById('ps-spinner').style.display = 'flex';
+  document.getElementById('ps-result').style.display = 'none';
+  document.getElementById('ps-error').style.display = 'none';
+
+  const prompt = buildPhotoshootPrompt();
+
+  const payload = {
+    prompt,
+    action: hasImage ? 'edit' : 'generate',
+    quality: 'high',
+    input_fidelity: 'high',
+    size: '1024x1024',
+  };
+
+  if (hasImage) {
+    payload.input_image = mktImgB64;
+  }
+  if (psResponseId) {
+    payload.previous_response_id = psResponseId;
+  }
+
+  try {
+    const res = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error || 'HTTP ' + res.status);
+    }
+
+    const data = await res.json();
+    psResponseId = data.response_id || null;
+
+    const img = document.getElementById('ps-result-img');
+    img.src = data.url;
+    document.getElementById('ps-download').href = data.url;
+
+    document.getElementById('ps-spinner').style.display = 'none';
+    document.getElementById('ps-result').style.display = 'flex';
+  } catch (e) {
+    document.getElementById('ps-spinner').style.display = 'none';
+    const errEl = document.getElementById('ps-error');
+    errEl.textContent = 'Photoshoot failed: ' + e.message;
+    errEl.style.display = 'block';
+  }
+
+  psBusy = false;
+  document.getElementById('ps-gen-btn').style.opacity = '1';
+}
+
+function regeneratePhotoshoot() {
+  // Keep the previous response ID for iterative improvement
+  generatePhotoshoot();
+}
+
 
 /* ══════════════════════════════════════════════════════
    TOOL 05 — QUICK ESTIMATE
