@@ -2531,7 +2531,30 @@ const PAGES = {
 
 // ── ZipJeweler Render Proxy ───────────────────────────────
 // Set this to your Vercel deployment URL after deploying zipjeweler-proxy
-const PROXY_URL = '/api/generate-render'; // e.g. 'https://zipjeweler-proxy.vercel.app/api/generate-render'
+const PROXY_URL = '/api/generate-render';
+const CHAT_URL  = '/api/chat';
+let useServerKeys = false;
+
+// Helper: route Anthropic calls through server proxy or direct
+async function claudeAPI(body) {
+  if (useServerKeys) {
+    return fetch(CHAT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+  }
+  return fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': anthropicKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify(body)
+  });
+}
 
 function go(id) {
   Object.values(PAGES).forEach(p => { const e = document.getElementById(p); if(e) e.classList.remove('on'); });
@@ -2620,23 +2643,34 @@ function toggleImagine() {
 }
 
 /* ── Start ── */
-function startWithKey() {
-  const antKey = document.getElementById('ik-input').value.trim();
-  if (!antKey) { document.getElementById('ik-input').style.borderColor='#C9534B'; return; }
-  anthropicKey = antKey;
-  higgsKey = document.getElementById('hf-input').value.trim();
+function startWithKey(auto) {
+  if (!auto) {
+    const antKey = document.getElementById('ik-input').value.trim();
+    if (!antKey) { document.getElementById('ik-input').style.borderColor='#C9534B'; return; }
+    anthropicKey = antKey;
+    higgsKey = document.getElementById('hf-input').value.trim();
+  }
 
   document.getElementById('ik-prompt').style.display = 'none';
   document.getElementById('imagine-msgs').style.display = 'flex';
   document.getElementById('imagine-inputbar').style.display = 'flex';
 
-  // Show/hide Higgsfield note
-  if (!higgsKey) {
-    document.getElementById('render-no-key').style.display = 'block';
-  }
-
   if (!isStarted) { isStarted = true; buildFields(); callImagine(null); }
 }
+
+/* ── Auto-detect server keys on load ── */
+(async function autoDetectKeys() {
+  try {
+    const res = await fetch('/api/config');
+    if (!res.ok) return;
+    const cfg = await res.json();
+    if (cfg.hasAnthropicKey) {
+      useServerKeys = true;
+      // Auto-launch Imagine without requiring key entry
+      document.addEventListener('DOMContentLoaded', () => startWithKey(true));
+    }
+  } catch(e) { /* server not available, user enters keys manually */ }
+})();
 
 /* ── Reset ── */
 function resetImagine() {
@@ -2844,21 +2878,12 @@ async function callImagine(userMsg) {
   const messages = userMsg ? history : [{role:'user', content:"Hi, I'd like to create a new project brief."}];
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
+    const res = await claudeAPI({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 600,
         system: SYS,
         messages: messages
-      })
-    });
+      });
 
     if (!res.ok) {
       const err = await res.json().catch(()=>({}));
@@ -3009,21 +3034,12 @@ Keep analysis to 2-3 sentences. Be specific and technical.`;
     : [{ type: 'text', text: `No image uploaded. User-specified material specs: ${specStr}\n\nSince no sketch was provided, acknowledge this and still generate a descriptive render prompt based on the specs alone. Note that in production a sketch would refine this further.` }];
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
+    const res = await claudeAPI({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 800,
         system: systemPrompt,
         messages: [{ role: 'user', content: userContent }]
-      })
-    });
+      });
 
     if (!res.ok) {
       const err = await res.json().catch(()=>({}));
@@ -3184,21 +3200,12 @@ If no image is uploaded, acknowledge it briefly and still build the prompt from 
     : [{ type: 'text', text: 'No CAD image uploaded. Material and scene settings: ' + specStr + '\n\nNo screenshot was provided — acknowledge this briefly, then build the best render prompt possible from the specifications alone. Note that uploading a CAD screenshot would let Claude read the exact geometry.' }];
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
+    const res = await claudeAPI({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 900,
         system: systemPrompt,
         messages: [{ role: 'user', content: userContent }]
-      })
-    });
+      });
 
     if (!res.ok) {
       const err = await res.json().catch(()=>({}));
@@ -3356,13 +3363,8 @@ If an image is provided, describe what you see and let it inform the copy. Be sp
     : [{ type: 'text', text: 'Product details: ' + productStr + '\n\nNo image provided — generate compelling copy from the details alone.' }];
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'x-api-key':anthropicKey,
-        'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
-      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:900, system:sys,
-        messages:[{ role:'user', content:userContent }] })
-    });
+    const res = await claudeAPI({ model:'claude-sonnet-4-20250514', max_tokens:900, system:sys,
+        messages:[{ role:'user', content:userContent }] });
     if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e?.error?.message||'HTTP '+res.status); }
     const data = await res.json();
     const text = data.content?.[0]?.text || '';
@@ -3464,13 +3466,8 @@ Return ONLY valid JSON inside [TIERS]...[/TIERS] — no markdown, no extra keys.
   const userMsg = `Project: ${piece}\nMetal: ${metal||'unspecified'} @ ~$${spotPerG}/g × ${weight}g = $${metalCost}\nStone: ${stone||'none'} ~$${stoneCost}\nLabor: ${labor}hrs × $85 = $${laborCost}\nOverhead (15%): $${overhead}\nBase cost: $${baseCost.toFixed(0)}\nTarget margin: ${margin}\nEstimated retail: $${retailBase}\nNotes: ${notes||'none'}\n\nGenerate the summary and three pricing tiers.`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'x-api-key':anthropicKey,
-        'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
-      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:700, system:sys,
-        messages:[{role:'user',content:userMsg}] })
-    });
+    const res = await claudeAPI({ model:'claude-sonnet-4-20250514', max_tokens:700, system:sys,
+        messages:[{role:'user',content:userMsg}] });
     if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e?.error?.message||'HTTP '+res.status); }
     const data = await res.json();
     const text = data.content?.[0]?.text || '';
@@ -3592,13 +3589,8 @@ Be precise and technical — use goldsmithing and CAD terminology correctly.`;
     : [{ type:'text', text:'No reference image uploaded. CAD parameters: '+specStr+'\n\nGenerate the build spec from parameters alone, noting that a reference image would allow precise geometry analysis.' }];
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'x-api-key':anthropicKey,
-        'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
-      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:900, system:sys,
-        messages:[{role:'user', content:userContent}] })
-    });
+    const res = await claudeAPI({ model:'claude-sonnet-4-20250514', max_tokens:900, system:sys,
+        messages:[{role:'user', content:userContent}] });
     if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e?.error?.message||'HTTP '+res.status); }
     const data = await res.json();
     const text = data.content?.[0]?.text || '';
