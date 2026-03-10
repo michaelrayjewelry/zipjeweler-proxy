@@ -990,15 +990,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                     </div>
                   </div>
 
-                  <!-- Analyze button -->
-                  <button id="s2i-analyze-btn" onclick="analyzeS2I()" style="padding:11px 0;background:#C9534B;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;box-shadow:0 2px 12px rgba(201,83,75,.25);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-                    Analyze Sketch → Generate Prompt
+                  <!-- Generate Render button — sends sketch directly to Responses API -->
+                  <button id="s2i-analyze-btn" onclick="renderS2IDirect()" style="padding:11px 0;background:#C9534B;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;box-shadow:0 2px 12px rgba(201,83,75,.25);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                    Generate Render
                   </button>
-
-                  <!-- Key required note -->
-                  <div id="s2i-key-note" style="display:none;text-align:center;font-family:'DM Sans',sans-serif;font-size:9.5px;color:#3A3835;line-height:1.6;padding:8px;background:rgba(201,83,75,.06);border-radius:8px;border:1px solid rgba(201,83,75,.12);">
-                    ⚠️ Enter your Anthropic key in the Imagine tool above to enable AI analysis
-                  </div>
 
                 </div>
               </div>
@@ -1008,7 +1003,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
 
                 <!-- Header -->
                 <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;">
-                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;">AI Analysis + Render Prompt</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;">Render Output</div>
                 </div>
 
                 <!-- Content area -->
@@ -1017,33 +1012,21 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                   <!-- Idle state -->
                   <div id="s2i-idle" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:200px;text-align:center;">
                     <div style="font-size:32px;opacity:.15;">✦</div>
-                    <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#2A2825;line-height:1.7;">Upload a sketch and set your specs,<br>then click <strong style="color:#3A3835;font-weight:600;">Analyze Sketch</strong> to see<br>Claude's vision analysis and the<br>full render prompt.</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#2A2825;line-height:1.7;">Upload a sketch and set your specs,<br>then click <strong style="color:#3A3835;font-weight:600;">Generate Render</strong> to create<br>a photorealistic product image.</div>
                   </div>
 
                   <!-- Analyzing spinner -->
                   <div id="s2i-spinner" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:200px;">
                     <div style="width:32px;height:32px;border:2px solid rgba(201,83,75,.15);border-top-color:#C9534B;border-radius:50%;animation:ispin .8s linear infinite;"></div>
-                    <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#3A3835;letter-spacing:.5px;">Analyzing sketch with Claude Vision…</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#3A3835;letter-spacing:.5px;">Generating render…</div>
                   </div>
 
                   <!-- Results -->
                   <div id="s2i-results" style="display:none;flex-direction:column;gap:14px;">
 
-                    <!-- Vision analysis block -->
+                    <!-- Render instruction sent -->
                     <div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:8px;">Claude Vision Analysis</div>
-                      <div id="s2i-analysis-text" style="font-family:'DM Sans',sans-serif;font-size:12px;color:#A8A49E;line-height:1.72;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:12px 14px;"></div>
-                    </div>
-
-                    <!-- Extracted specs -->
-                    <div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:8px;">Extracted Specs</div>
-                      <div id="s2i-specs" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
-                    </div>
-
-                    <!-- Render prompt -->
-                    <div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;margin-bottom:8px;">Generated Render Prompt</div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;margin-bottom:8px;">Render Instruction</div>
                       <div id="s2i-prompt-text" style="font-family:'DM Sans',sans-serif;font-size:11.5px;color:#CFB584;line-height:1.7;background:rgba(207,181,132,.06);border:1px solid rgba(207,181,132,.15);border-radius:8px;padding:12px 14px;font-style:italic;word-break:break-word;"></div>
                     </div>
 
@@ -1051,7 +1034,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                     <div>
                       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
                         <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;">AI Render</div>
-                        <button id="s2i-render-btn" onclick="renderS2I()" style="padding:5px 14px;background:rgba(207,181,132,.12);border:1px solid rgba(207,181,132,.25);border-radius:14px;color:#CFB584;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(207,181,132,.2)'" onmouseout="this.style.background='rgba(207,181,132,.12)'">✦ Generate Render</button>
+                        <button id="s2i-render-btn" onclick="renderS2IDirect()" style="padding:5px 14px;background:rgba(207,181,132,.12);border:1px solid rgba(207,181,132,.25);border-radius:14px;color:#CFB584;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(207,181,132,.2)'" onmouseout="this.style.background='rgba(207,181,132,.12)'">&#10022; Re-Render</button>
                       </div>
                       <div id="s2i-render-wrap" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;">
                         <div id="s2i-render-placeholder" style="text-align:center;padding:16px;">
@@ -3057,221 +3040,121 @@ function handleS2IUpload(input) {
 
 // Also allow clicking drop zone to open file picker - handled by label
 
-async function analyzeS2I() {
-  if (s2iAnalyzing) return;
-
-  // Check for API key (reuse anthropicKey from Imagine, or server keys)
-  if (!anthropicKey && !useServerKeys) {
-    document.getElementById('s2i-key-note').style.display = 'block';
-    return;
-  }
-  document.getElementById('s2i-key-note').style.display = 'none';
-
-  if (!s2iImageB64) {
-    // No image — still useful: build a prompt from specs only with a note
-    runS2IAnalysis(null);
-    return;
-  }
-  runS2IAnalysis(s2iImageB64);
-}
-
-async function runS2IAnalysis(b64) {
-  s2iAnalyzing = true;
-  document.getElementById('s2i-idle').style.display = 'none';
-  document.getElementById('s2i-results').style.display = 'none';
-  document.getElementById('s2i-spinner').style.display = 'flex';
-  document.getElementById('s2i-analyze-btn').style.opacity = '.5';
-
+/* ── Build S2I instruction from specs — mirrors C2R's buildC2RInstruction ── */
+function buildS2IInstruction(corrections) {
   const metal   = document.getElementById('s2i-metal').value;
   const stone   = document.getElementById('s2i-stone').value;
   const setting = document.getElementById('s2i-setting').value;
   const finish  = document.getElementById('s2i-finish').value;
   const notes   = document.getElementById('s2i-notes').value.trim();
 
-  const specStr = [
-    metal   ? 'Metal: ' + metal   : '',
-    stone   ? 'Stone: ' + stone   : '',
-    setting ? 'Setting: ' + setting : '',
-    finish  ? 'Finish: ' + finish  : '',
-    notes   ? 'Notes: ' + notes   : '',
-  ].filter(Boolean).join(' | ') || 'No specs specified';
+  let prompt = 'Edit this image. This is a hand-drawn jewelry sketch. ';
+  prompt += 'Make it look like a photorealistic product photo. ';
+  prompt += 'Keep the EXACT same design — same shape, same silhouette, same proportions, same angle, same stone count and placement. ';
+  prompt += 'Only change the surface materials and environment.\n\n';
 
-  const systemPrompt = `You are ZipJeweler's Sketch-to-Render AI. Your job is to analyze jewelry sketches with absolute precision and produce a LOCKED render prompt that preserves the exact design — no redesigning, no adding elements, no creative reinterpretation.
+  if (corrections) prompt += 'Fix these issues: ' + corrections + '\n\n';
 
-When given a sketch/image, produce these sections in order:
+  // Materials — keep descriptions brief
+  const parts = [];
+  if (metal) parts.push('Metal: ' + metal + (finish ? ', ' + finish.toLowerCase() + ' finish' : ''));
+  if (stone && stone !== 'No stone') parts.push('Stones: ' + stone + (setting ? ' in ' + setting.toLowerCase() + ' setting' : ''));
+  if (parts.length) prompt += 'Materials: ' + parts.join('. ') + '.\n';
 
-1. VISUAL ANALYSIS — 2-3 sentences describing exactly what you see. Be surgical: silhouette, proportions, stone count and placement, setting type, negative space, component relationships.
+  // Scene — always studio lighting + white background
+  prompt += 'Scene: white studio background, soft studio lighting.\n';
 
-2. [SPEC]{...}[/SPEC] — Strict JSON spec extraction:
-{
-  "jewelry_type": "ring|pendant|earring|bracelet|necklace|brooch|other",
-  "materials": { "metal": "...", "finish": "..." },
-  "gemstones": [{ "zone_id": "center_1", "type": "...", "shape": "...", "setting": "...", "count_estimate": 1, "size_estimate_mm": "..." }],
-  "design_elements": [{ "element_id": "head_1", "category": "head|shank|halo|gallery|basket|shoulder|bezel_wall|motif|fringe|clasp", "description": "..." }],
-  "critical_fidelity_rules": ["Preserve exact silhouette.", "Do not alter stone count.", ...],
-  "allowed_render_changes": ["Apply material substitution", "Add photoreal lighting"],
-  "uncertainties": ["Side gallery not fully visible", ...]
+  if (notes) prompt += notes + '\n';
+
+  return prompt;
 }
 
-3. [GEOMETRY]{...}[/GEOMETRY] — Strict JSON geometry description:
-{
-  "overall_view": "front|side|top|3_4|multi_view",
-  "symmetry": "symmetrical|asymmetrical|likely_symmetrical|unknown",
-  "silhouette_notes": "Describe the overall outline precisely...",
-  "proportion_rules": ["Head width is approximately 1.8x band width.", ...],
-  "must_preserve": ["Negative space beneath center head", "Raised cathedral shoulders", ...],
-  "risk_flags": ["Perspective may hide left shoulder thickness", ...]
-}
+/* ── S2I render — sends sketch directly to Responses API with action:"edit" (same as C2R) ── */
+async function renderS2IDirect(correctionText) {
+  if (s2iAnalyzing) return;
 
-4. [PROMPT]...[/PROMPT] — The locked render prompt. MUST follow this exact structure:
+  // Require an image — sketch IS the design
+  if (!s2iImageB64) {
+    const idleEl = document.getElementById('s2i-idle');
+    if (idleEl) {
+      idleEl.style.display = 'flex';
+      idleEl.querySelector('div:last-child').textContent = 'Upload a sketch first — the image is required for rendering.';
+    }
+    return;
+  }
 
-REFERENCE LOCK: Use the uploaded image as the primary structural reference. Match silhouette, proportions, spatial relationships, element placement, stone count, and negative space exactly.
+  s2iAnalyzing = true;
+  document.getElementById('s2i-idle').style.display = 'none';
+  document.getElementById('s2i-results').style.display = 'none';
+  document.getElementById('s2i-spinner').style.display = 'flex';
+  document.getElementById('s2i-analyze-btn').style.opacity = '.5';
 
-SUBJECT: [Describe the EXACT piece — lead with the most distinctive visual element, not generic "fine jewelry". E.g. "Eagle pendant with spread wings and individually articulated feathers" not "pendant"]
+  // Hide previous fidelity grade
+  const gradeEl = document.getElementById('s2i-fidelity-grade');
+  if (gradeEl) gradeEl.style.display = 'none';
+  const retryBtn = document.getElementById('s2i-retry-btn');
+  if (retryBtn) retryBtn.style.display = 'none';
 
-MATERIALS: [Exact metal color, finish, stone types with placement. E.g. "Polished 18k yellow gold body, pavé-set round brilliant diamonds along wing edges, two bezel-set ruby eyes"]
+  // Build material instruction from dropdowns (same pattern as C2R)
+  const prompt = correctionText || buildS2IInstruction(null);
 
-STRUCTURE: [Faithfully describe every visible structural element from the sketch — silhouette, proportions, component relationships, negative space. This must match the geometry analysis above.]
+  // Show the instruction being sent
+  const promptEl = document.getElementById('s2i-prompt-text');
+  if (promptEl) promptEl.textContent = prompt;
 
-FORBIDDEN: Do not redesign. Do not add or remove elements. Do not change proportions. Do not alter setting type. Do not change stone count, spacing, or scale. Do not thicken, slim, taper, or reshape the structure. Do not add ornamentation not in the source.
-
-CAMERA: [angle, framing — match source perspective]
-SCENE: [background, lighting, surface]
-QUALITY: Photorealistic luxury jewelry photography, 8K, macro detail, ray-traced reflections, controlled caustics.
-
-CRITICAL RULES:
-- Geometry fidelity > material realism > photo quality > speed.
-- The sketch is the source of truth. The render should look like the SAME EXACT jewelry design, only upgraded into a realistic luxury product image.
-- Lead the prompt with the most distinctive visual element of the design.
-- If the sketch shows an eagle, the render MUST show an eagle. If it shows a snake, the render MUST show a snake. Never genericize.
-- Flag uncertainty rather than hallucinate hidden structure.
-- Keep analysis clinical and precise, not flowery.`;
-
-  const userContent = b64
-    ? [
-        { type: 'image', source: { type: 'base64', media_type: s2iImageType, data: b64 } },
-        { type: 'text',  text: `User-specified material specs: ${specStr}\n\nAnalyze this jewelry sketch with surgical precision. Extract the spec, describe the geometry, and build a LOCKED render prompt that preserves every design detail. The sketch is the source of truth — do not redesign or reinterpret.` }
-      ]
-    : [{ type: 'text', text: `No image uploaded. User-specified material specs: ${specStr}\n\nNo sketch provided. Build the best render prompt from specs alone, but note that a sketch would dramatically improve geometry fidelity.` }];
+  // Use Responses API endpoint with action:"edit" to force image editing
+  const responsesUrl = (PROXY_URL || '').replace('/api/generate-render', '/api/generate-image');
 
   try {
-    const res = await claudeAPI({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1500,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userContent }]
-      });
+    const payload = {
+      prompt,
+      action: 'edit',           // Force EDIT mode — preserve sketch structure
+      quality: 'high',
+      input_fidelity: 'high',   // Preserve fine details from sketch
+      size: 'auto',
+    };
 
-    if (!res.ok) {
-      const err = await res.json().catch(()=>({}));
-      throw new Error(err?.error?.message || 'HTTP ' + res.status);
+    // First render: send the sketch image
+    // Correction renders: chain via previous_response_id (image already in context)
+    if (s2iResponseId && correctionText) {
+      payload.previous_response_id = s2iResponseId;
+    } else {
+      payload.input_image = s2iImageB64;
+      s2iResponseId = null;
     }
 
-    const data = await res.json();
-    const text = data.content?.[0]?.text || '';
-
-    // Parse structured sections
-    const specMatch     = text.match(/\[SPEC\]([\s\S]*?)\[\/SPEC\]/);
-    const geomMatch     = text.match(/\[GEOMETRY\]([\s\S]*?)\[\/GEOMETRY\]/);
-    const promptMatch   = text.match(/\[PROMPT\]([\s\S]*?)\[\/PROMPT\]/);
-    // Backward compat: also try old [SPECS] tag
-    const specsMatchOld = !specMatch ? text.match(/\[SPECS\]([\s\S]*?)\[\/SPECS\]/) : null;
-
-    // Everything before structured tags is the visual analysis
-    const analysisText = text
-      .replace(/\[SPEC\][\s\S]*?\[\/SPEC\]/g,'')
-      .replace(/\[SPECS\][\s\S]*?\[\/SPECS\]/g,'')
-      .replace(/\[GEOMETRY\][\s\S]*?\[\/GEOMETRY\]/g,'')
-      .replace(/\[PROMPT\][\s\S]*?\[\/PROMPT\]/g,'')
-      .trim();
-
-    document.getElementById('s2i-analysis-text').textContent = analysisText || '(No analysis text returned)';
-
-    // Parse spec JSON
-    let specObj = {};
-    const specRaw = specMatch || specsMatchOld;
-    if (specRaw) {
-      try { specObj = JSON.parse(specRaw[1].trim()); } catch(e) {}
-    }
-
-    // Parse geometry JSON
-    let geomObj = {};
-    if (geomMatch) {
-      try { geomObj = JSON.parse(geomMatch[1].trim()); } catch(e) {}
-    }
-
-    // Store for fidelity grader
-    window._s2iSpec = specObj;
-    window._s2iGeom = geomObj;
-
-    // Render specs chips — show key extracted data
-    const specsEl = document.getElementById('s2i-specs');
-    specsEl.innerHTML = '';
-
-    // Flatten spec into displayable chips
-    const chipData = [];
-    if (specObj.jewelry_type) chipData.push(['type', specObj.jewelry_type]);
-    if (specObj.materials?.metal) chipData.push(['metal', specObj.materials.metal]);
-    if (specObj.materials?.finish) chipData.push(['finish', specObj.materials.finish]);
-    if (specObj.gemstones?.length) {
-      specObj.gemstones.forEach(g => {
-        chipData.push(['stone', (g.count_estimate > 1 ? g.count_estimate + 'x ' : '') + (g.shape || '') + ' ' + (g.type || 'unknown')]);
-        if (g.setting) chipData.push(['setting', g.setting]);
-      });
-    }
-    if (specObj.design_elements?.length) {
-      specObj.design_elements.forEach(d => chipData.push([d.category || 'detail', d.description]));
-    }
-    // Merge user-selected values if not already present
-    if (metal && !chipData.find(c => c[0] === 'metal'))     chipData.push(['metal', metal]);
-    if (stone && !chipData.find(c => c[0] === 'stone'))     chipData.push(['stone', stone]);
-    if (setting && !chipData.find(c => c[0] === 'setting')) chipData.push(['setting', setting]);
-    if (finish && !chipData.find(c => c[0] === 'finish'))   chipData.push(['finish', finish]);
-
-    chipData.forEach(([k, v]) => {
-      const chip = document.createElement('div');
-      chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;';
-      chip.innerHTML = '<span style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;color:#3A3835;text-transform:uppercase;letter-spacing:1px;">' + k + '</span>'
-        + '<span style="font-family:\'DM Sans\',sans-serif;font-size:9.5px;color:#CFB584;font-weight:500;">' + String(v).substring(0,80) + '</span>';
-      specsEl.appendChild(chip);
+    const res = await fetch(responsesUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
-
-    // Show geometry must-preserve rules as green chips
-    if (geomObj.must_preserve?.length) {
-      geomObj.must_preserve.forEach(rule => {
-        const chip = document.createElement('div');
-        chip.style.cssText = 'display:inline-flex;padding:3px 10px;background:rgba(76,175,112,.08);border:1px solid rgba(76,175,112,.18);border-radius:12px;font-family:\'DM Sans\',sans-serif;font-size:9px;color:#4CAF70;font-weight:500;';
-        chip.textContent = '\u{1F512} ' + rule;
-        specsEl.appendChild(chip);
-      });
-    }
-
-    // Show uncertainties as amber chips
-    const uncertainties = specObj.uncertainties || [];
-    if (uncertainties.length) {
-      uncertainties.forEach(u => {
-        const chip = document.createElement('div');
-        chip.style.cssText = 'display:inline-flex;padding:3px 10px;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.18);border-radius:12px;font-family:\'DM Sans\',sans-serif;font-size:9px;color:#CFB584;font-weight:500;';
-        chip.textContent = '\u26A0 ' + u;
-        specsEl.appendChild(chip);
-      });
-    }
-
-    if (specsEl.children.length === 0) {
-      specsEl.innerHTML = '<span style="font-family:\'DM Sans\',sans-serif;font-size:10px;color:#2A2825;">No specs extracted — add selections on the left</span>';
-    }
-
-    // Render prompt
-    const promptText = promptMatch ? promptMatch[1].trim() : text.split('\n').slice(-3).join(' ').trim();
-    document.getElementById('s2i-prompt-text').textContent = promptText;
+    const data = await res.json();
 
     document.getElementById('s2i-spinner').style.display = 'none';
+    if (!res.ok || !data.url) throw new Error(data.error || 'No image URL returned');
+
+    // Show results
     document.getElementById('s2i-results').style.display = 'flex';
+    const img = document.getElementById('s2i-render-img');
+    if (img) { img.src = data.url; img.style.display = 'block'; }
+    const placeholder = document.getElementById('s2i-render-placeholder');
+    if (placeholder) placeholder.style.display = 'none';
+
+    // Store response_id for multi-turn corrections
+    if (data.response_id) s2iResponseId = data.response_id;
+
+    window._s2iRenderUrl = data.url;
+    window._s2iRenderMode = data.mode || 'responses-api-edit';
+
+    // Auto-grade fidelity if we have a source sketch
+    if (s2iImageB64 && (anthropicKey || useServerKeys)) {
+      gradeFidelity('s2i', s2iImageB64, s2iImageType, data.url, prompt);
+    }
 
   } catch(e) {
     document.getElementById('s2i-spinner').style.display = 'none';
     document.getElementById('s2i-idle').style.display = 'flex';
-    document.getElementById('s2i-idle').querySelector('div:last-child').textContent = '\u26A0\uFE0F ' + e.message;
+    document.getElementById('s2i-idle').querySelector('div:last-child').textContent = e.message;
   }
 
   s2iAnalyzing = false;
@@ -4073,99 +3956,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ── Render from generated prompt (S2I) — uses Responses API for multi-turn editing ── */
-async function renderS2I(correctionText) {
-  const prompt = correctionText || document.getElementById('s2i-prompt-text')?.textContent;
-  if (!prompt || prompt.length < 10) return;
-  const btn = document.getElementById('s2i-render-btn');
-  const placeholder = document.getElementById('s2i-render-placeholder');
-  const spinner = document.getElementById('s2i-render-spinner');
-  const errEl = document.getElementById('s2i-render-error');
-  const img = document.getElementById('s2i-render-img');
-  if (btn) btn.style.opacity = '.5';
-  if (placeholder) placeholder.style.display = 'none';
-  if (errEl) errEl.style.display = 'none';
-  if (img) img.style.display = 'none';
-  if (spinner) spinner.style.display = 'flex';
-
-  // Hide previous fidelity grade
-  const gradeEl = document.getElementById('s2i-fidelity-grade');
-  if (gradeEl) gradeEl.style.display = 'none';
-  const retryBtn = document.getElementById('s2i-retry-btn');
-  if (retryBtn) retryBtn.style.display = 'none';
-
-  // Determine which endpoint to use:
-  // - Responses API (/api/generate-image) for S2I with sketch reference + multi-turn
-  // - Fallback to Image API (/api/generate-render) if Responses API unavailable
-  const responsesUrl = (PROXY_URL || '').replace('/api/generate-render', '/api/generate-image');
-  const useResponsesAPI = serverHasOpenAI && responsesUrl.includes('/api/generate-image');
-
-  try {
-    let data;
-
-    if (useResponsesAPI) {
-      // Responses API — supports multi-turn editing with previous_response_id
-      const payload = {
-        prompt,
-        quality: 'high',
-        size: 'auto',
-        input_fidelity: 'high',
-      };
-
-      // First render: include the sketch image
-      // Correction renders: chain via previous_response_id (sketch already in context)
-      if (s2iResponseId && correctionText) {
-        payload.previous_response_id = s2iResponseId;
-      } else if (s2iImageB64) {
-        payload.input_image = s2iImageB64;
-        s2iResponseId = null; // Reset chain for fresh renders
-      }
-
-      const res = await fetch(responsesUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      data = await res.json();
-      if (!res.ok || !data.url) throw new Error(data.error || 'No image URL returned');
-
-      // Store response_id for multi-turn corrections
-      if (data.response_id) {
-        s2iResponseId = data.response_id;
-      }
-    } else {
-      // Fallback: Image API (single-shot edit)
-      const payload = { prompt, aspect_ratio: '1:1' };
-      if (s2iImageB64) {
-        payload.input_image = s2iImageB64;
-        payload.input_fidelity = 'high';
-      }
-      const res = await fetch(PROXY_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      data = await res.json();
-      if (!res.ok || !data.url) throw new Error(data.error || 'No image URL returned');
-    }
-
-    if (spinner) spinner.style.display = 'none';
-    if (img) { img.src = data.url; img.style.display = 'block'; }
-
-    // Store render URL for fidelity grading
-    window._s2iRenderUrl = data.url;
-    window._s2iRenderMode = data.mode || 'responses-api';
-
-    // Auto-grade fidelity if we have a source sketch
-    if (s2iImageB64 && (anthropicKey || useServerKeys)) {
-      gradeFidelity('s2i', s2iImageB64, s2iImageType, data.url, prompt);
-    }
-
-  } catch(e) {
-    if (spinner) spinner.style.display = 'none';
-    if (errEl) { errEl.textContent = '\u26A0 ' + e.message; errEl.style.display = 'block'; }
-  }
-  if (btn) btn.style.opacity = '1';
-}
+/* ── renderS2I() is now an alias for renderS2IDirect() ── */
+async function renderS2I(correctionText) { return renderS2IDirect(correctionText); }
 
 /* ── renderC2R() is now an alias for renderC2RDirect() ── */
 async function renderC2R() { return renderC2RDirect(); }
@@ -4311,11 +4103,9 @@ async function retryRender(tool) {
     // S2I with Responses API: send corrections as a follow-up turn
     // The previous_response_id chains to the last render, so the model
     // sees the original sketch + prior render and applies corrections
-    const correctionPrompt = 'Apply these corrections to the previous render. '
-      + 'Keep everything else identical — only fix the issues listed:\n\n'
-      + corrections
-      + '\n\nPreserve the exact silhouette, proportions, stone count, and structure from the original sketch.';
-    renderS2I(correctionPrompt);
+    const correctionPrompt = buildS2IInstruction(corrections
+      + '\n\nPreserve the exact silhouette, proportions, stone count, and structure from the original sketch.');
+    renderS2IDirect(correctionPrompt);
   } else if (tool === 'c2r') {
     // C2R with Responses API: send corrections as a follow-up turn
     // The previous_response_id chains to the last render, so the model
