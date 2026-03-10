@@ -494,6 +494,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
   #pf-card .pf-render-thumb{height:80px;}
 }
 </style>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
 </head>
 <body>
 
@@ -1720,23 +1721,23 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:start;margin-bottom:20px;">
             <div>
               <div class="tc-top" style="margin-bottom:12px;"><div class="tc-icon">📐</div><div class="tc-num">Tool 06</div></div>
-              <div class="tc-name" style="font-size:20px;margin-bottom:8px;">Prototype 3D Model Generation</div>
-              <div class="tc-desc">Upload any render, sketch, or reference image and receive a 3D-printable, castable CAD prototype. Eliminates $150–$400 per-piece CAD contractor costs and the 2–5 day turnaround. Built on Rhino.Compute — the same geometry kernel professional jewelers use worldwide.</div>
+              <div class="tc-name" style="font-size:20px;margin-bottom:8px;">Image to 3D Model</div>
+              <div class="tc-desc">Upload any render, sketch, or reference photo and receive a textured 3D model in seconds. Powered by Meshy.ai — generates production-quality GLB, FBX, OBJ, and USDZ files with PBR materials (metallic, roughness, normal maps). Ideal for client previews, AR try-on, and casting prep.</div>
             </div>
             <div class="tc-feats" style="margin-bottom:0;padding-top:48px;">
-              <div class="tf">Outputs .STL (print-ready), .STEP, .IGES, and native Rhino .3DM formats</div>
-              <div class="tf">AI identifies jewelry zones — shank, bezel, prong, gallery — for accurate reconstruction</div>
-              <div class="tf">Validates casting tolerances and minimum wall thickness pre-delivery</div>
-              <div class="tf">Files drop directly into the project folder for client approval</div>
+              <div class="tf">Outputs GLB, FBX, OBJ, USDZ, and Blender formats with PBR textures</div>
+              <div class="tf">Quad or triangle mesh topology with configurable polycount</div>
+              <div class="tf">Interactive 3D preview — rotate, zoom, and inspect the model in-browser</div>
+              <div class="tf">Download models directly for 3D printing, rendering, or AR integration</div>
             </div>
           </div>
           <div class="tc-footer" style="margin-bottom:20px;">
             <div class="tc-layer">AI Studio</div>
             <div style="display:flex;align-items:center;gap:10px;">
-              <span class="pill pill-build">&#9680; Building Now</span>
+              <span class="pill pill-live">&#9679; Live</span>
               <button id="p3d-toggle" onclick="toggleP3D()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 18px;background:#7050A8;color:#fff;border:none;border-radius:20px;font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
                 <span id="p3d-toggle-icon" style="font-size:12px;">&#9654;</span>
-                <span id="p3d-toggle-txt">Try 3D Prototype Planner</span>
+                <span id="p3d-toggle-txt">Try Image to 3D</span>
               </button>
             </div>
           </div>
@@ -1751,128 +1752,136 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
               <div style="flex:1;text-align:center;">
                 <span style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:3px 14px;">
                   <span style="width:8px;height:8px;border-radius:50%;background:#7050A8;display:inline-block;opacity:.7;"></span>
-                  <span style="font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.5px;">zipjeweler.com/prototype</span>
+                  <span style="font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.5px;">zipjeweler.com/3d-model</span>
                 </span>
               </div>
               <button onclick="resetP3D()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:5px;color:rgba(255,255,255,.35);cursor:pointer;font-size:12px;padding:3px 8px;font-family:'DM Sans',sans-serif;" onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">&#8635; Reset</button>
             </div>
 
             <div id="p3d-shell" style="display:grid;grid-template-columns:1fr 1fr;background:#0F0F0D;min-height:520px;">
-              <!-- LEFT: Upload + CAD specs -->
+              <!-- LEFT: Upload + 3D generation settings -->
               <div style="display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.05);">
                 <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:12px;flex-shrink:0;">
                   <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(112,80,168,.2),rgba(112,80,168,.07));border:1.5px solid rgba(112,80,168,.35);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">📐</div>
                   <div>
-                    <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;color:#E8E4DD;">3D Prototype Planner</div>
-                    <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#47453F;margin-top:1px;">Reference → CAD Build Spec</div>
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;color:#E8E4DD;">Image to 3D Model</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#47453F;margin-top:1px;">Upload Image &rarr; Textured 3D Model</div>
                   </div>
                 </div>
                 <div style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;">
                   <!-- Image upload -->
                   <div>
-                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:8px;">Reference Image <span style="color:#2E2C28;text-transform:none;letter-spacing:0;">(sketch, render, or photo)</span></div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:8px;">Source Image <span style="color:#2E2C28;text-transform:none;letter-spacing:0;">(render, photo, or sketch)</span></div>
                     <label for="p3d-file" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1.5px dashed rgba(255,255,255,.1);border-radius:10px;padding:20px 16px;cursor:pointer;transition:border-color .2s;min-height:130px;" onmouseover="this.style.borderColor='rgba(112,80,168,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)'">
                       <div id="p3d-upload-ph" style="text-align:center;">
                         <div style="font-size:26px;margin-bottom:6px;opacity:.4;">📐</div>
-                        <div style="font-family:'DM Sans',sans-serif;font-size:11.5px;color:#4A4845;">Drop reference image or <span style="color:#7050A8;font-weight:500;">browse</span></div>
-                        <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:#2E2C28;margin-top:4px;">Any sketch, render, or reference photo</div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:11.5px;color:#4A4845;">Drop image or <span style="color:#7050A8;font-weight:500;">browse</span></div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:#2E2C28;margin-top:4px;">Clean, well-lit image on a plain background works best</div>
                       </div>
                       <img id="p3d-preview-img" style="display:none;max-width:100%;max-height:180px;border-radius:6px;object-fit:contain;" />
                     </label>
                     <input id="p3d-file" type="file" accept="image/*" style="display:none;" onchange="handleP3DUpload(this)" />
                   </div>
-                  <!-- CAD specs -->
+                  <!-- 3D Generation settings -->
                   <div>
-                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:10px;">CAD Parameters</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:10px;">Model Settings</div>
                     <div style="display:flex;flex-direction:column;gap:8px;">
                       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                         <div>
-                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Piece Type</div>
-                          <select id="p3d-piece" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
-                            <option value="">Select…</option>
-                            <option>Solitaire Ring</option><option>Halo Ring</option><option>Band Ring</option>
-                            <option>Pendant</option><option>Earring</option><option>Bracelet</option><option>Brooch</option>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Topology</div>
+                          <select id="p3d-topology" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
+                            <option value="quad">Quad (CAD-friendly)</option>
+                            <option value="triangle">Triangle (Print-ready)</option>
                           </select>
                         </div>
                         <div>
-                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Ring Size (if ring)</div>
-                          <select id="p3d-size" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
-                            <option value="">N/A</option>
-                            <option>Size 4</option><option>Size 5</option><option>Size 6</option><option>Size 7</option>
-                            <option>Size 8</option><option>Size 9</option><option>Size 10</option>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Target Polycount</div>
+                          <select id="p3d-polycount" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
+                            <option value="10000">10K (Fast / Low Detail)</option>
+                            <option value="30000" selected>30K (Balanced)</option>
+                            <option value="50000">50K (High Detail)</option>
+                            <option value="80000">80K (Ultra Detail)</option>
                           </select>
                         </div>
                       </div>
                       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                         <div>
-                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Stone Seat</div>
-                          <select id="p3d-seat" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
-                            <option value="">None</option>
-                            <option>Round 4.5mm</option><option>Round 6.5mm</option><option>Round 8mm</option>
-                            <option>Oval 7x9mm</option><option>Cushion 6x6mm</option><option>Emerald Cut 5x7mm</option>
-                            <option>Pear 6x9mm</option>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">PBR Materials</div>
+                          <select id="p3d-pbr" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
+                            <option value="true">Enabled (Metallic, Roughness, Normal)</option>
+                            <option value="false">Disabled (Color Only)</option>
                           </select>
                         </div>
                         <div>
-                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Output Format</div>
-                          <select id="p3d-format" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
-                            <option>.STL (Print-ready)</option>
-                            <option>.STEP</option>
-                            <option>.3DM (Rhino)</option>
-                            <option>All formats</option>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Piece Type</div>
+                          <select id="p3d-piece" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
+                            <option value="">Any / Auto-detect</option>
+                            <option>Ring</option><option>Pendant</option><option>Earring</option>
+                            <option>Bracelet</option><option>Brooch</option><option>Necklace</option>
                           </select>
                         </div>
                       </div>
-                      <div>
-                        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Construction Notes</div>
-                        <textarea id="p3d-notes" placeholder="e.g. knife-edge shank, pavé band, hidden halo, millgrain edges, 0.3mm wall min…" rows="2" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:8px 11px;resize:none;outline:none;line-height:1.5;" onfocus="this.style.borderColor='rgba(112,80,168,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.08)'"></textarea>
-                      </div>
                     </div>
                   </div>
-                  <button id="p3d-gen-btn" onclick="generateP3D()" style="padding:11px 0;background:#7050A8;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;box-shadow:0 2px 12px rgba(112,80,168,.25);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Analyze → Generate CAD Brief</button>
-                  <div id="p3d-key-note" style="display:none;text-align:center;font-family:'DM Sans',sans-serif;font-size:9.5px;color:#3A3835;line-height:1.6;padding:8px;background:rgba(112,80,168,.06);border-radius:8px;border:1px solid rgba(112,80,168,.18);">⚠️ Enter your Anthropic key in the Imagine tool above to enable AI</div>
+                  <button id="p3d-gen-btn" onclick="generateP3D()" style="padding:11px 0;background:#7050A8;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;box-shadow:0 2px 12px rgba(112,80,168,.25);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Generate 3D Model</button>
+                  <div id="p3d-key-note" style="display:none;text-align:center;font-family:'DM Sans',sans-serif;font-size:9.5px;color:#3A3835;line-height:1.6;padding:8px;background:rgba(112,80,168,.06);border-radius:8px;border:1px solid rgba(112,80,168,.18);">Requires MESHY_API_KEY on the server</div>
                 </div>
               </div>
 
-              <!-- RIGHT: CAD Build Spec Output -->
+              <!-- RIGHT: 3D Model Viewer + Downloads -->
               <div style="display:flex;flex-direction:column;background:#0C0C0A;overflow:hidden;">
                 <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;">
-                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;">CAD Build Specification</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;">3D Model Output</div>
                 </div>
                 <div style="flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px;">
+                  <!-- Idle state -->
                   <div id="p3d-idle" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:200px;text-align:center;">
                     <div style="font-size:32px;opacity:.15;">📐</div>
-                    <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#2A2825;line-height:1.7;">Upload a reference and set<br>your parameters, then click<br><strong style="color:#3A3835;">Analyze → Generate CAD Brief</strong><br>to receive the full build spec.</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#2A2825;line-height:1.7;">Upload a jewelry image and<br>configure your settings, then click<br><strong style="color:#3A3835;">Generate 3D Model</strong> to create<br>a textured 3D model.</div>
                   </div>
+                  <!-- Loading/progress state -->
                   <div id="p3d-spinner" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:200px;">
                     <div style="width:32px;height:32px;border:2px solid rgba(112,80,168,.15);border-top-color:#7050A8;border-radius:50%;animation:ispin .8s linear infinite;"></div>
-                    <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#3A3835;letter-spacing:.5px;">Generating CAD build specification…</div>
+                    <div id="p3d-progress-text" style="font-family:'DM Sans',sans-serif;font-size:10px;color:#3A3835;letter-spacing:.5px;">Submitting to Meshy.ai…</div>
+                    <div style="width:180px;height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;">
+                      <div id="p3d-progress-bar" style="width:0%;height:100%;background:#7050A8;border-radius:2px;transition:width .5s ease;"></div>
+                    </div>
+                    <div id="p3d-progress-pct" style="font-family:'DM Sans',sans-serif;font-size:9px;color:#2A2825;">0%</div>
                   </div>
+                  <!-- Results state -->
                   <div id="p3d-results" style="display:none;flex-direction:column;gap:14px;">
+                    <!-- 3D Viewer -->
                     <div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:8px;">Visual Analysis</div>
-                      <div id="p3d-analysis" style="font-family:'DM Sans',sans-serif;font-size:12px;color:#A8A49E;line-height:1.72;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:12px 14px;"></div>
-                    </div>
-                    <div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#7050A8;font-weight:700;margin-bottom:8px;">Identified Zones</div>
-                      <div id="p3d-zones" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
-                    </div>
-                    <div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;margin-bottom:8px;">Rhino.Compute Build Spec</div>
-                      <div id="p3d-spec" style="font-family:'DM Sans',sans-serif;font-size:11.5px;color:#CFB584;line-height:1.75;background:rgba(207,181,132,.05);border:1px solid rgba(207,181,132,.12);border-radius:8px;padding:12px 14px;white-space:pre-line;"></div>
-                    </div>
-                    <div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:8px;">Tolerance Check</div>
-                      <div id="p3d-tolerances" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
-                    </div>
-                    <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;">
-                      <div style="font-size:16px;flex-shrink:0;">📐</div>
-                      <div>
-                        <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:#7050A8;font-weight:600;margin-bottom:3px;">3D geometry generation requires Rhino.Compute backend</div>
-                        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;line-height:1.6;">In production, this spec drives ZipJeweler's Rhino.Compute pipeline to generate actual .STL / .3DM files. The AI analysis and spec sheet shown here are the instruction layer — real geometry outputs in the full platform.</div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#7050A8;font-weight:700;margin-bottom:8px;">Interactive 3D Preview</div>
+                      <div id="p3d-viewer-wrap" style="width:100%;aspect-ratio:1;background:#1A1A1A;border-radius:10px;overflow:hidden;border:1px solid rgba(112,80,168,.15);position:relative;">
+                        <model-viewer
+                          id="p3d-model-viewer"
+                          style="width:100%;height:100%;"
+                          camera-controls
+                          auto-rotate
+                          shadow-intensity="1"
+                          environment-image="neutral"
+                          exposure="1.2"
+                          shadow-softness="0.5"
+                          alt="Generated 3D jewelry model"
+                        ></model-viewer>
+                        <!-- Thumbnail fallback -->
+                        <img id="p3d-thumbnail" style="display:none;width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;" />
                       </div>
                     </div>
+                    <!-- Download buttons -->
+                    <div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;margin-bottom:8px;">Download Formats</div>
+                      <div id="p3d-downloads" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"></div>
+                    </div>
+                    <!-- Texture maps -->
+                    <div id="p3d-textures-section" style="display:none;">
+                      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:8px;">PBR Texture Maps</div>
+                      <div id="p3d-textures" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;"></div>
+                    </div>
                   </div>
+                  <!-- Error state -->
+                  <div id="p3d-error" style="display:none;text-align:center;font-family:'DM Sans',sans-serif;font-size:10px;color:#E74C3C;line-height:1.6;padding:12px;background:rgba(231,76,60,.06);border-radius:8px;border:1px solid rgba(231,76,60,.18);"></div>
                 </div>
               </div>
             </div>
@@ -2620,6 +2629,7 @@ const CHAT_URL  = '/api/chat';
 let useServerKeys = false;
 let serverHasHiggsfield = false;
 let serverHasOpenAI = false;
+let serverHasMeshy = false;
 
 // Helper: route Anthropic calls through server proxy or direct
 async function claudeAPI(body) {
@@ -2767,6 +2777,7 @@ function startWithKey(auto) {
     const cfg = await res.json();
     if (cfg.hasOpenAI) serverHasOpenAI = true;
     if (cfg.hasHiggsfield) serverHasHiggsfield = true;
+    if (cfg.hasMeshy) serverHasMeshy = true;
     if (cfg.hasAnthropicKey) {
       useServerKeys = true;
       // Auto-launch Imagine without requiring key entry
@@ -4243,34 +4254,46 @@ Generate the summary and three pricing tiers. The Better tier should be close to
 }
 
 /* ══════════════════════════════════════════════════════
-   TOOL 06 — PROTOTYPE 3D MODEL GENERATION
+   TOOL 06 — IMAGE TO 3D MODEL (Meshy.ai)
 ══════════════════════════════════════════════════════ */
-let p3dOpen = false, p3dBusy = false, p3dImgB64 = null, p3dImgType = 'image/jpeg';
+let p3dOpen = false, p3dBusy = false, p3dImgB64 = null, p3dImgType = 'image/png';
+let p3dTaskId = null, p3dPollTimer = null;
+const P3D_URL = '/api/generate-3d';
 
 function toggleP3D() {
   p3dOpen = !p3dOpen;
   const p = document.getElementById('p3d-preview');
   p.style.display = p3dOpen ? 'block' : 'none';
   document.getElementById('p3d-toggle-icon').textContent = p3dOpen ? '\u25BE' : '\u25B6';
-  document.getElementById('p3d-toggle-txt').textContent  = p3dOpen ? 'Close Preview' : 'Try 3D Prototype Planner';
+  document.getElementById('p3d-toggle-txt').textContent  = p3dOpen ? 'Close Preview' : 'Try Image to 3D';
   if (p3dOpen) setTimeout(() => p.scrollIntoView({behavior:'smooth', block:'nearest'}), 80);
 }
+
 function resetP3D() {
-  p3dOpen = false; p3dBusy = false; p3dImgB64 = null;
+  p3dOpen = false; p3dBusy = false; p3dImgB64 = null; p3dTaskId = null;
+  if (p3dPollTimer) { clearTimeout(p3dPollTimer); p3dPollTimer = null; }
   document.getElementById('p3d-file').value = '';
   document.getElementById('p3d-upload-ph').style.display = 'block';
   document.getElementById('p3d-preview-img').style.display = 'none';
-  ['p3d-piece','p3d-size','p3d-seat','p3d-format'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('p3d-notes').value = '';
   document.getElementById('p3d-idle').style.display = 'flex';
   document.getElementById('p3d-spinner').style.display = 'none';
   document.getElementById('p3d-results').style.display = 'none';
+  document.getElementById('p3d-error').style.display = 'none';
   document.getElementById('p3d-key-note').style.display = 'none';
   document.getElementById('p3d-gen-btn').style.opacity = '1';
+  document.getElementById('p3d-progress-bar').style.width = '0%';
+  document.getElementById('p3d-progress-pct').textContent = '0%';
+  // Reset model viewer
+  const viewer = document.getElementById('p3d-model-viewer');
+  if (viewer) viewer.removeAttribute('src');
+  document.getElementById('p3d-downloads').innerHTML = '';
+  document.getElementById('p3d-textures').innerHTML = '';
+  document.getElementById('p3d-textures-section').style.display = 'none';
 }
+
 function handleP3DUpload(input) {
   const file = input.files[0]; if (!file) return;
-  p3dImgType = file.type || 'image/jpeg';
+  p3dImgType = file.type || 'image/png';
   const r = new FileReader();
   r.onload = e => {
     p3dImgB64 = e.target.result.split(',')[1];
@@ -4280,98 +4303,191 @@ function handleP3DUpload(input) {
   };
   r.readAsDataURL(file);
 }
+
 async function generateP3D() {
   if (p3dBusy) return;
-  if (!anthropicKey && !useServerKeys) { document.getElementById('p3d-key-note').style.display = 'block'; return; }
-  document.getElementById('p3d-key-note').style.display = 'none';
+  if (!p3dImgB64) {
+    alert('Please upload an image first.');
+    return;
+  }
+
   p3dBusy = true;
   document.getElementById('p3d-idle').style.display = 'none';
   document.getElementById('p3d-results').style.display = 'none';
+  document.getElementById('p3d-error').style.display = 'none';
   document.getElementById('p3d-spinner').style.display = 'flex';
   document.getElementById('p3d-gen-btn').style.opacity = '.5';
+  document.getElementById('p3d-progress-text').textContent = 'Submitting to Meshy.ai\u2026';
+  document.getElementById('p3d-progress-bar').style.width = '0%';
+  document.getElementById('p3d-progress-pct').textContent = '0%';
 
-  const piece  = document.getElementById('p3d-piece').value  || '';
-  const size   = document.getElementById('p3d-size').value   || '';
-  const seat   = document.getElementById('p3d-seat').value   || '';
-  const format = document.getElementById('p3d-format').value || '.STL';
-  const notes  = document.getElementById('p3d-notes').value.trim();
+  const topology = document.getElementById('p3d-topology').value;
+  const polycount = parseInt(document.getElementById('p3d-polycount').value);
+  const enablePbr = document.getElementById('p3d-pbr').value === 'true';
 
-  const specStr = [piece && 'Piece: '+piece, size && 'Ring size: '+size,
-    seat && 'Stone seat: '+seat, 'Output: '+format, notes && 'Notes: '+notes].filter(Boolean).join(' | ');
-
-  const sys = `You are ZipJeweler's 3D Prototype Planner powered by Rhino.Compute. Analyze jewelry reference images and produce detailed CAD build specifications.
-
-Produce:
-1. A 2-3 sentence visual analysis of the reference (or acknowledge no image and work from specs alone).
-2. [ZONES]...[/ZONES] — JSON array of identified jewelry construction zones, e.g. ["shank","basket","gallery","prong x4","stone seat","milgrain edge"]. Be specific and technical.
-3. [SPEC]...[/SPEC] — A structured Rhino.Compute build specification. Use a step-by-step format:
-   • Piece type and dimensions
-   • Shank profile and construction method
-   • Stone seat specs (diameter, depth, type)
-   • Setting details (prong count, size, profile)
-   • Surface details and finishing notes
-   • Output format and tolerance validation
-4. [TOLERANCES]...[/TOLERANCES] — JSON array of tolerance check items, e.g. ["Min wall 0.4mm ✓","Stone seat depth 2.1mm ✓","Print tolerance ±0.05mm ✓","Casting shrinkage 2% accounted ✓"]
-
-Be precise and technical — use goldsmithing and CAD terminology correctly.`;
-
-  const userContent = p3dImgB64
-    ? [
-        { type:'image', source:{ type:'base64', media_type:p3dImgType, data:p3dImgB64 } },
-        { type:'text',  text:'CAD parameters: '+specStr+'\n\nAnalyze this reference and generate the full CAD build specification.' }
-      ]
-    : [{ type:'text', text:'No reference image uploaded. CAD parameters: '+specStr+'\n\nGenerate the build spec from parameters alone, noting that a reference image would allow precise geometry analysis.' }];
+  const imageDataUrl = `data:${p3dImgType};base64,${p3dImgB64}`;
 
   try {
-    const res = await claudeAPI({ model:'claude-sonnet-4-20250514', max_tokens:900, system:sys,
-        messages:[{role:'user', content:userContent}] });
-    if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e?.error?.message||'HTTP '+res.status); }
-    const data = await res.json();
-    const text = data.content?.[0]?.text || '';
-
-    const zonesMatch = text.match(/\[ZONES\]([\s\S]*?)\[\/ZONES\]/);
-    const specMatch  = text.match(/\[SPEC\]([\s\S]*?)\[\/SPEC\]/);
-    const tolMatch   = text.match(/\[TOLERANCES\]([\s\S]*?)\[\/TOLERANCES\]/);
-
-    const analysis = text.replace(/\[ZONES\][\s\S]*?\[\/ZONES\]/g,'').replace(/\[SPEC\][\s\S]*?\[\/SPEC\]/g,'').replace(/\[TOLERANCES\][\s\S]*?\[\/TOLERANCES\]/g,'').trim();
-    document.getElementById('p3d-analysis').textContent = analysis || '(No visual analysis)';
-
-    // Zones — purple chips
-    const zonesEl = document.getElementById('p3d-zones');
-    zonesEl.innerHTML = '';
-    let zones = [];
-    if (zonesMatch) { try { zones = JSON.parse(zonesMatch[1].trim()); } catch(e) {} }
-    if (!zones.length) zones = ['Upload reference for zone detection'];
-    zones.forEach(z => {
-      const chip = document.createElement('div');
-      chip.style.cssText = 'display:inline-flex;padding:3px 10px;background:rgba(112,80,168,.08);border:1px solid rgba(112,80,168,.2);border-radius:12px;font-family:\'DM Sans\',sans-serif;font-size:9.5px;color:#7050A8;font-weight:500;';
-      chip.textContent = z; zonesEl.appendChild(chip);
+    // Step 1: Create the task
+    const createRes = await fetch(P3D_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'create',
+        image_url: imageDataUrl,
+        topology,
+        target_polycount: polycount,
+        enable_pbr: enablePbr,
+      }),
     });
 
-    document.getElementById('p3d-spec').textContent = specMatch ? specMatch[1].trim() : '(No spec generated)';
+    if (!createRes.ok) {
+      const err = await createRes.json().catch(() => ({}));
+      if (createRes.status === 500 && (err.error || '').includes('MESHY_API_KEY')) {
+        document.getElementById('p3d-key-note').style.display = 'block';
+        throw new Error('Meshy API key not configured on server.');
+      }
+      throw new Error(err.error || 'Failed to create 3D task (HTTP ' + createRes.status + ')');
+    }
 
-    // Tolerance chips — green
-    const tolEl = document.getElementById('p3d-tolerances');
-    tolEl.innerHTML = '';
-    let tols = [];
-    if (tolMatch) { try { tols = JSON.parse(tolMatch[1].trim()); } catch(e) {} }
-    tols.forEach(t => {
-      const chip = document.createElement('div');
-      const pass = t.includes('\u2713') || t.toLowerCase().includes('pass') || t.includes('ok');
-      chip.style.cssText = 'display:inline-flex;padding:3px 10px;background:rgba(76,175,80,.08);border:1px solid rgba(76,175,80,.2);border-radius:12px;font-family:\'DM Sans\',sans-serif;font-size:9.5px;color:#4CAF80;font-weight:500;';
-      chip.textContent = t; tolEl.appendChild(chip);
-    });
-    if (!tols.length) tolEl.innerHTML = '<span style="font-family:\'DM Sans\',sans-serif;font-size:10px;color:#2A2825;">Tolerance validation runs on geometry output</span>';
+    const createData = await createRes.json();
+    p3dTaskId = createData.task_id;
+    document.getElementById('p3d-progress-text').textContent = 'Processing 3D model\u2026';
 
-    document.getElementById('p3d-spinner').style.display = 'none';
-    document.getElementById('p3d-results').style.display = 'flex';
-  } catch(e) {
-    document.getElementById('p3d-spinner').style.display = 'none';
-    document.getElementById('p3d-idle').style.display = 'flex';
-    document.getElementById('p3d-idle').querySelector('div:last-child').textContent = '\u26A0\uFE0F ' + e.message;
+    // Step 2: Start polling
+    pollP3DStatus();
+  } catch (e) {
+    p3dShowError(e.message);
   }
+}
+
+function pollP3DStatus() {
+  if (!p3dTaskId) return;
+
+  p3dPollTimer = setTimeout(async () => {
+    try {
+      const res = await fetch(P3D_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'poll', task_id: p3dTaskId }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Poll failed (HTTP ' + res.status + ')');
+      }
+
+      const data = await res.json();
+
+      // Update progress
+      const progress = data.progress || 0;
+      document.getElementById('p3d-progress-bar').style.width = progress + '%';
+      document.getElementById('p3d-progress-pct').textContent = progress + '%';
+
+      if (data.status === 'SUCCEEDED') {
+        p3dShowResults(data);
+      } else if (data.status === 'FAILED' || data.status === 'EXPIRED') {
+        throw new Error(data.task_error || 'Task ' + data.status.toLowerCase());
+      } else {
+        // PENDING or IN_PROGRESS — keep polling
+        const statusText = data.status === 'PENDING' ? 'Queued, waiting to start\u2026' : 'Generating 3D model\u2026 ' + progress + '%';
+        document.getElementById('p3d-progress-text').textContent = statusText;
+        pollP3DStatus();
+      }
+    } catch (e) {
+      p3dShowError(e.message);
+    }
+  }, 6000); // Poll every 6 seconds
+}
+
+function p3dShowError(msg) {
+  document.getElementById('p3d-spinner').style.display = 'none';
+  const errEl = document.getElementById('p3d-error');
+  errEl.textContent = '3D generation failed: ' + msg;
+  errEl.style.display = 'block';
   p3dBusy = false;
   document.getElementById('p3d-gen-btn').style.opacity = '1';
+}
+
+function p3dShowResults(data) {
+  p3dBusy = false;
+  document.getElementById('p3d-gen-btn').style.opacity = '1';
+  document.getElementById('p3d-spinner').style.display = 'none';
+  document.getElementById('p3d-results').style.display = 'flex';
+
+  // Set up 3D viewer with GLB
+  const modelUrls = data.model_urls || {};
+  const viewer = document.getElementById('p3d-model-viewer');
+  const thumbnail = document.getElementById('p3d-thumbnail');
+
+  if (modelUrls.glb) {
+    viewer.setAttribute('src', modelUrls.glb);
+    viewer.style.display = 'block';
+    thumbnail.style.display = 'none';
+  } else if (data.thumbnail_url) {
+    // Fallback: show thumbnail if no GLB
+    thumbnail.src = data.thumbnail_url;
+    thumbnail.style.display = 'block';
+    viewer.style.display = 'none';
+  }
+
+  // Build download buttons
+  const downloadsEl = document.getElementById('p3d-downloads');
+  downloadsEl.innerHTML = '';
+  const formatLabels = {
+    glb: 'GLB (Web/AR)',
+    fbx: 'FBX (3D Apps)',
+    obj: 'OBJ (Universal)',
+    usdz: 'USDZ (Apple AR)',
+    blend: 'Blend (Blender)',
+  };
+  for (const [fmt, url] of Object.entries(modelUrls)) {
+    if (!url) continue;
+    const label = formatLabels[fmt] || fmt.toUpperCase();
+    const btn = document.createElement('a');
+    btn.href = url;
+    btn.download = 'model.' + fmt;
+    btn.target = '_blank';
+    btn.rel = 'noopener';
+    btn.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:5px;padding:8px 6px;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.18);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:10px;color:#CFB584;font-weight:600;text-decoration:none;cursor:pointer;transition:opacity .15s;';
+    btn.textContent = label;
+    btn.onmouseover = function() { this.style.opacity = '.75'; };
+    btn.onmouseout = function() { this.style.opacity = '1'; };
+    downloadsEl.appendChild(btn);
+  }
+
+  // Show PBR texture maps if available
+  const textureUrls = data.texture_urls;
+  const texturesEl = document.getElementById('p3d-textures');
+  const texturesSec = document.getElementById('p3d-textures-section');
+  texturesEl.innerHTML = '';
+
+  if (textureUrls && textureUrls.length > 0) {
+    const mapSet = textureUrls[0];
+    const mapLabels = {
+      base_color: 'Base Color',
+      metallic: 'Metallic',
+      normal: 'Normal',
+      roughness: 'Roughness',
+    };
+    let hasTextures = false;
+    for (const [mapName, mapUrl] of Object.entries(mapSet)) {
+      if (!mapUrl) continue;
+      hasTextures = true;
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
+      const thumb = document.createElement('img');
+      thumb.src = mapUrl;
+      thumb.style.cssText = 'width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,.08);background:#1A1A1A;';
+      const label = document.createElement('div');
+      label.style.cssText = 'font-family:\'DM Sans\',sans-serif;font-size:8px;color:#3A3835;text-align:center;letter-spacing:.5px;';
+      label.textContent = mapLabels[mapName] || mapName;
+      wrap.appendChild(thumb);
+      wrap.appendChild(label);
+      texturesEl.appendChild(wrap);
+    }
+    texturesSec.style.display = hasTextures ? 'block' : 'none';
+  }
 }
 
 

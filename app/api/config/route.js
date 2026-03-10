@@ -7,6 +7,7 @@ export async function GET() {
       hasAnthropicKey: !!process.env.ANTHROPIC_API_KEY,
       hasOpenAI: !!process.env.OPENAI_API_KEY,
       hasHiggsfield: !!(process.env.HIGGSFIELD_KEY_ID && process.env.HIGGSFIELD_KEY_SECRET),
+      hasMeshy: !!process.env.MESHY_API_KEY,
     },
     {
       headers: { 'Access-Control-Allow-Origin': '*' },
