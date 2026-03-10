@@ -1,6 +1,7 @@
 // app/api/generate-render/route.js
-// Next.js App Router API route — zero dependencies, native fetch (Node 18+)
-// Supports both text-to-image and image-to-image (sketch-conditioned) rendering
+// Next.js App Router API route — supports OpenAI gpt-image-1.5 (primary) and Higgsfield FLUX (fallback)
+// For C2R: image editing (input_image + material instruction)
+// For S2I/Imagine: generation or image-conditioned generation
 
 export async function OPTIONS() {
   return new Response(null, {
@@ -20,49 +21,165 @@ export async function POST(request) {
     'Access-Control-Allow-Headers': 'Content-Type',
   };
 
-  const keyId     = process.env.HIGGSFIELD_KEY_ID;
-  const keySecret = process.env.HIGGSFIELD_KEY_SECRET;
-  if (!keyId || !keySecret) {
-    return Response.json({ error: 'Missing HIGGSFIELD_KEY_ID or HIGGSFIELD_KEY_SECRET' }, { status: 500, headers: corsHeaders });
-  }
-
   let body;
   try { body = await request.json(); } catch { body = {}; }
 
-  const { prompt, aspect_ratio = '1:1', input_image, input_image_2, input_image_3, input_image_4, render_mode = 'fidelity' } = body;
+  const { prompt, aspect_ratio = '1:1', input_image, input_image_2, input_image_3, input_image_4, quality = 'high' } = body;
   if (!prompt || prompt.trim().length < 5) {
     return Response.json({ error: 'prompt is required' }, { status: 400, headers: corsHeaders });
   }
 
-  // Append quality suffix only if prompt doesn't already include photography direction
-  const lower = prompt.toLowerCase();
-  const hasPhotoDir = lower.includes('photography') || lower.includes('photorealistic') || lower.includes('macro') || lower.includes('8k');
-  const qualitySuffix = hasPhotoDir ? '' : '. Photorealistic luxury jewelry photography, soft studio lighting, sharp macro detail.';
-  const fullPrompt = prompt.trim() + qualitySuffix;
+  const hasInputImage = input_image && input_image.length > 100;
 
+  // Try OpenAI first, then Higgsfield fallback
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (openaiKey) {
+    try {
+      const result = await openaiGenerate({ openaiKey, prompt: prompt.trim(), hasInputImage, input_image, input_image_2, input_image_3, input_image_4, aspect_ratio, quality });
+      return Response.json(result, { headers: corsHeaders });
+    } catch (e) {
+      // If OpenAI fails, fall through to Higgsfield
+      console.error('OpenAI image API error:', e.message);
+    }
+  }
+
+  // Higgsfield fallback
+  const keyId     = process.env.HIGGSFIELD_KEY_ID;
+  const keySecret = process.env.HIGGSFIELD_KEY_SECRET;
+  if (!keyId || !keySecret) {
+    return Response.json({ error: 'No image generation API keys configured. Set OPENAI_API_KEY or HIGGSFIELD_KEY_ID + HIGGSFIELD_KEY_SECRET.' }, { status: 500, headers: corsHeaders });
+  }
+
+  try {
+    const result = await higgsGenerate({ keyId, keySecret, prompt: prompt.trim(), hasInputImage, input_image, aspect_ratio });
+    return Response.json(result, { headers: corsHeaders });
+  } catch (e) {
+    return Response.json({ error: e.message }, { status: 500, headers: corsHeaders });
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// OpenAI gpt-image-1.5 — supports both generation and image editing
+// ────────────────────────────────────────────────────────────
+async function openaiGenerate({ openaiKey, prompt, hasInputImage, input_image, input_image_2, input_image_3, input_image_4, aspect_ratio, quality }) {
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${openaiKey}`,
+  };
+
+  // Map aspect ratio to OpenAI size format
+  const sizeMap = {
+    '1:1': '1024x1024',
+    '16:9': '1536x1024',
+    '9:16': '1024x1536',
+    '4:3': '1536x1024',
+    '3:4': '1024x1536',
+  };
+  const size = sizeMap[aspect_ratio] || '1024x1024';
+
+  if (hasInputImage) {
+    // Image EDIT — send input image(s) + prompt instruction
+    const images = [];
+    if (input_image) {
+      const dataUrl = input_image.startsWith('data:') ? input_image : `data:image/png;base64,${input_image}`;
+      images.push({ type: 'image_url', image_url: dataUrl });
+    }
+    if (input_image_2) {
+      const dataUrl = input_image_2.startsWith('data:') ? input_image_2 : `data:image/png;base64,${input_image_2}`;
+      images.push({ type: 'image_url', image_url: dataUrl });
+    }
+    if (input_image_3) {
+      const dataUrl = input_image_3.startsWith('data:') ? input_image_3 : `data:image/png;base64,${input_image_3}`;
+      images.push({ type: 'image_url', image_url: dataUrl });
+    }
+    if (input_image_4) {
+      const dataUrl = input_image_4.startsWith('data:') ? input_image_4 : `data:image/png;base64,${input_image_4}`;
+      images.push({ type: 'image_url', image_url: dataUrl });
+    }
+
+    const editBody = {
+      model: 'gpt-image-1.5',
+      prompt: prompt,
+      image: images,
+      size,
+      quality,
+    };
+
+    const res = await fetch('https://api.openai.com/v1/images/edits', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(editBody),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data?.error?.message || `OpenAI edit error: HTTP ${res.status}`);
+    }
+
+    // OpenAI gpt-image-1.5 returns base64 directly
+    const b64 = data?.data?.[0]?.b64_json;
+    if (!b64) throw new Error('No image data returned from OpenAI');
+
+    return { url: `data:image/png;base64,${b64}`, mode: 'openai-edit' };
+
+  } else {
+    // Image GENERATION — text prompt only (for Imagine tool)
+    // Append quality suffix if not already present
+    const lower = prompt.toLowerCase();
+    const hasPhotoDir = lower.includes('photography') || lower.includes('photorealistic') || lower.includes('macro') || lower.includes('8k');
+    const fullPrompt = hasPhotoDir ? prompt : prompt + '. Photorealistic luxury jewelry photography, soft studio lighting, sharp macro detail.';
+
+    const genBody = {
+      model: 'gpt-image-1.5',
+      prompt: fullPrompt,
+      size,
+      quality,
+      n: 1,
+    };
+
+    const res = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(genBody),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data?.error?.message || `OpenAI generation error: HTTP ${res.status}`);
+    }
+
+    const b64 = data?.data?.[0]?.b64_json;
+    const url = data?.data?.[0]?.url;
+    if (!b64 && !url) throw new Error('No image data returned from OpenAI');
+
+    return { url: b64 ? `data:image/png;base64,${b64}` : url, mode: 'openai-generate' };
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// Higgsfield FLUX Kontext — fallback (text-to-image + img2img attempt)
+// ────────────────────────────────────────────────────────────
+async function higgsGenerate({ keyId, keySecret, prompt, hasInputImage, input_image, aspect_ratio }) {
   const AUTH = `Key ${keyId}:${keySecret}`;
   const BASE = 'https://platform.higgsfield.ai';
 
-  // Determine if we should attempt image-to-image (sketch-conditioned rendering)
-  const hasInputImage = input_image && input_image.length > 100;
+  // Append quality suffix
+  const lower = prompt.toLowerCase();
+  const hasPhotoDir = lower.includes('photography') || lower.includes('photorealistic') || lower.includes('macro') || lower.includes('8k');
+  const qualitySuffix = hasPhotoDir ? '' : '. Photorealistic luxury jewelry photography, soft studio lighting, sharp macro detail.';
+  const fullPrompt = prompt + qualitySuffix;
 
-  // Build the payload
   const basePayload = { prompt: fullPrompt, aspect_ratio, safety_tolerance: 2, seed: Math.floor(Math.random() * 999999) };
 
-  // If we have an input image, try image-to-image first for geometry preservation
   let requestId;
-  let usedMode = 'text-to-image';
+  let usedMode = 'higgsfield-text-to-image';
 
+  // Try img2img if we have an input image
   if (hasInputImage) {
-    // Attempt 1: Higgsfield Kontext image-to-image endpoint
     const img2imgPayload = {
       ...basePayload,
       input_image: input_image.startsWith('data:') ? input_image : `data:image/jpeg;base64,${input_image}`,
     };
-    // Include additional reference images if provided (FLUX Kontext supports up to 4)
-    if (input_image_2) img2imgPayload.input_image_2 = input_image_2.startsWith('data:') ? input_image_2 : `data:image/jpeg;base64,${input_image_2}`;
-    if (input_image_3) img2imgPayload.input_image_3 = input_image_3.startsWith('data:') ? input_image_3 : `data:image/jpeg;base64,${input_image_3}`;
-    if (input_image_4) img2imgPayload.input_image_4 = input_image_4.startsWith('data:') ? input_image_4 : `data:image/jpeg;base64,${input_image_4}`;
 
     try {
       const submitRes = await fetch(`${BASE}/flux-pro/kontext/max/image-to-image`, {
@@ -70,57 +187,44 @@ export async function POST(request) {
         headers: { 'Content-Type': 'application/json', 'Authorization': AUTH },
         body: JSON.stringify(img2imgPayload)
       });
-
       if (submitRes.ok) {
         const submitData = await submitRes.json();
         requestId = submitData?.id || submitData?.request_id;
-        if (requestId) usedMode = 'image-to-image';
+        if (requestId) usedMode = 'higgsfield-image-to-image';
       }
-      // If 404 or other failure, fall through to text-to-image
-    } catch (e) {
-      // Silently fall through to text-to-image
-    }
+    } catch (e) { /* fall through */ }
   }
 
-  // Fallback: text-to-image (no sketch conditioning)
+  // Fallback: text-to-image
   if (!requestId) {
-    try {
-      const submitRes = await fetch(`${BASE}/flux-pro/kontext/max/text-to-image`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': AUTH },
-        body: JSON.stringify(basePayload)
-      });
-      const submitData = await submitRes.json();
-      if (!submitRes.ok) return Response.json({ error: submitData?.detail || submitData?.error || 'Submit failed', raw: submitData }, { status: submitRes.status, headers: corsHeaders });
-      requestId = submitData?.id || submitData?.request_id;
-      if (!requestId) return Response.json({ error: 'No request ID returned', raw: submitData }, { status: 500, headers: corsHeaders });
-      usedMode = 'text-to-image';
-    } catch (e) {
-      return Response.json({ error: 'Submit error: ' + e.message }, { status: 500, headers: corsHeaders });
-    }
+    const submitRes = await fetch(`${BASE}/flux-pro/kontext/max/text-to-image`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': AUTH },
+      body: JSON.stringify(basePayload)
+    });
+    const submitData = await submitRes.json();
+    if (!submitRes.ok) throw new Error(submitData?.detail || submitData?.error || 'Higgsfield submit failed');
+    requestId = submitData?.id || submitData?.request_id;
+    if (!requestId) throw new Error('No request ID returned from Higgsfield');
   }
 
   // Poll up to 55s
   const deadline = Date.now() + 55000;
   while (Date.now() < deadline) {
     await new Promise(r => setTimeout(r, 2500));
-    try {
-      const pollRes = await fetch(`${BASE}/requests/${requestId}/status`, { headers: { 'Authorization': AUTH } });
-      const pollData = await pollRes.json();
-      const status = pollData?.status;
-      if (status === 'completed' || status === 'succeeded') {
-        const url = pollData?.images?.[0]?.url || pollData?.result?.images?.[0]?.url || pollData?.results?.raw?.url || pollData?.output?.[0] || pollData?.image_url;
-        if (!url) return Response.json({ error: 'Completed but no image URL', raw: pollData }, { status: 500, headers: corsHeaders });
-        return Response.json({ url, mode: usedMode }, { headers: corsHeaders });
-      }
-      if (status === 'failed' || status === 'error' || status === 'cancelled' || status === 'nsfw') {
-        return Response.json({ error: `Job ${status}`, raw: pollData }, { status: 500, headers: corsHeaders });
-      }
-    } catch (e) {
-      return Response.json({ error: 'Poll error: ' + e.message }, { status: 500, headers: corsHeaders });
+    const pollRes = await fetch(`${BASE}/requests/${requestId}/status`, { headers: { 'Authorization': AUTH } });
+    const pollData = await pollRes.json();
+    const status = pollData?.status;
+    if (status === 'completed' || status === 'succeeded') {
+      const url = pollData?.images?.[0]?.url || pollData?.result?.images?.[0]?.url || pollData?.results?.raw?.url || pollData?.output?.[0] || pollData?.image_url;
+      if (!url) throw new Error('Completed but no image URL');
+      return { url, mode: usedMode };
+    }
+    if (status === 'failed' || status === 'error' || status === 'cancelled' || status === 'nsfw') {
+      throw new Error(`Higgsfield job ${status}`);
     }
   }
-  return Response.json({ error: 'Timed out. Try again.' }, { status: 504, headers: corsHeaders });
+  throw new Error('Higgsfield timed out');
 }
 
 export async function GET() {
@@ -128,6 +232,7 @@ export async function GET() {
     {
       status: 'ok',
       service: 'zipjeweler-proxy',
+      hasOpenAI: !!process.env.OPENAI_API_KEY,
       hasKeyId: !!process.env.HIGGSFIELD_KEY_ID,
       hasKeySecret: !!process.env.HIGGSFIELD_KEY_SECRET,
       timestamp: new Date().toISOString(),

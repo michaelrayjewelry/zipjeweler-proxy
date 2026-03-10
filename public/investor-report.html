@@ -2533,6 +2533,7 @@ const PROXY_URL = '/api/generate-render';
 const CHAT_URL  = '/api/chat';
 let useServerKeys = false;
 let serverHasHiggsfield = false;
+let serverHasOpenAI = false;
 
 // Helper: route Anthropic calls through server proxy or direct
 async function claudeAPI(body) {
@@ -2667,6 +2668,7 @@ function startWithKey(auto) {
     const res = await fetch('/api/config');
     if (!res.ok) return;
     const cfg = await res.json();
+    if (cfg.hasOpenAI) serverHasOpenAI = true;
     if (cfg.hasHiggsfield) serverHasHiggsfield = true;
     if (cfg.hasAnthropicKey) {
       useServerKeys = true;
@@ -2758,11 +2760,11 @@ function updateScore() {
 function checkRenderReady() {
   const designReady = fieldValues.pieceType && fieldValues.metalType;
   const btn = document.getElementById('render-btn');
-  const hasHiggs = higgsKey || serverHasHiggsfield;
-  if (designReady && hasHiggs) {
+  const hasRenderKey = higgsKey || serverHasHiggsfield || serverHasOpenAI;
+  if (designReady && hasRenderKey) {
     btn.style.display = 'inline-flex';
     document.getElementById('render-no-key').style.display = 'none';
-  } else if (designReady && !hasHiggs) {
+  } else if (designReady && !hasRenderKey) {
     document.getElementById('render-no-key').style.display = 'block';
   }
 }
