@@ -24,7 +24,7 @@ export async function POST(request) {
   let body;
   try { body = await request.json(); } catch { body = {}; }
 
-  const { prompt, aspect_ratio = '1:1', input_image, input_image_2, input_image_3, input_image_4, quality = 'high' } = body;
+  const { prompt, aspect_ratio = '1:1', input_image, input_image_2, input_image_3, input_image_4, quality = 'high', input_fidelity } = body;
   if (!prompt || prompt.trim().length < 5) {
     return Response.json({ error: 'prompt is required' }, { status: 400, headers: corsHeaders });
   }
@@ -35,7 +35,7 @@ export async function POST(request) {
   const openaiKey = process.env.OPENAI_API_KEY;
   if (openaiKey) {
     try {
-      const result = await openaiGenerate({ openaiKey, prompt: prompt.trim(), hasInputImage, input_image, input_image_2, input_image_3, input_image_4, aspect_ratio, quality });
+      const result = await openaiGenerate({ openaiKey, prompt: prompt.trim(), hasInputImage, input_image, input_image_2, input_image_3, input_image_4, aspect_ratio, quality, input_fidelity });
       return Response.json(result, { headers: corsHeaders });
     } catch (e) {
       // If OpenAI fails, fall through to Higgsfield
@@ -61,7 +61,7 @@ export async function POST(request) {
 // ────────────────────────────────────────────────────────────
 // OpenAI gpt-image-1.5 — supports both generation and image editing
 // ────────────────────────────────────────────────────────────
-async function openaiGenerate({ openaiKey, prompt, hasInputImage, input_image, input_image_2, input_image_3, input_image_4, aspect_ratio, quality }) {
+async function openaiGenerate({ openaiKey, prompt, hasInputImage, input_image, input_image_2, input_image_3, input_image_4, aspect_ratio, quality, input_fidelity }) {
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${openaiKey}`,
@@ -103,6 +103,7 @@ async function openaiGenerate({ openaiKey, prompt, hasInputImage, input_image, i
       image: images,
       size,
       quality,
+      input_fidelity: input_fidelity || 'high',
     };
 
     const res = await fetch('https://api.openai.com/v1/images/edits', {

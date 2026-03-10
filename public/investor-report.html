@@ -3346,9 +3346,10 @@ function buildC2RInstruction(corrections) {
   const angle    = document.getElementById('c2r-angle').value;
   const notes    = document.getElementById('c2r-notes').value.trim();
 
-  let prompt = 'Convert this jewelry CAD wireframe into a photorealistic luxury product photograph. ';
-  prompt += 'Preserve the exact geometry, silhouette, proportions, stone count, and structure. ';
-  prompt += 'Only apply materials, lighting, and realism — do not redesign.\n\n';
+  let prompt = 'Edit this image of a jewelry piece. Keep the EXACT same piece — same shape, silhouette, proportions, stone count, prong positions, band width, and every structural detail must be pixel-identical. ';
+  prompt += 'Do NOT redesign, reinterpret, or change the form in any way. ';
+  prompt += 'The ONLY change is to replace the CAD/wireframe material appearance with photorealistic materials as specified below. ';
+  prompt += 'The output should look like a professional product photograph of this exact same piece of jewelry.\n\n';
 
   if (corrections) prompt += 'CORRECTIONS FROM PRIOR PASS:\n' + corrections + '\n\n';
 
@@ -3422,7 +3423,7 @@ async function renderC2RDirect() {
     const res = await fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, input_image: c2rImageB64, aspect_ratio: '1:1' })
+      body: JSON.stringify({ prompt, input_image: c2rImageB64, aspect_ratio: '1:1', input_fidelity: 'high' })
     });
     const data = await res.json();
     if (spinner) spinner.style.display = 'none';
@@ -4066,7 +4067,10 @@ async function renderS2I() {
   try {
     // Build payload — include sketch image for image-to-image rendering
     const payload = { prompt, aspect_ratio: '1:1' };
-    if (s2iImageB64) payload.input_image = s2iImageB64;
+    if (s2iImageB64) {
+      payload.input_image = s2iImageB64;
+      payload.input_fidelity = 'high';
+    }
 
     const res = await fetch(PROXY_URL, {
       method: 'POST',
