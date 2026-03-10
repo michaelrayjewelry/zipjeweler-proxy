@@ -4110,8 +4110,21 @@ function buildPhotoshootPrompt() {
 
   const productDesc = [name, metal, stone].filter(Boolean).join(', ');
   const isOnModel = psMode === 'model';
+  const hasImage = !!mktImgB64;
+  const additionalDetails = document.getElementById('mkt-details').value.trim();
 
-  let prompt = `Professional product photoshoot for a ${productDesc}. `;
+  let prompt = '';
+
+  // When a product image is provided, lead with strong preservation instructions
+  if (hasImage) {
+    prompt += `CRITICAL: The attached image shows the EXACT jewelry product. You MUST preserve this specific piece with absolute fidelity — the exact shape, silhouette, proportions, design elements, stone cuts, stone colors, metal color/finish, band width, setting style, and every unique detail. Do NOT redesign, reinterpret, simplify, or alter the jewelry in any way. The output must show this identical piece, recognizable as the same product. `;
+    if (additionalDetails) {
+      prompt += `Product details for reference: ${additionalDetails}. `;
+    }
+    prompt += `\n\nNow place this exact piece (${productDesc}) into the following photoshoot scene:\n\n`;
+  } else {
+    prompt += `Professional product photoshoot for a ${productDesc}. `;
+  }
 
   if (isOnModel) {
     prompt += `The jewelry is being worn by ${modelMap[model] || 'a model'} in ${sceneMap[scene] || 'a studio setting'}. `;
@@ -4133,6 +4146,9 @@ function buildPhotoshootPrompt() {
   if (effectMap[effect]) prompt += `${effectMap[effect]}. `;
 
   prompt += `The jewelry must be the clear hero of the image — prominently displayed and in sharp focus. `;
+  if (hasImage) {
+    prompt += `REMINDER: The jewelry in the output MUST be identical to the uploaded product image — same design, same stones, same metal, same proportions. Do not invent new details or change existing ones. `;
+  }
   prompt += `Photorealistic, ultra-high quality, commercial jewelry photography. Shot on a Phase One IQ4 150MP. `;
   prompt += `The image should look like it belongs in a luxury jewelry brand campaign.`;
   if (direction) prompt += ` Additional direction: ${direction}.`;

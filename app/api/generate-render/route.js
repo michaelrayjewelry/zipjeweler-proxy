@@ -147,7 +147,16 @@ async function responsesGenerate({ openaiKey, prompt, hasInputImage, input_image
     if (input_image_3) addImage(input_image_3);
     if (input_image_4) addImage(input_image_4);
 
-    content.push({ type: 'input_text', text: prompt });
+    // When editing with an input image, reinforce that the product must be preserved exactly
+    let enhancedPrompt = prompt;
+    if (action === 'edit') {
+      const isPhotoshoot = prompt.toLowerCase().includes('photoshoot') || prompt.toLowerCase().includes('product');
+      if (isPhotoshoot && !prompt.includes('CRITICAL')) {
+        enhancedPrompt = `IMPORTANT: The attached image shows the exact product. Preserve its exact design, shape, colors, stones, and proportions. Do not alter the product itself.\n\n${prompt}`;
+      }
+    }
+
+    content.push({ type: 'input_text', text: enhancedPrompt });
 
     input = [{ role: 'user', content }];
   } else {
