@@ -3012,6 +3012,7 @@ let s2iOpen = false;
 let s2iImageB64 = null;
 let s2iImageType = 'image/jpeg';
 let s2iAnalyzing = false;
+let s2iResponseId = null;  // Track Responses API response ID for multi-turn
 
 function toggleS2I() {
   s2iOpen = !s2iOpen;
@@ -3023,7 +3024,7 @@ function toggleS2I() {
 }
 
 function resetS2I() {
-  s2iImageB64 = null;
+  s2iImageB64 = null; s2iResponseId = null;
   document.getElementById('s2i-file').value = '';
   document.getElementById('s2i-upload-ph').style.display = 'block';
   document.getElementById('s2i-preview-img').style.display = 'none';
@@ -4209,9 +4210,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (r1) r1.classList.add('pf-render-selected');
 });
 
-/* ── Render from generated prompt (S2I) — sends sketch as input_image for img2img ── */
-async function renderS2I() {
-  const prompt = document.getElementById('s2i-prompt-text')?.textContent;
+/* ── Render from generated prompt (S2I) — uses Responses API for multi-turn editing ── */
+async function renderS2I(correctionText) {
+  const prompt = correctionText || document.getElementById('s2i-prompt-text')?.textContent;
   if (!prompt || prompt.length < 10) return;
   const btn = document.getElementById('s2i-render-btn');
   const placeholder = document.getElementById('s2i-render-placeholder');
@@ -4230,30 +4231,70 @@ async function renderS2I() {
   const retryBtn = document.getElementById('s2i-retry-btn');
   if (retryBtn) retryBtn.style.display = 'none';
 
+  // Determine which endpoint to use:
+  // - Responses API (/api/generate-image) for S2I with sketch reference + multi-turn
+  // - Fallback to Image API (/api/generate-render) if Responses API unavailable
+  const responsesUrl = (PROXY_URL || '').replace('/api/generate-render', '/api/generate-image');
+  const useResponsesAPI = serverHasOpenAI && responsesUrl.includes('/api/generate-image');
+
   try {
-    // Build payload — include sketch image for image-to-image rendering
-    const payload = { prompt, aspect_ratio: '1:1' };
-    if (s2iImageB64) {
-      payload.input_image = s2iImageB64;
-      payload.input_fidelity = 'high';
+    let data;
+
+    if (useResponsesAPI) {
+      // Responses API — supports multi-turn editing with previous_response_id
+      const payload = {
+        prompt,
+        quality: 'high',
+        size: 'auto',
+        input_fidelity: 'high',
+      };
+
+      // First render: include the sketch image
+      // Correction renders: chain via previous_response_id (sketch already in context)
+      if (s2iResponseId && correctionText) {
+        payload.previous_response_id = s2iResponseId;
+      } else if (s2iImageB64) {
+        payload.input_image = s2iImageB64;
+        s2iResponseId = null; // Reset chain for fresh renders
+      }
+
+      const res = await fetch(responsesUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      data = await res.json();
+      if (!res.ok || !data.url) throw new Error(data.error || 'No image URL returned');
+
+      // Store response_id for multi-turn corrections
+      if (data.response_id) {
+        s2iResponseId = data.response_id;
+      }
+    } else {
+      // Fallback: Image API (single-shot edit)
+      const payload = { prompt, aspect_ratio: '1:1' };
+      if (s2iImageB64) {
+        payload.input_image = s2iImageB64;
+        payload.input_fidelity = 'high';
+      }
+      const res = await fetch(PROXY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      data = await res.json();
+      if (!res.ok || !data.url) throw new Error(data.error || 'No image URL returned');
     }
 
-    const res = await fetch(PROXY_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
     if (spinner) spinner.style.display = 'none';
-    if (!res.ok || !data.url) throw new Error(data.error || 'No image URL returned');
     if (img) { img.src = data.url; img.style.display = 'block'; }
 
     // Store render URL for fidelity grading
     window._s2iRenderUrl = data.url;
-    window._s2iRenderMode = data.mode || 'text-to-image';
+    window._s2iRenderMode = data.mode || 'responses-api';
 
     // Auto-grade fidelity if we have a source sketch
-    if (s2iImageB64) {
+    if (s2iImageB64 && (anthropicKey || useServerKeys)) {
       gradeFidelity('s2i', s2iImageB64, s2iImageType, data.url, prompt);
     }
 
@@ -4397,7 +4438,7 @@ correction_instructions: specific, actionable fixes for the next render pass.`;
   }
 }
 
-/* ── Retry render with correction instructions prepended ── */
+/* ── Retry render with correction instructions ── */
 async function retryRender(tool) {
   const grade = window['_' + tool + 'Grade'];
   if (!grade?.correction_instructions?.length) return;
@@ -4405,11 +4446,14 @@ async function retryRender(tool) {
   const corrections = grade.correction_instructions.map(c => '- ' + c).join('\n');
 
   if (tool === 's2i') {
-    // S2I: prepend corrections to the prompt text
-    const promptEl = document.getElementById('s2i-prompt-text');
-    const currentPrompt = promptEl?.textContent || '';
-    promptEl.textContent = 'CORRECTIONS FROM PRIOR PASS:\n' + corrections + '\n\n' + currentPrompt;
-    renderS2I();
+    // S2I with Responses API: send corrections as a follow-up turn
+    // The previous_response_id chains to the last render, so the model
+    // sees the original sketch + prior render and applies corrections
+    const correctionPrompt = 'Apply these corrections to the previous render. '
+      + 'Keep everything else identical — only fix the issues listed:\n\n'
+      + corrections
+      + '\n\nPreserve the exact silhouette, proportions, stone count, and structure from the original sketch.';
+    renderS2I(correctionPrompt);
   } else if (tool === 'c2r') {
     // C2R: store corrections and re-render (buildC2RInstruction reads them)
     window._c2rCorrections = corrections;
