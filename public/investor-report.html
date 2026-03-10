@@ -431,6 +431,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
   #mod-shell > div:last-child{display:none;}
 }
 @media(max-width:720px){
+  #zip-shell{grid-template-columns:1fr !important;}
+  #zip-shell > div:last-child{display:none;}
+}
+@media(max-width:720px){
   #imagine-shell{grid-template-columns:1fr !important;}
   #imagine-brief-col{display:none !important;}
   .ic-header{grid-template-columns:1fr !important;}
@@ -2009,18 +2013,132 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
         </div>
 
 
-        <div class="tc" style="border-top:3px solid var(--coral);">
-          
-          <div class="tc-top"><div class="tc-icon">🤖</div><div class="tc-num">Tool 07</div></div>
-          <div class="tc-name">Dashboard Assistant</div>
-          <div class="tc-desc">An AI that handles the boring parts of studio management through natural language. Edit project folders, upload and organize files, create editable documents and invoices, move orders through stages — all by typing what you want. The platform does the clicking for you.</div>
-          <div class="tc-feats">
-            <div class="tf">Edit any project folder field through natural language — no UI navigation</div>
-            <div class="tf">Upload and auto-organize files into the correct project folder and section</div>
-            <div class="tf">Create invoices, documents, and production packages via plain-language commands</div>
-            <div class="tf">Move orders through pipeline stages, update statuses, trigger client notifications</div>
+        <div class="tc" id="zip-card" style="border-top:3px solid var(--coral);grid-column:1/-1;padding:28px 24px;">
+
+          <!-- Info header -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:start;margin-bottom:20px;">
+            <div>
+              <div class="tc-top" style="margin-bottom:12px;"><div class="tc-icon">🤖</div><div class="tc-num">Tool 07</div></div>
+              <div class="tc-name" style="font-size:20px;margin-bottom:8px;">Dashboard Assistant</div>
+              <div class="tc-desc">An AI that handles the boring parts of studio management through natural language. Edit project folders, upload and organize files, create editable documents and invoices, move orders through stages — all by typing what you want. The platform does the clicking for you.</div>
+            </div>
+            <div class="tc-feats" style="margin-bottom:0;padding-top:48px;">
+              <div class="tf">Edit any project folder field through natural language — no UI navigation</div>
+              <div class="tf">Upload and auto-organize files into the correct project folder and section</div>
+              <div class="tf">Create invoices, documents, and production packages via plain-language commands</div>
+              <div class="tf">Move orders through pipeline stages, update statuses, trigger client notifications</div>
+            </div>
           </div>
-          <div class="tc-footer"><div class="tc-layer">AI Studio</div><span class="pill pill-build">◐ Building Now</span></div>
+
+          <!-- Footer -->
+          <div class="tc-footer" style="margin-bottom:20px;">
+            <div class="tc-layer">AI Studio</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span class="pill pill-build">&#9680; Building Now</span>
+              <button id="zip-toggle" onclick="toggleZip()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 18px;background:var(--coral);color:#fff;border:none;border-radius:20px;font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                <span id="zip-toggle-icon" style="font-size:12px;">&#9654;</span>
+                <span id="zip-toggle-txt">Try Dashboard Assistant</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Preview Panel -->
+          <div id="zip-preview" style="display:none;border-radius:14px;overflow:hidden;border:1px solid rgba(0,0,0,.15);box-shadow:0 12px 50px rgba(0,0,0,.22);">
+
+            <!-- Chrome bar -->
+            <div style="background:#141410;padding:11px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06);">
+              <div style="display:flex;gap:6px;flex-shrink:0;">
+                <div style="width:11px;height:11px;border-radius:50%;background:#FF5F57;"></div>
+                <div style="width:11px;height:11px;border-radius:50%;background:#FFBD2E;"></div>
+                <div style="width:11px;height:11px;border-radius:50%;background:#28C840;"></div>
+              </div>
+              <div style="flex:1;text-align:center;">
+                <span style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:3px 14px;">
+                  <span style="width:8px;height:8px;border-radius:50%;background:#C9534B;display:inline-block;opacity:.7;"></span>
+                  <span style="font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.5px;">zipjeweler.com/dashboard/celestine-oval-ring</span>
+                </span>
+              </div>
+              <button onclick="resetZip()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:5px;color:rgba(255,255,255,.35);cursor:pointer;font-size:12px;padding:3px 8px;font-family:'DM Sans',sans-serif;" onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">&#8635; Reset</button>
+            </div>
+
+            <!-- App Shell: chat | project folder -->
+            <div id="zip-shell" style="display:grid;grid-template-columns:1fr 1fr;background:#0F0F0D;height:600px;">
+
+              <!-- LEFT: Zip Chat -->
+              <div style="display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.05);overflow:hidden;">
+
+                <!-- Chat header -->
+                <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:12px;flex-shrink:0;">
+                  <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(201,83,75,.25),rgba(207,181,132,.15));border:1.5px solid rgba(201,83,75,.35);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">⚡</div>
+                  <div style="flex:1;">
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;color:#E8E4DD;">Zip <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;font-weight:400;margin-left:4px;">AI Dashboard Assistant</span></div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#47453F;margin-top:1px;">Celestine Oval Ring — Sarah &amp; James Chen</div>
+                  </div>
+                  <div id="zip-status-dot" style="width:8px;height:8px;border-radius:50%;background:#28C840;box-shadow:0 0 6px rgba(40,200,64,.4);flex-shrink:0;"></div>
+                </div>
+
+                <!-- Messages -->
+                <div id="zip-msgs" style="flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px;">
+                </div>
+
+                <!-- Typing indicator -->
+                <div id="zip-typing" style="display:none;padding:0 20px 10px;flex-shrink:0;">
+                  <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,255,255,.03);border-radius:12px;">
+                    <div style="display:flex;gap:3px;">
+                      <div style="width:5px;height:5px;border-radius:50%;background:#C9534B;animation:ibounce 1.2s ease infinite;"></div>
+                      <div style="width:5px;height:5px;border-radius:50%;background:#C9534B;animation:ibounce 1.2s ease .15s infinite;"></div>
+                      <div style="width:5px;height:5px;border-radius:50%;background:#C9534B;animation:ibounce 1.2s ease .3s infinite;"></div>
+                    </div>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;">Zip is thinking…</span>
+                  </div>
+                </div>
+
+                <!-- Suggestion chips -->
+                <div id="zip-suggestions" style="padding:4px 16px 0;display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;"></div>
+
+                <!-- Input bar -->
+                <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.05);background:#0C0C0A;display:flex;align-items:flex-end;gap:10px;flex-shrink:0;">
+                  <textarea id="zip-input" rows="1" placeholder="Ask Zip anything about this project…" style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#E8E4DD;font-family:'DM Sans',sans-serif;font-size:12px;padding:10px 14px;resize:none;outline:none;line-height:1.5;max-height:80px;" onfocus="this.style.borderColor='rgba(201,83,75,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.08)'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendZip();}"></textarea>
+                  <button onclick="sendZip()" id="zip-send" style="width:40px;height:40px;border-radius:50%;background:#C9534B;border:none;color:#fff;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;box-shadow:0 2px 10px rgba(201,83,75,.3);" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">&#10148;</button>
+                </div>
+              </div>
+
+              <!-- RIGHT: Live Project Folder -->
+              <div style="display:flex;flex-direction:column;background:#0C0C0A;overflow:hidden;">
+
+                <!-- Project folder header -->
+                <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:12px;flex-shrink:0;">
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;flex:1;">Live Project Folder</div>
+                  <div id="zip-pf-status" style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(207,181,132,.1);border:1px solid rgba(207,181,132,.22);border-radius:10px;">
+                    <div style="width:6px;height:6px;border-radius:50%;background:#CFB584;"></div>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;color:#CFB584;">In Review</span>
+                  </div>
+                </div>
+
+                <!-- Tab nav -->
+                <div style="display:flex;border-bottom:1px solid rgba(255,255,255,.05);padding:0 12px;flex-shrink:0;overflow-x:auto;" id="zip-pf-tabs">
+                  <button onclick="zipPfGo('overview')" class="zip-pf-tab zip-pf-tab-active" data-tab="overview" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#CFB584;background:none;border:none;border-bottom:2px solid #CFB584;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Overview</button>
+                  <button onclick="zipPfGo('design')" class="zip-pf-tab" data-tab="design" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Design</button>
+                  <button onclick="zipPfGo('stones')" class="zip-pf-tab" data-tab="stones" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Stones</button>
+                  <button onclick="zipPfGo('specs')" class="zip-pf-tab" data-tab="specs" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Specs</button>
+                  <button onclick="zipPfGo('order')" class="zip-pf-tab" data-tab="order" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Order</button>
+                  <button onclick="zipPfGo('files')" class="zip-pf-tab" data-tab="files" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Files</button>
+                </div>
+
+                <!-- Scrollable content -->
+                <div id="zip-pf-scroll" style="flex:1;overflow-y:auto;padding:14px 16px;">
+                  <!-- Panels rendered by JS from zipProjectData -->
+                  <div id="zip-pf-content"></div>
+                </div>
+
+                <!-- Change log -->
+                <div id="zip-changelog" style="display:none;border-top:1px solid rgba(255,255,255,.05);padding:8px 16px;background:rgba(45,139,85,.04);max-height:90px;overflow-y:auto;">
+                  <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#2D8B55;font-weight:700;margin-bottom:4px;">Recent Changes by Zip</div>
+                  <div id="zip-changelog-items" style="display:flex;flex-direction:column;gap:2px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- BATCH UPLOAD -->
@@ -4924,6 +5042,371 @@ function p3dShowResults(data) {
     }
     texturesSec.style.display = hasTextures ? 'block' : 'none';
   }
+}
+
+
+/* ══════════════════════════════════════════════════════
+   TOOL 07 — ZIP: AI Dashboard Assistant
+══════════════════════════════════════════════════════ */
+let zipOpen = false, zipBusy = false;
+let zipMessages = []; // {role:'user'|'assistant', content:string}
+
+/* ── Mockup project data (mutable — Zip edits this in real-time) ── */
+const zipProjectData = {
+  overview: {
+    'Client Name': 'Sarah & James Chen',
+    'Email': 'sarah.chen@gmail.com',
+    'Collection': 'Bridal',
+    'Priority': 'HIGH',
+    'Budget': '$14,500',
+    'Timeline': '6 weeks',
+    'Delivery': 'In-Store Pickup',
+    'Due Date': 'March 28, 2025',
+    'Piece Type': 'Engagement Ring',
+    'Metal': '18k White Gold',
+    'Center Stone': 'Oval Diamond',
+    'Setting': 'Pavé Halo',
+    'Client Notes': 'Client prefers vintage-inspired details. Referenced Tiffany Soleste style but wants a thinner band. Bride is left-handed — consider comfort for daily wear.',
+    'Production Notes': 'Stone setting in progress. Pavé alignment verified under 10x loupe. Final QC scheduled for March 21.',
+  },
+  design: {
+    'Metal Type': '18k White Gold',
+    'Metal Weight': '8.5g',
+    'Finish': 'High Polish',
+    'Setting Style': 'Pavé Halo',
+    'Piece Type': 'Engagement Ring',
+    'Engraving Text': 'Always & Forever',
+    'Engraving Font': 'Script',
+    'Engraving Location': 'Inside band',
+  },
+  stones: {
+    'Center Stone': 'Diamond',
+    'Shape': 'Oval',
+    'Carat Weight': '2.1 ct',
+    'Color': 'F',
+    'Clarity': 'VS1',
+    'Dimensions': '9.8 × 6.9mm',
+    'Center Source': 'Client Supplied',
+    'Accent Type': 'Diamond (Round)',
+    'Accent Count': '42 stones',
+    'Total Accent Carat': '0.38 ctw',
+    'Accent Size': '1.2mm each',
+    'Accent Color': 'G–H',
+    'Accent Setting': 'Shared Pavé',
+  },
+  specs: {
+    'Ring Size': '6.5',
+    'Inner Diameter': '16.9mm',
+    'Profile': 'Comfort Fit',
+    'Overall Width': '20mm × 8mm',
+    'Shank Width': '1.8mm',
+    'Shank Height': '1.4mm',
+  },
+  order: {
+    'Order Number': '#ZJ-2025-0214',
+    'Payment Status': 'Deposit Received',
+    'Deposit': '$7,250 (50%)',
+    'Balance Due': '$7,250',
+    'Metal Cost': '$493',
+    'Center Stone Cost': '$7,400',
+    'Pavé Cost': '$680',
+    'Labor': '$1,020 (12 hrs)',
+    'Overhead': '$1,408 (15%)',
+    'Total Cost': '$11,001',
+    'Client Price': '$14,500',
+    'Margin': '24.1%',
+    'Stage': 'Stone Setting — In Progress',
+  },
+  files: {
+    'CAD File': 'Celestine_v3_FINAL.3dm — Rhino 8, 4.2 MB',
+    'Print File': 'Celestine_print_ready.stl — 8.7 MB',
+    'Spec Sheet': 'Production_Spec_Sheet.pdf — 1.1 MB',
+    'Reference 1': 'pinterest_ref_1.jpg — Client inspiration',
+    'Reference 2': 'hand_sketch_oval_halo.jpg — Designer sketch',
+    'Approval': 'Client_Render_Approval_Signed.pdf — Signed Feb 19',
+  },
+};
+
+/* ── Zip changelog ── */
+let zipChangelog = [];
+
+function toggleZip() {
+  zipOpen = !zipOpen;
+  const p = document.getElementById('zip-preview');
+  p.style.display = zipOpen ? 'block' : 'none';
+  document.getElementById('zip-toggle-icon').textContent = zipOpen ? '\u25BE' : '\u25B6';
+  document.getElementById('zip-toggle-txt').textContent  = zipOpen ? 'Close Preview' : 'Try Dashboard Assistant';
+  if (zipOpen) {
+    if (!zipMessages.length) initZipChat();
+    setTimeout(() => p.scrollIntoView({behavior:'smooth', block:'nearest'}), 80);
+  }
+}
+
+function resetZip() {
+  zipMessages = [];
+  zipChangelog = [];
+  // Reset project data to defaults
+  zipProjectData.overview['Metal'] = '18k White Gold';
+  zipProjectData.overview['Budget'] = '$14,500';
+  zipProjectData.overview['Priority'] = 'HIGH';
+  zipProjectData.design['Metal Type'] = '18k White Gold';
+  zipProjectData.design['Finish'] = 'High Polish';
+  zipProjectData.stones['Center Stone'] = 'Diamond';
+  zipProjectData.order['Stage'] = 'Stone Setting — In Progress';
+  document.getElementById('zip-msgs').innerHTML = '';
+  document.getElementById('zip-changelog').style.display = 'none';
+  document.getElementById('zip-changelog-items').innerHTML = '';
+  initZipChat();
+}
+
+function initZipChat() {
+  zipRenderPfPanel('overview');
+  zipShowSuggestions();
+  addZipBubble('assistant', 'Hi! I\'m <strong>Zip</strong>, your AI dashboard assistant. I have full access to the <strong>Celestine Oval Ring</strong> project folder for Sarah & James Chen.\n\nI can read and update any field — just tell me what you need. Try something like:\n• "Change the metal to 14k rose gold"\n• "What\'s the current budget?"\n• "Move the project to Ready for Production"');
+}
+
+function addZipBubble(role, html) {
+  const msgs = document.getElementById('zip-msgs');
+  const wrap = document.createElement('div');
+  wrap.className = 'imsg-wrap';
+  const isUser = role === 'user';
+  wrap.style.cssText = 'display:flex;gap:8px;' + (isUser ? 'flex-direction:row-reverse;' : '');
+
+  const avatar = document.createElement('div');
+  avatar.style.cssText = 'width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;' +
+    (isUser ? 'background:rgba(201,83,75,.15);border:1px solid rgba(201,83,75,.25);' : 'background:linear-gradient(135deg,rgba(201,83,75,.2),rgba(207,181,132,.12));border:1px solid rgba(201,83,75,.3);');
+  avatar.textContent = isUser ? '👤' : '⚡';
+
+  const bubble = document.createElement('div');
+  bubble.style.cssText = 'max-width:85%;padding:10px 14px;border-radius:12px;font-family:\'DM Sans\',sans-serif;font-size:11.5px;line-height:1.65;word-break:break-word;' +
+    (isUser ? 'background:rgba(201,83,75,.12);border:1px solid rgba(201,83,75,.2);color:#E0D8D0;' : 'background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:#C8C4BE;');
+  bubble.innerHTML = html.replace(/\n/g, '<br>');
+
+  wrap.appendChild(avatar);
+  wrap.appendChild(bubble);
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  zipMessages.push({role, content: html.replace(/<[^>]*>/g, '')});
+}
+
+/* ── Render project folder panel ── */
+function zipRenderPfPanel(tab) {
+  // Update tab active states
+  document.querySelectorAll('.zip-pf-tab').forEach(t => {
+    const isActive = t.dataset.tab === tab;
+    t.style.color = isActive ? '#CFB584' : '#5A5652';
+    t.style.borderBottomColor = isActive ? '#CFB584' : 'transparent';
+    t.classList.toggle('zip-pf-tab-active', isActive);
+  });
+
+  const content = document.getElementById('zip-pf-content');
+  const data = zipProjectData[tab];
+  if (!data) { content.innerHTML = '<div style="text-align:center;padding:40px;color:#3A3835;font-family:\'DM Sans\',sans-serif;font-size:11px;">No data for this tab.</div>'; return; }
+
+  let html = '';
+  for (const [key, val] of Object.entries(data)) {
+    const isLong = val.length > 60;
+    const isBadge = key === 'Priority' || key === 'Payment Status' || key === 'Center Source';
+    let valHtml = '';
+    if (isBadge && val === 'HIGH') {
+      valHtml = '<span style="padding:2px 8px;border-radius:8px;background:rgba(201,83,75,.12);border:1px solid rgba(201,83,75,.2);color:#C9534B;font-size:9px;font-weight:700;letter-spacing:1px;">' + val + '</span>';
+    } else if (isBadge && (val === 'Deposit Received' || val === 'Client Supplied')) {
+      valHtml = '<span style="padding:2px 8px;border-radius:8px;background:rgba(45,139,85,.1);border:1px solid rgba(45,139,85,.2);color:#2D8B55;font-size:9px;font-weight:700;">' + val + '</span>';
+    } else if (key === 'Client Price' || key === 'Carat Weight') {
+      valHtml = '<span style="color:#CFB584;font-weight:600;">' + val + '</span>';
+    } else if (key === 'Margin') {
+      valHtml = '<span style="color:#2D8B55;font-weight:600;">' + val + '</span>';
+    } else {
+      valHtml = val;
+    }
+
+    if (isLong) {
+      html += '<div id="zip-field-' + key.replace(/\s+/g,'-').toLowerCase() + '" style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;gap:4px;">' +
+        '<div style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#3A3835;font-weight:600;">' + key + '</div>' +
+        '<div class="zip-pf-val" style="font-family:\'DM Sans\',sans-serif;font-size:11px;color:#B8B4AE;line-height:1.6;">' + valHtml + '</div>' +
+        '</div>';
+    } else {
+      html += '<div id="zip-field-' + key.replace(/\s+/g,'-').toLowerCase() + '" style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:baseline;gap:8px;">' +
+        '<div style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#3A3835;font-weight:600;min-width:110px;flex-shrink:0;">' + key + '</div>' +
+        '<div class="zip-pf-val" style="font-family:\'DM Sans\',sans-serif;font-size:11.5px;color:#B8B4AE;font-weight:500;">' + valHtml + '</div>' +
+        '</div>';
+    }
+  }
+  content.innerHTML = html;
+}
+
+function zipPfGo(tab) {
+  zipRenderPfPanel(tab);
+  document.getElementById('zip-pf-scroll').scrollTop = 0;
+}
+
+/* ── Suggestion chips ── */
+function zipShowSuggestions() {
+  const el = document.getElementById('zip-suggestions');
+  const suggestions = [
+    'Change metal to rose gold',
+    'What\'s the margin?',
+    'Move to Ready for Prod',
+    'Add production note',
+  ];
+  el.innerHTML = suggestions.map(s =>
+    '<button onclick="zipUseSuggestion(this)" style="padding:5px 12px;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.18);border-radius:14px;color:#CFB584;font-family:\'DM Sans\',sans-serif;font-size:9px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;" onmouseover="this.style.background=\'rgba(207,181,132,.16)\'" onmouseout="this.style.background=\'rgba(207,181,132,.08)\'">' + s + '</button>'
+  ).join('');
+}
+
+function zipUseSuggestion(btn) {
+  document.getElementById('zip-input').value = btn.textContent;
+  sendZip();
+}
+
+/* ── Highlight a field that was changed ── */
+function zipHighlightField(key) {
+  const id = 'zip-field-' + key.replace(/\s+/g,'-').toLowerCase();
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.transition = 'background .3s';
+  el.style.background = 'rgba(207,181,132,.12)';
+  el.style.borderLeft = '3px solid #CFB584';
+  setTimeout(() => { el.style.background = ''; el.style.borderLeft = ''; }, 3000);
+}
+
+/* ── Add changelog entry ── */
+function zipAddChangelog(text) {
+  zipChangelog.push(text);
+  const container = document.getElementById('zip-changelog');
+  const items = document.getElementById('zip-changelog-items');
+  container.style.display = 'block';
+  const entry = document.createElement('div');
+  entry.style.cssText = 'font-family:\'DM Sans\',sans-serif;font-size:9px;color:#5A8A60;line-height:1.5;';
+  const time = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  entry.innerHTML = '<span style="color:#3A6A40;font-weight:600;">' + time + '</span> — ' + text;
+  items.insertBefore(entry, items.firstChild);
+}
+
+/* ── Build system prompt with full project context ── */
+function zipBuildSystemPrompt() {
+  let ctx = 'You are Zip, the AI Dashboard Assistant for ZipJeweler. You have full read/write access to the current project folder.\n\n';
+  ctx += 'CURRENT PROJECT FOLDER DATA:\n';
+  for (const [tab, fields] of Object.entries(zipProjectData)) {
+    ctx += '\n[' + tab.toUpperCase() + ']\n';
+    for (const [k, v] of Object.entries(fields)) {
+      ctx += k + ': ' + v + '\n';
+    }
+  }
+  ctx += '\nINSTRUCTIONS:\n';
+  ctx += '- You can update any field. When doing so, respond with a JSON block in this exact format on its own line: $$UPDATE{"tab":"overview","field":"Metal","value":"14k Rose Gold"}$$\n';
+  ctx += '- You may include multiple $$UPDATE{...}$$ blocks in one response to change several fields at once.\n';
+  ctx += '- When navigating to a tab, include: $$TAB{"tab":"design"}$$\n';
+  ctx += '- When suggesting a tool, include: $$SUGGEST{"tool":"Sketch to Image","reason":"Generate a render with the new rose gold specs"}$$\n';
+  ctx += '- Always confirm what you changed and why. Be concise but helpful.\n';
+  ctx += '- Proactively suggest filling missing data, using other tools, or next steps when relevant.\n';
+  ctx += '- If the user asks about data, quote the exact values from the project folder.\n';
+  ctx += '- Keep responses short and conversational — 2-4 sentences max unless the user asks for detail.\n';
+  ctx += '- You are friendly, professional, and efficient. Your name is Zip.\n';
+  return ctx;
+}
+
+/* ── Send message to Zip ── */
+async function sendZip() {
+  const input = document.getElementById('zip-input');
+  const text = input.value.trim();
+  if (!text || zipBusy) return;
+
+  input.value = '';
+  addZipBubble('user', text);
+  document.getElementById('zip-suggestions').innerHTML = '';
+  zipBusy = true;
+
+  // Show typing
+  document.getElementById('zip-typing').style.display = 'block';
+  document.getElementById('zip-msgs').scrollTop = document.getElementById('zip-msgs').scrollHeight;
+
+  // Build messages for Claude
+  const apiMessages = [];
+  for (const m of zipMessages) {
+    apiMessages.push({ role: m.role, content: m.content });
+  }
+
+  try {
+    const res = await fetch(CHAT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        system: zipBuildSystemPrompt(),
+        messages: apiMessages,
+      }),
+    });
+
+    const data = await res.json();
+    document.getElementById('zip-typing').style.display = 'none';
+
+    if (!res.ok || !data.content) throw new Error(data.error?.message || data.error || 'No response');
+
+    let reply = data.content[0]?.text || '';
+
+    // Process $$UPDATE{...}$$ commands
+    const updateRe = /\$\$UPDATE(\{[^}]+\})\$\$/g;
+    let match;
+    while ((match = updateRe.exec(reply)) !== null) {
+      try {
+        const cmd = JSON.parse(match[1]);
+        if (cmd.tab && cmd.field && cmd.value !== undefined && zipProjectData[cmd.tab]) {
+          const oldVal = zipProjectData[cmd.tab][cmd.field] || '(empty)';
+          zipProjectData[cmd.tab][cmd.field] = cmd.value;
+          zipAddChangelog(cmd.field + ': ' + oldVal + ' → ' + cmd.value);
+          // Re-render if on that tab
+          const activeTab = document.querySelector('.zip-pf-tab-active');
+          if (activeTab && activeTab.dataset.tab === cmd.tab) {
+            zipRenderPfPanel(cmd.tab);
+          }
+          setTimeout(() => zipHighlightField(cmd.field), 100);
+        }
+      } catch(e) {}
+    }
+
+    // Process $$TAB{...}$$ commands
+    const tabRe = /\$\$TAB(\{[^}]+\})\$\$/g;
+    while ((match = tabRe.exec(reply)) !== null) {
+      try {
+        const cmd = JSON.parse(match[1]);
+        if (cmd.tab && zipProjectData[cmd.tab]) {
+          zipPfGo(cmd.tab);
+        }
+      } catch(e) {}
+    }
+
+    // Process $$SUGGEST{...}$$ commands
+    const suggestRe = /\$\$SUGGEST(\{[^}]+\})\$\$/g;
+    const suggestions = [];
+    while ((match = suggestRe.exec(reply)) !== null) {
+      try {
+        const cmd = JSON.parse(match[1]);
+        if (cmd.tool) suggestions.push(cmd);
+      } catch(e) {}
+    }
+
+    // Clean commands from display text
+    let displayReply = reply.replace(/\$\$(UPDATE|TAB|SUGGEST)\{[^}]*\}\$\$/g, '').trim();
+
+    // Add suggestion pills if any
+    if (suggestions.length) {
+      displayReply += '\n\n' + suggestions.map(s =>
+        '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(112,80,168,.1);border:1px solid rgba(112,80,168,.2);border-radius:10px;font-size:9px;font-weight:600;color:#9070C0;">💡 ' + s.tool + (s.reason ? ' — ' + s.reason : '') + '</span>'
+      ).join(' ');
+    }
+
+    addZipBubble('assistant', displayReply);
+    zipShowSuggestions();
+
+  } catch (e) {
+    document.getElementById('zip-typing').style.display = 'none';
+    addZipBubble('assistant', 'Sorry, I hit an error: ' + e.message + '. Please try again.');
+  }
+
+  zipBusy = false;
 }
 
 
