@@ -1456,7 +1456,18 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                   <!-- Photoshoot Section -->
                   <div style="margin-top:10px;border-top:1px solid rgba(255,255,255,.06);padding-top:12px;">
                     <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;margin-bottom:8px;">Product Photoshoot</div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+
+                    <!-- Shot Mode Toggle -->
+                    <div style="margin-bottom:10px;">
+                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:5px;">Shot Mode</div>
+                      <div style="display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid rgba(207,181,132,.2);">
+                        <button id="ps-mode-model" onclick="setPsMode('model')" style="flex:1;padding:7px 0;background:rgba(207,181,132,.15);color:#CFB584;border:none;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;cursor:pointer;transition:all .15s;">On Model / Human</button>
+                        <button id="ps-mode-product" onclick="setPsMode('product')" style="flex:1;padding:7px 0;background:transparent;color:#5A5652;border:none;border-left:1px solid rgba(207,181,132,.2);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;cursor:pointer;transition:all .15s;">Product Only</button>
+                      </div>
+                    </div>
+
+                    <!-- Row 1: Scene + Environment -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
                       <div>
                         <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Scene Type</div>
                         <select id="ps-scene" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
@@ -1466,9 +1477,72 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                           <option value="outdoor">Outdoor Natural</option>
                           <option value="evening">Evening / Gala</option>
                           <option value="bridal">Bridal / Wedding</option>
-                          <option value="closeup">Product Close-up on Hand</option>
+                          <option value="closeup">Close-up Detail</option>
+                          <option value="ecommerce">E-commerce / White BG</option>
+                          <option value="flat-lay">Flat Lay / Styled</option>
+                          <option value="window-display">Window Display</option>
                         </select>
                       </div>
+                      <div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Background / Environment</div>
+                        <select id="ps-environment" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
+                          <option value="seamless-white">Seamless White</option>
+                          <option value="seamless-black">Seamless Black</option>
+                          <option value="seamless-gray">Seamless Gray</option>
+                          <option value="gradient-dark">Dark Gradient</option>
+                          <option value="bokeh">Soft Bokeh</option>
+                          <option value="marble">Marble Surface</option>
+                          <option value="velvet">Velvet / Fabric</option>
+                          <option value="natural-outdoor">Natural / Outdoor</option>
+                          <option value="urban">Urban / Architecture</option>
+                          <option value="floral">Floral Arrangement</option>
+                          <option value="textured-wall">Textured Wall</option>
+                          <option value="transparent">Transparent / Isolated</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <!-- Row 2: Surface/Prop + Detail Type -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                      <div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Surface / Props</div>
+                        <select id="ps-surface" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
+                          <option value="none">None</option>
+                          <option value="white-marble">White Marble Slab</option>
+                          <option value="black-marble">Black Marble Slab</option>
+                          <option value="dark-wood">Dark Wood Surface</option>
+                          <option value="light-wood">Light Oak / Ash</option>
+                          <option value="mirror">Mirror / Reflective</option>
+                          <option value="silk">Silk / Satin Drape</option>
+                          <option value="velvet-cushion">Velvet Ring Cushion</option>
+                          <option value="jewelry-box">Open Jewelry Box</option>
+                          <option value="ring-stand">Ring Stand / Holder</option>
+                          <option value="dried-flowers">Dried Flowers / Botanicals</option>
+                          <option value="water-droplets">Water Droplets / Dew</option>
+                          <option value="ice-crystals">Ice / Crystal Shards</option>
+                          <option value="loose-stones">Loose Gemstones Scattered</option>
+                          <option value="gold-dust">Gold Dust / Flakes</option>
+                        </select>
+                      </div>
+                      <div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Detail Focus</div>
+                        <select id="ps-detail" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
+                          <option value="full-piece">Full Piece Overview</option>
+                          <option value="stone-focus">Center Stone Close-up</option>
+                          <option value="setting-detail">Setting / Prong Detail</option>
+                          <option value="side-profile">Band / Side Profile</option>
+                          <option value="hallmark">Hallmark / Stamp Detail</option>
+                          <option value="clasp">Clasp / Closure Detail</option>
+                          <option value="texture">Surface Texture / Finish</option>
+                          <option value="sparkle">Brilliance / Sparkle Shot</option>
+                          <option value="scale">Scale / Size Reference</option>
+                          <option value="stacked">Stacked / Layered Look</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <!-- Row 3: Camera + Lighting -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
                       <div>
                         <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Camera Angle</div>
                         <select id="ps-angle" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
@@ -1478,6 +1552,8 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                           <option value="overhead">Overhead / Flat Lay</option>
                           <option value="low-angle">Low Angle (Hero Shot)</option>
                           <option value="macro">Macro / Detail Close-up</option>
+                          <option value="45-degree">45-Degree Tilt</option>
+                          <option value="worms-eye">Worm's Eye (Dramatic)</option>
                         </select>
                       </div>
                       <div>
@@ -1490,9 +1566,17 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                           <option value="high-key">High Key (Bright & Airy)</option>
                           <option value="low-key">Low Key (Moody & Dark)</option>
                           <option value="ring-light">Ring Light / Beauty</option>
+                          <option value="backlit">Backlit / Silhouette Rim</option>
+                          <option value="spotlight">Single Spotlight</option>
+                          <option value="neon">Neon / Colored Gel</option>
+                          <option value="candlelight">Candlelight / Warm Glow</option>
                         </select>
                       </div>
-                      <div>
+                    </div>
+
+                    <!-- Row 4: Model (shown when mode=model) + Aspect Ratio -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                      <div id="ps-model-wrap">
                         <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Model</div>
                         <select id="ps-model" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
                           <option value="young-woman">Young Woman (20s-30s)</option>
@@ -1501,12 +1585,43 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                           <option value="mature-man">Mature Man (40s-50s)</option>
                           <option value="androgynous">Androgynous Model</option>
                           <option value="hand-only">Hand / Body Part Only</option>
+                          <option value="couple">Couple (Two Models)</option>
+                          <option value="diverse-group">Diverse Group</option>
+                        </select>
+                      </div>
+                      <div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Aspect Ratio</div>
+                        <select id="ps-ratio" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
+                          <option value="1:1">1:1 Square (Instagram)</option>
+                          <option value="4:5">4:5 Portrait (IG Feed)</option>
+                          <option value="9:16">9:16 Story / Reel</option>
+                          <option value="16:9">16:9 Landscape (Web Banner)</option>
+                          <option value="4:3">4:3 Standard</option>
                         </select>
                       </div>
                     </div>
+
+                    <!-- Row 5: Studio Effect -->
+                    <div style="margin-bottom:8px;">
+                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Studio Effects</div>
+                      <select id="ps-effect" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:7px 10px;outline:none;cursor:pointer;">
+                        <option value="none">None (Clean)</option>
+                        <option value="lens-flare">Lens Flare / Light Leak</option>
+                        <option value="prism">Prism / Rainbow Refraction</option>
+                        <option value="smoke">Smoke / Haze</option>
+                        <option value="sparkle-dust">Sparkle Dust Particles</option>
+                        <option value="motion-blur">Motion Blur / Movement</option>
+                        <option value="double-exposure">Double Exposure</option>
+                        <option value="reflection">Mirror Reflection Below</option>
+                        <option value="shadow-play">Dramatic Shadow Play</option>
+                        <option value="wet-surface">Wet Surface / Rain</option>
+                        <option value="film-grain">Vintage Film Grain</option>
+                      </select>
+                    </div>
+
                     <div style="margin-bottom:10px;">
                       <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;margin-bottom:4px;">Additional Direction (optional)</div>
-                      <input id="ps-direction" type="text" placeholder="e.g. elegant updo hairstyle, minimal makeup, black dress…" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:8px 11px;outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='rgba(207,181,132,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.08)'" />
+                      <input id="ps-direction" type="text" placeholder="e.g. elegant updo hairstyle, minimal makeup, black dress, luxury feel…" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11.5px;padding:8px 11px;outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='rgba(207,181,132,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.08)'" />
                     </div>
                     <button id="ps-gen-btn" onclick="generatePhotoshoot()" style="width:100%;padding:11px 0;background:linear-gradient(135deg,#CFB584,#A8956A);color:#0C0C0A;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;box-shadow:0 2px 12px rgba(207,181,132,.25);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Photoshoot</button>
                   </div>
@@ -3778,6 +3893,9 @@ function resetMkt() {
   document.getElementById('ps-spinner').style.display = 'none';
   document.getElementById('ps-error').style.display = 'none';
   document.getElementById('ps-direction').value = '';
+  setPsMode('model');
+  ['ps-environment','ps-surface','ps-detail','ps-effect'].forEach(id => { const el = document.getElementById(id); if (el) el.selectedIndex = 0; });
+  const ratioEl = document.getElementById('ps-ratio'); if (ratioEl) ratioEl.selectedIndex = 0;
 }
 function handleMktUpload(input) {
   const file = input.files[0]; if (!file) return;
@@ -3855,28 +3973,93 @@ If an image is provided, describe what you see and let it inform the copy. Be sp
 /* ══════════════════════════════════════════════════════
    TOOL 04b — PHOTOSHOOT
 ══════════════════════════════════════════════════════ */
-let psBusy = false, psResponseId = null;
+let psBusy = false, psResponseId = null, psMode = 'model';
+
+function setPsMode(mode) {
+  psMode = mode;
+  const modelBtn = document.getElementById('ps-mode-model');
+  const prodBtn  = document.getElementById('ps-mode-product');
+  const modelWrap = document.getElementById('ps-model-wrap');
+  if (mode === 'model') {
+    modelBtn.style.background = 'rgba(207,181,132,.15)'; modelBtn.style.color = '#CFB584';
+    prodBtn.style.background  = 'transparent';           prodBtn.style.color  = '#5A5652';
+    modelWrap.style.display = 'block';
+  } else {
+    prodBtn.style.background  = 'rgba(207,181,132,.15)'; prodBtn.style.color  = '#CFB584';
+    modelBtn.style.background = 'transparent';           modelBtn.style.color = '#5A5652';
+    modelWrap.style.display = 'none';
+  }
+}
 
 function buildPhotoshootPrompt() {
-  const scene = document.getElementById('ps-scene').value;
-  const angle = document.getElementById('ps-angle').value;
-  const lighting = document.getElementById('ps-lighting').value;
-  const model = document.getElementById('ps-model').value;
-  const direction = document.getElementById('ps-direction').value.trim();
+  const scene       = document.getElementById('ps-scene').value;
+  const environment = document.getElementById('ps-environment').value;
+  const surface     = document.getElementById('ps-surface').value;
+  const detail      = document.getElementById('ps-detail').value;
+  const angle       = document.getElementById('ps-angle').value;
+  const lighting    = document.getElementById('ps-lighting').value;
+  const model       = document.getElementById('ps-model').value;
+  const effect      = document.getElementById('ps-effect').value;
+  const direction   = document.getElementById('ps-direction').value.trim();
 
-  // Product context from marketing form
   const name  = document.getElementById('mkt-name').value.trim() || 'fine jewelry piece';
   const metal = document.getElementById('mkt-metal').value;
   const stone = document.getElementById('mkt-stone').value;
 
   const sceneMap = {
-    'studio': 'a professional studio portrait setting with a clean, seamless backdrop',
+    'studio': 'a professional studio portrait setting',
     'lifestyle': 'a candid lifestyle scene — a café, city street, or living room with natural ambiance',
     'editorial': 'a high-fashion editorial setting, like a Vogue or Harper\'s Bazaar spread',
     'outdoor': 'a beautiful outdoor natural setting with lush greenery or scenic background',
     'evening': 'an elegant evening or gala setting — candlelight, champagne, luxurious atmosphere',
     'bridal': 'a romantic bridal or wedding setting with soft florals and ethereal atmosphere',
-    'closeup': 'an extreme close-up shot of the jewelry being worn, showing exquisite detail'
+    'closeup': 'an extreme close-up detail shot showing exquisite craftsmanship',
+    'ecommerce': 'a clean e-commerce product shot on a pure white background, evenly lit',
+    'flat-lay': 'a styled flat-lay composition shot from directly above',
+    'window-display': 'a luxury jeweler\'s window display with elegant props and lighting'
+  };
+  const envMap = {
+    'seamless-white': 'on a seamless pure white background',
+    'seamless-black': 'on a seamless deep black background',
+    'seamless-gray': 'on a seamless neutral gray background',
+    'gradient-dark': 'against a dark gradient background fading from charcoal to black',
+    'bokeh': 'with a soft, dreamy bokeh background',
+    'marble': 'with a marble surface environment',
+    'velvet': 'with rich velvet or fabric backdrop',
+    'natural-outdoor': 'in a natural outdoor environment with greenery',
+    'urban': 'against an urban architectural backdrop',
+    'floral': 'surrounded by a lush floral arrangement',
+    'textured-wall': 'against an elegant textured wall background',
+    'transparent': 'isolated on a clean transparent background'
+  };
+  const surfaceMap = {
+    'none': '',
+    'white-marble': 'resting on a polished white marble slab',
+    'black-marble': 'resting on a glossy black marble surface',
+    'dark-wood': 'placed on a rich dark walnut wood surface',
+    'light-wood': 'placed on a natural light oak surface',
+    'mirror': 'placed on a mirror surface with a perfect reflection below',
+    'silk': 'draped over flowing silk or satin fabric',
+    'velvet-cushion': 'presented on a plush velvet ring cushion',
+    'jewelry-box': 'displayed in an open luxury jewelry box',
+    'ring-stand': 'mounted on an elegant ring stand or display holder',
+    'dried-flowers': 'arranged with dried flowers and botanical elements',
+    'water-droplets': 'glistening with fresh water droplets and dew',
+    'ice-crystals': 'arranged among ice shards and crystal formations',
+    'loose-stones': 'surrounded by scattered loose gemstones',
+    'gold-dust': 'dusted with fine gold flakes and particles'
+  };
+  const detailMap = {
+    'full-piece': 'showing the entire piece in full view',
+    'stone-focus': 'with tight focus on the center stone, revealing its brilliance and fire',
+    'setting-detail': 'focusing on the setting and prong work in fine detail',
+    'side-profile': 'from the side showing the band profile and gallery',
+    'hallmark': 'focusing on the hallmark, stamp, or engraving',
+    'clasp': 'showing the clasp or closure mechanism in detail',
+    'texture': 'highlighting the surface texture and finish (brushed, hammered, polished, etc.)',
+    'sparkle': 'capturing the brilliance, fire, and sparkle of the stones with light play',
+    'scale': 'with a subtle size reference for scale context',
+    'stacked': 'styled in a stacked or layered arrangement with complementary pieces'
   };
   const angleMap = {
     'front': 'shot from the front, straight on',
@@ -3884,7 +4067,9 @@ function buildPhotoshootPrompt() {
     'side-profile': 'shot from the side profile',
     'overhead': 'shot from overhead as a flat-lay composition',
     'low-angle': 'shot from a low angle looking up (hero shot)',
-    'macro': 'an ultra-close macro shot showing fine detail and texture'
+    'macro': 'an ultra-close macro shot showing fine detail and texture',
+    '45-degree': 'shot at a 45-degree tilt for a dynamic perspective',
+    'worms-eye': 'shot from a dramatic worm\'s eye view looking upward'
   };
   const lightingMap = {
     'soft-studio': 'soft diffused studio lighting with gentle shadows',
@@ -3893,7 +4078,11 @@ function buildPhotoshootPrompt() {
     'golden-hour': 'warm golden-hour sunlight with a romantic glow',
     'high-key': 'bright high-key lighting that is airy and luminous',
     'low-key': 'moody low-key lighting with deep shadows and rich contrast',
-    'ring-light': 'ring light beauty lighting with even illumination and catchlights'
+    'ring-light': 'ring light beauty lighting with even illumination and catchlights',
+    'backlit': 'backlit with a glowing rim light silhouette effect',
+    'spotlight': 'a single focused spotlight creating dramatic contrast',
+    'neon': 'colored neon gel lighting for a modern, editorial feel',
+    'candlelight': 'warm candlelight with an intimate, romantic glow'
   };
   const modelMap = {
     'young-woman': 'a beautiful young woman in her 20s-30s',
@@ -3901,15 +4090,48 @@ function buildPhotoshootPrompt() {
     'young-man': 'a stylish young man in his 20s-30s',
     'mature-man': 'a distinguished mature man in his 40s-50s',
     'androgynous': 'an androgynous fashion model with striking features',
-    'hand-only': 'a well-manicured hand and wrist (no face needed)'
+    'hand-only': 'a well-manicured hand and wrist (no face needed)',
+    'couple': 'a stylish couple together, both wearing complementary jewelry',
+    'diverse-group': 'a diverse group of models showcasing different styling'
+  };
+  const effectMap = {
+    'none': '',
+    'lens-flare': 'with a subtle lens flare and light leak effect',
+    'prism': 'with prism rainbow light refractions dancing across the frame',
+    'smoke': 'with wisps of atmospheric smoke or haze adding depth',
+    'sparkle-dust': 'with magical sparkle dust particles floating in the air',
+    'motion-blur': 'with artistic motion blur suggesting elegant movement',
+    'double-exposure': 'with a double-exposure effect blending the jewelry with an abstract texture',
+    'reflection': 'with a perfect mirror reflection on the surface below',
+    'shadow-play': 'with dramatic shadow patterns cast across the scene (e.g. from blinds or foliage)',
+    'wet-surface': 'on a wet surface with rain droplets and reflections',
+    'film-grain': 'with a vintage film grain and analog photography aesthetic'
   };
 
   const productDesc = [name, metal, stone].filter(Boolean).join(', ');
+  const isOnModel = psMode === 'model';
 
   let prompt = `Professional product photoshoot for a ${productDesc}. `;
-  prompt += `The jewelry is being worn by ${modelMap[model] || 'a model'} in ${sceneMap[scene] || 'a studio setting'}. `;
+
+  if (isOnModel) {
+    prompt += `The jewelry is being worn by ${modelMap[model] || 'a model'} in ${sceneMap[scene] || 'a studio setting'}. `;
+  } else {
+    prompt += `Product-only shot (no human model). The jewelry is displayed ${sceneMap[scene] ? 'in ' + sceneMap[scene] : 'in a studio setting'}. `;
+  }
+
+  // Environment
+  if (envMap[environment]) prompt += `${envMap[environment]}. `;
+  // Surface/props
+  if (surfaceMap[surface]) prompt += `${surfaceMap[surface]}. `;
+  // Detail focus
+  if (detailMap[detail]) prompt += `Focus: ${detailMap[detail]}. `;
+  // Camera angle
   prompt += `${angleMap[angle] || 'Front shot'}. `;
+  // Lighting
   prompt += `${lightingMap[lighting] || 'Soft studio lighting'}. `;
+  // Studio effect
+  if (effectMap[effect]) prompt += `${effectMap[effect]}. `;
+
   prompt += `The jewelry must be the clear hero of the image — prominently displayed and in sharp focus. `;
   prompt += `Photorealistic, ultra-high quality, commercial jewelry photography. Shot on a Phase One IQ4 150MP. `;
   prompt += `The image should look like it belongs in a luxury jewelry brand campaign.`;
@@ -3921,7 +4143,6 @@ function buildPhotoshootPrompt() {
 async function generatePhotoshoot() {
   if (psBusy) return;
 
-  // Need either an uploaded image or product details
   const hasImage = !!mktImgB64;
   const name = document.getElementById('mkt-name').value.trim();
   if (!hasImage && !name) {
@@ -3937,12 +4158,17 @@ async function generatePhotoshoot() {
 
   const prompt = buildPhotoshootPrompt();
 
+  // Map aspect ratio to size
+  const ratio = document.getElementById('ps-ratio').value;
+  const sizeMap = { '1:1':'1024x1024', '4:5':'1024x1280', '9:16':'1024x1536', '16:9':'1536x1024', '4:3':'1536x1024' };
+  const size = sizeMap[ratio] || '1024x1024';
+
   const payload = {
     prompt,
     action: hasImage ? 'edit' : 'generate',
     quality: 'high',
     input_fidelity: 'high',
-    size: '1024x1024',
+    size,
   };
 
   if (hasImage) {
@@ -3971,6 +4197,11 @@ async function generatePhotoshoot() {
     img.src = data.url;
     document.getElementById('ps-download').href = data.url;
 
+    // Update aspect ratio on result image
+    const imgWrap = document.getElementById('ps-img-wrap');
+    const arMap = { '1:1':'1/1', '4:5':'4/5', '9:16':'9/16', '16:9':'16/9', '4:3':'4/3' };
+    imgWrap.style.aspectRatio = arMap[ratio] || '1/1';
+
     document.getElementById('ps-spinner').style.display = 'none';
     document.getElementById('ps-result').style.display = 'flex';
   } catch (e) {
@@ -3985,7 +4216,6 @@ async function generatePhotoshoot() {
 }
 
 function regeneratePhotoshoot() {
-  // Keep the previous response ID for iterative improvement
   generatePhotoshoot();
 }
 
