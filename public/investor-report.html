@@ -1047,12 +1047,23 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                       <div id="s2i-prompt-text" style="font-family:'DM Sans',sans-serif;font-size:11.5px;color:#CFB584;line-height:1.7;background:rgba(207,181,132,.06);border:1px solid rgba(207,181,132,.15);border-radius:8px;padding:12px 14px;font-style:italic;word-break:break-word;"></div>
                     </div>
 
-                    <!-- Backend note -->
-                    <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;">
-                      <div style="font-size:16px;flex-shrink:0;margin-top:1px;">🖥</div>
-                      <div>
-                        <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:#CFB584;font-weight:600;letter-spacing:.3px;margin-bottom:3px;">Render generation requires server backend</div>
-                        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;line-height:1.6;">In production, this prompt routes through ZipJeweler's API layer to Higgsfield or FLUX — browser CORS restrictions prevent direct calls. The full Sketch to Image tool handles this end-to-end.</div>
+                    <!-- Render output -->
+                    <div>
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                        <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;">AI Render</div>
+                        <button id="s2i-render-btn" onclick="renderS2I()" style="padding:5px 14px;background:rgba(207,181,132,.12);border:1px solid rgba(207,181,132,.25);border-radius:14px;color:#CFB584;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(207,181,132,.2)'" onmouseout="this.style.background='rgba(207,181,132,.12)'">✦ Generate Render</button>
+                      </div>
+                      <div id="s2i-render-wrap" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;">
+                        <div id="s2i-render-placeholder" style="text-align:center;padding:16px;">
+                          <div style="font-size:22px;margin-bottom:6px;opacity:.25;">✦</div>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:#2A2825;line-height:1.6;">Click Generate Render to create<br>a photorealistic image from<br>the prompt above</div>
+                        </div>
+                        <div id="s2i-render-spinner" style="display:none;flex-direction:column;align-items:center;gap:8px;">
+                          <div style="width:28px;height:28px;border:2px solid rgba(207,181,132,.15);border-top-color:#CFB584;border-radius:50%;animation:ispin .8s linear infinite;"></div>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:#3A3835;">Generating render...</div>
+                        </div>
+                        <div id="s2i-render-error" style="display:none;text-align:center;padding:16px;font-family:'DM Sans',sans-serif;font-size:10px;color:#C9534B;line-height:1.6;"></div>
+                        <img id="s2i-render-img" style="display:none;width:100%;height:100%;object-fit:cover;" alt="AI render" />
                       </div>
                     </div>
                   </div>
@@ -1304,15 +1315,25 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                       <div id="c2r-prompt-text" style="font-family:'DM Sans',sans-serif;font-size:11.5px;color:#CFB584;line-height:1.7;background:rgba(207,181,132,.06);border:1px solid rgba(207,181,132,.15);border-radius:8px;padding:12px 14px;font-style:italic;word-break:break-word;"></div>
                     </div>
 
-                    <!-- Backend note -->
-                    <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;">
-                      <div style="font-size:16px;flex-shrink:0;margin-top:1px;">🖥</div>
-                      <div>
-                        <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:#CFB584;font-weight:600;letter-spacing:.3px;margin-bottom:3px;">Render generation requires server backend</div>
-                        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;line-height:1.6;">In production this prompt routes through ZipJeweler's API layer to Higgsfield or FLUX. The full CAD to Render tool handles upload, analysis, and image generation end-to-end with no Keyshot required.</div>
+                    <!-- Render output -->
+                    <div>
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                        <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;">AI Render</div>
+                        <button id="c2r-render-btn" onclick="renderC2R()" style="padding:5px 14px;background:rgba(207,181,132,.12);border:1px solid rgba(207,181,132,.25);border-radius:14px;color:#CFB584;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(207,181,132,.2)'" onmouseout="this.style.background='rgba(207,181,132,.12)'">✦ Generate Render</button>
+                      </div>
+                      <div id="c2r-render-wrap" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;">
+                        <div id="c2r-render-placeholder" style="text-align:center;padding:16px;">
+                          <div style="font-size:22px;margin-bottom:6px;opacity:.25;">✦</div>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:#2A2825;line-height:1.6;">Click Generate Render to create<br>a photorealistic image from<br>the prompt above</div>
+                        </div>
+                        <div id="c2r-render-spinner" style="display:none;flex-direction:column;align-items:center;gap:8px;">
+                          <div style="width:28px;height:28px;border:2px solid rgba(207,181,132,.15);border-top-color:#CFB584;border-radius:50%;animation:ispin .8s linear infinite;"></div>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:#3A3835;">Generating render...</div>
+                        </div>
+                        <div id="c2r-render-error" style="display:none;text-align:center;padding:16px;font-family:'DM Sans',sans-serif;font-size:10px;color:#C9534B;line-height:1.6;"></div>
+                        <img id="c2r-render-img" style="display:none;width:100%;height:100%;object-fit:cover;" alt="AI render" />
                       </div>
                     </div>
-
                   </div>
                 </div>
               </div>
@@ -3727,20 +3748,20 @@ document.addEventListener('DOMContentLoaded', () => {
   if (r1) r1.classList.add('pf-render-selected');
 });
 
-/* ── Shared Proxy Render Helper (S2I + C2R) ── */
-async function proxyRender(prompt, imgEl, spinnerEl, noticeEl) {
-  if (!PROXY_URL) {
-    if (noticeEl) {
-      noticeEl.style.display = 'flex';
-      const msg = noticeEl.querySelector('.proxy-msg');
-      if (msg) msg.textContent = 'Set PROXY_URL in the HTML to your Vercel deployment URL to enable live renders.';
-    }
-    return;
-  }
-  if (spinnerEl) spinnerEl.style.display = 'flex';
-  if (noticeEl) noticeEl.style.display = 'none';
-  if (imgEl) imgEl.style.display = 'none';
-
+/* ── Render from generated prompt (S2I) ── */
+async function renderS2I() {
+  const prompt = document.getElementById('s2i-prompt-text')?.textContent;
+  if (!prompt || prompt.length < 10) return;
+  const btn = document.getElementById('s2i-render-btn');
+  const placeholder = document.getElementById('s2i-render-placeholder');
+  const spinner = document.getElementById('s2i-render-spinner');
+  const errEl = document.getElementById('s2i-render-error');
+  const img = document.getElementById('s2i-render-img');
+  if (btn) btn.style.opacity = '.5';
+  if (placeholder) placeholder.style.display = 'none';
+  if (errEl) errEl.style.display = 'none';
+  if (img) img.style.display = 'none';
+  if (spinner) spinner.style.display = 'flex';
   try {
     const res = await fetch(PROXY_URL, {
       method: 'POST',
@@ -3748,17 +3769,45 @@ async function proxyRender(prompt, imgEl, spinnerEl, noticeEl) {
       body: JSON.stringify({ prompt, aspect_ratio: '1:1' })
     });
     const data = await res.json();
-    if (spinnerEl) spinnerEl.style.display = 'none';
-    if (!res.ok || !data.url) throw new Error(data.error || 'No URL');
-    if (imgEl) { imgEl.src = data.url; imgEl.style.display = 'block'; }
+    if (spinner) spinner.style.display = 'none';
+    if (!res.ok || !data.url) throw new Error(data.error || 'No image URL returned');
+    if (img) { img.src = data.url; img.style.display = 'block'; }
   } catch(e) {
-    if (spinnerEl) spinnerEl.style.display = 'none';
-    if (noticeEl) {
-      noticeEl.style.display = 'flex';
-      const msg = noticeEl.querySelector('.proxy-msg');
-      if (msg) msg.textContent = 'Render failed: ' + e.message;
-    }
+    if (spinner) spinner.style.display = 'none';
+    if (errEl) { errEl.textContent = '\u26A0 ' + e.message; errEl.style.display = 'block'; }
   }
+  if (btn) btn.style.opacity = '1';
+}
+
+/* ── Render from generated prompt (C2R) ── */
+async function renderC2R() {
+  const prompt = document.getElementById('c2r-prompt-text')?.textContent;
+  if (!prompt || prompt.length < 10) return;
+  const btn = document.getElementById('c2r-render-btn');
+  const placeholder = document.getElementById('c2r-render-placeholder');
+  const spinner = document.getElementById('c2r-render-spinner');
+  const errEl = document.getElementById('c2r-render-error');
+  const img = document.getElementById('c2r-render-img');
+  if (btn) btn.style.opacity = '.5';
+  if (placeholder) placeholder.style.display = 'none';
+  if (errEl) errEl.style.display = 'none';
+  if (img) img.style.display = 'none';
+  if (spinner) spinner.style.display = 'flex';
+  try {
+    const res = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, aspect_ratio: '1:1' })
+    });
+    const data = await res.json();
+    if (spinner) spinner.style.display = 'none';
+    if (!res.ok || !data.url) throw new Error(data.error || 'No image URL returned');
+    if (img) { img.src = data.url; img.style.display = 'block'; }
+  } catch(e) {
+    if (spinner) spinner.style.display = 'none';
+    if (errEl) { errEl.textContent = '\u26A0 ' + e.message; errEl.style.display = 'block'; }
+  }
+  if (btn) btn.style.opacity = '1';
 }
 
 </script>
