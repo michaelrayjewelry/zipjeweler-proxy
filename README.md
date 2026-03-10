@@ -1,105 +1,79 @@
-# ZipJeweler Render Proxy
+# ZipJeweler Proxy
 
-Vercel serverless function that proxies Higgsfield FLUX image generation
-for the ZipJeweler investor report preview tools.
+Serverless proxy for fal.ai image generation, deployed on Vercel via Next.js App Router.
 
-Claude (Anthropic) handles all text/analysis directly from the browser.
-This proxy exists solely to give Higgsfield a server-side home — their
-SDK explicitly blocks browser calls.
-
----
-
-## Files
+## File Structure
 
 ```
 zipjeweler-proxy/
-├── api/
-│   └── generate-render.mjs  ← the only serverless function
-├── package.json
-├── vercel.json              ← CORS headers + 60s timeout
+├── app/
+│   ├── api/
+│   │   └── generate-render/
+│   │       └── route.js          ← The actual proxy logic
+│   ├── layout.js                 ← Required by Next.js App Router
+│   └── page.js                   ← Health/landing page
+├── .gitignore
+├── next.config.js
+├── package.json                  ← Must list "next" as dependency
 └── README.md
 ```
 
----
+## Setup
 
-## Deploy (step by step)
+### 1. Push to GitHub
 
-### 1. Get your Higgsfield keys
-- Go to https://cloud.higgsfield.ai
-- Sign in → Settings → API Keys
-- Create a new key — you'll get a KEY_ID and a KEY_SECRET
-- Save both immediately (secret is shown once)
+Upload all files to your `zipjeweler-proxy` repo. **Delete any old files** at the root level like `api/generate-render.js` or `generate-render.js` — those don't work with Next.js App Router.
 
-### 2. Push this folder to GitHub
-```bash
-cd zipjeweler-proxy
-git init
-git add .
-git commit -m "initial"
-# Create a new repo on github.com called zipjeweler-proxy
-git remote add origin https://github.com/YOUR_USERNAME/zipjeweler-proxy.git
-git push -u origin main
-```
+### 2. Configure Vercel
 
-### 3. Create the Vercel project
-- Go to https://vercel.com → Add New Project
-- Import your zipjeweler-proxy GitHub repo
-- Framework Preset: **Other** (not Next.js)
-- Root directory: leave as `/`
-- Click Deploy
+1. Go to [vercel.com](https://vercel.com) → your `zipjeweler-proxy` project
+2. **Settings → General → Framework Preset** → make sure it says **Next.js**
+3. **Settings → Environment Variables** → add:
+   - Key: `FAL_API_KEY`
+   - Value: your fal.ai API key
+4. **Redeploy** (Deployments tab → click "..." on latest → Redeploy)
 
-### 4. Add environment variables
-In your Vercel project → Settings → Environment Variables, add:
-
-| Name                    | Value              | Environment        |
-|-------------------------|--------------------|--------------------|
-| HIGGSFIELD_KEY_ID       | your key ID        | Production, Preview, Development |
-| HIGGSFIELD_KEY_SECRET   | your key secret    | Production, Preview, Development |
-
-Then go to Deployments → click the 3-dot menu on your latest deploy → **Redeploy**
-(env vars only take effect after a redeploy)
-
-### 5. Note your proxy URL
-It will be:  https://zipjeweler-proxy.vercel.app/api/generate-render
-(or whatever Vercel names it)
-
----
-
-## Test it
+### 3. Test
 
 ```bash
+# Health check
+curl https://zipjeweler-proxy.vercel.app/api/generate-render
+
+# Generate an image
 curl -X POST https://zipjeweler-proxy.vercel.app/api/generate-render \
   -H "Content-Type: application/json" \
-  -d '{"prompt":"18k white gold oval engagement ring with pavé diamond halo, white studio background, macro jewelry photography"}'
+  -d '{
+    "model": "fal-ai/flux/dev",
+    "input": {
+      "prompt": "Fine jewelry product photo, 14k gold solitaire diamond ring, studio lighting",
+      "image_size": "square_hd"
+    }
+  }'
 ```
 
-Should return:
+## API
+
+### `POST /api/generate-render`
+
+**Request:**
 ```json
-{ "url": "https://..." }
+{
+  "model": "fal-ai/flux/dev",
+  "input": {
+    "prompt": "your prompt here",
+    "image_size": "square_hd"
+  }
+}
 ```
 
----
-
-## Plug it into the report
-
-In zipjeweler-investor-report-MG3.html, find the line:
-```
-const PROXY_URL = '';
-```
-And set it to your Vercel URL:
-```
-const PROXY_URL = 'https://zipjeweler-proxy.vercel.app/api/generate-render';
+**Response (success):**
+```json
+{
+  "url": "https://fal.media/files/...",
+  "requestId": "abc-123"
+}
 ```
 
-That's it — all three render panels (Imagine, Sketch to Image, CAD to Render)
-will fire live image generation.
+### `GET /api/generate-render`
 
----
-
-## Cost
-
-Higgsfield FLUX charges per generation. Check current pricing at:
-https://cloud.higgsfield.ai/pricing
-
-Claude API calls (analysis, chat) go directly browser → Anthropic and
-are not routed through this proxy.
+Returns health status and whether the API key is configured.
