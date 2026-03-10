@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ZipJeweler Render Proxy
 
-## Getting Started
+Vercel serverless function that proxies Higgsfield FLUX image generation
+for the ZipJeweler investor report preview tools.
 
-First, run the development server:
+Claude (Anthropic) handles all text/analysis directly from the browser.
+This proxy exists solely to give Higgsfield a server-side home — their
+SDK explicitly blocks browser calls.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## Files
+
+```
+zipjeweler-proxy/
+├── api/
+│   └── generate-render.js   ← the only serverless function
+├── package.json
+├── vercel.json              ← CORS headers + 60s timeout
+└── README.md
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploy (step by step)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Get your Higgsfield keys
+- Go to https://cloud.higgsfield.ai
+- Sign in → Settings → API Keys
+- Create a new key — you'll get a KEY_ID and a KEY_SECRET
+- Save both immediately (secret is shown once)
 
-## Learn More
+### 2. Push this folder to GitHub
+```bash
+cd zipjeweler-proxy
+git init
+git add .
+git commit -m "initial"
+# Create a new repo on github.com called zipjeweler-proxy
+git remote add origin https://github.com/YOUR_USERNAME/zipjeweler-proxy.git
+git push -u origin main
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 3. Create the Vercel project
+- Go to https://vercel.com → Add New Project
+- Import your zipjeweler-proxy GitHub repo
+- Framework Preset: **Other** (not Next.js)
+- Root directory: leave as `/`
+- Click Deploy
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 4. Add environment variables
+In your Vercel project → Settings → Environment Variables, add:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Name                    | Value              | Environment        |
+|-------------------------|--------------------|--------------------|
+| HIGGSFIELD_KEY_ID       | your key ID        | Production, Preview, Development |
+| HIGGSFIELD_KEY_SECRET   | your key secret    | Production, Preview, Development |
 
-## Deploy on Vercel
+Then go to Deployments → click the 3-dot menu on your latest deploy → **Redeploy**
+(env vars only take effect after a redeploy)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 5. Note your proxy URL
+It will be:  https://zipjeweler-proxy.vercel.app/api/generate-render
+(or whatever Vercel names it)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## Test it
+
+```bash
+curl -X POST https://zipjeweler-proxy.vercel.app/api/generate-render \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"18k white gold oval engagement ring with pavé diamond halo, white studio background, macro jewelry photography"}'
+```
+
+Should return:
+```json
+{ "url": "https://..." }
+```
+
+---
+
+## Plug it into the report
+
+In zipjeweler-investor-report-MG3.html, find the line:
+```
+const PROXY_URL = '';
+```
+And set it to your Vercel URL:
+```
+const PROXY_URL = 'https://zipjeweler-proxy.vercel.app/api/generate-render';
+```
+
+That's it — all three render panels (Imagine, Sketch to Image, CAD to Render)
+will fire live image generation.
+
+---
+
+## Cost
+
+Higgsfield FLUX charges per generation. Check current pricing at:
+https://cloud.higgsfield.ai/pricing
+
+Claude API calls (analysis, chat) go directly browser → Anthropic and
+are not routed through this proxy.
