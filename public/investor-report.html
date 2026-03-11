@@ -435,6 +435,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
   #zip-shell > div:first-child{display:none;}
 }
 @media(max-width:720px){
+  #bc-shell{grid-template-columns:1fr !important;}
+  #bc-shell > div:last-child{display:none;}
+}
+@media(max-width:720px){
   #imagine-shell{grid-template-columns:1fr !important;}
   #imagine-brief-col{display:none !important;}
   .ic-header{grid-template-columns:1fr !important;}
@@ -2159,19 +2163,179 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
           </div>
         </div>
 
-        <!-- BATCH UPLOAD -->
-        <div class="tc" style="border-top:3px solid var(--coral);">
-          
-          <div class="tc-top"><div class="tc-icon">📤</div><div class="tc-num">Tool 08</div></div>
-          <div class="tc-name">Batch Upload</div>
-          <div class="tc-desc">Upload up to 10 pages or images at once. The system automatically identifies each item, applies selected tools (Sketch to Image, Quick Estimate, etc.), and creates individual organized project folders for each upload. Onboard an entire backlog of pieces in one session.</div>
-          <div class="tc-feats">
-            <div class="tf">Upload up to 10 images or documents in a single batch session</div>
-            <div class="tf">Auto-identifies each piece and creates an individual project folder per item</div>
-            <div class="tf">Select which tools to auto-apply — renders, estimates, file organization</div>
-            <div class="tf">Clears the entire backlog of loose files and ideas from your phone or desktop</div>
+        <!-- BATCH CREATE — FULL WIDTH WITH LIVE PREVIEW -->
+        <div class="tc" id="bc-card" style="border-top:3px solid var(--coral);grid-column:1/-1;padding:28px 24px;">
+
+          <!-- Info header -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:start;margin-bottom:20px;">
+            <div>
+              <div class="tc-top" style="margin-bottom:12px;"><div class="tc-icon">⚡</div><div class="tc-num">Tool 08</div></div>
+              <div class="tc-name" style="font-size:20px;margin-bottom:8px;">Batch Create</div>
+              <div class="tc-desc">Upload a single sketch, render, or reference photo and run every AI tool on it at once. Select which assets to generate — photorealistic renders, marketing copy, cost estimates, 3D models — and watch them build in sequence. When complete, everything populates a new project folder automatically.</div>
+            </div>
+            <div class="tc-feats" style="margin-bottom:0;padding-top:48px;">
+              <div class="tf">Upload one image → generate renders, estimates, marketing, and 3D models in one pass</div>
+              <div class="tf">Checkbox control — pick exactly which tools to run on this upload</div>
+              <div class="tf">Rate-limited queue with 3-second delays between each action to prevent overload</div>
+              <div class="tf">All generated assets auto-populate a project folder accessible by Zip</div>
+            </div>
           </div>
-          <div class="tc-footer"><div class="tc-layer">AI Studio</div><span class="pill pill-build">◐ Building Now</span></div>
+
+          <!-- Footer -->
+          <div class="tc-footer" style="margin-bottom:20px;">
+            <div class="tc-layer">AI Studio</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span class="pill pill-build">&#9680; Building Now</span>
+              <button id="bc-toggle" onclick="toggleBc()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 18px;background:var(--coral);color:#fff;border:none;border-radius:20px;font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                <span id="bc-toggle-icon" style="font-size:12px;">&#9654;</span>
+                <span id="bc-toggle-txt">Try Batch Create</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Preview Panel -->
+          <div id="bc-preview" style="display:none;border-radius:14px;overflow:hidden;border:1px solid rgba(0,0,0,.15);box-shadow:0 12px 50px rgba(0,0,0,.22);">
+
+            <!-- Chrome bar -->
+            <div style="background:#141410;padding:11px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06);">
+              <div style="display:flex;gap:6px;flex-shrink:0;">
+                <div style="width:11px;height:11px;border-radius:50%;background:#FF5F57;"></div>
+                <div style="width:11px;height:11px;border-radius:50%;background:#FFBD2E;"></div>
+                <div style="width:11px;height:11px;border-radius:50%;background:#28C840;"></div>
+              </div>
+              <div style="flex:1;text-align:center;">
+                <span style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:3px 14px;">
+                  <span style="width:8px;height:8px;border-radius:50%;background:#C9534B;display:inline-block;opacity:.7;"></span>
+                  <span style="font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.5px;">zipjeweler.com/batch-create</span>
+                </span>
+              </div>
+              <button onclick="resetBc()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:5px;color:rgba(255,255,255,.35);cursor:pointer;font-size:12px;padding:3px 8px;font-family:'DM Sans',sans-serif;" onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">&#8635; Reset</button>
+            </div>
+
+            <!-- App Shell: config | output -->
+            <div id="bc-shell" style="display:grid;grid-template-columns:1fr 1fr;background:#0F0F0D;min-height:580px;">
+
+              <!-- LEFT: Upload + Tool Selection -->
+              <div style="display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.05);overflow:hidden;">
+
+                <!-- Header -->
+                <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:12px;flex-shrink:0;">
+                  <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(201,83,75,.2),rgba(201,83,75,.07));border:1.5px solid rgba(201,83,75,.35);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">⚡</div>
+                  <div>
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;color:#E8E4DD;">Batch Create</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#47453F;margin-top:1px;">Upload → Select Tools → Generate All</div>
+                  </div>
+                </div>
+
+                <div style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;">
+
+                  <!-- Upload zone -->
+                  <div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:8px;">Source Image</div>
+                    <label for="bc-file" id="bc-drop" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1.5px dashed rgba(255,255,255,.1);border-radius:10px;padding:20px 16px;cursor:pointer;transition:border-color .2s;min-height:120px;position:relative;" onmouseover="this.style.borderColor='rgba(201,83,75,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)'">
+                      <div id="bc-upload-ph" style="text-align:center;">
+                        <div style="font-size:28px;margin-bottom:6px;opacity:.4;">📷</div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:12px;color:#4A4845;line-height:1.6;">Drop a sketch, render, or photo<br><span style="color:#C9534B;font-weight:500;">or click to browse</span></div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:#2E2C28;margin-top:5px;">This image will be sent to every selected tool</div>
+                      </div>
+                      <img id="bc-preview-img" style="display:none;max-width:100%;max-height:160px;border-radius:6px;object-fit:contain;" />
+                    </label>
+                    <input id="bc-file" type="file" accept="image/*" style="display:none;" onchange="handleBcUpload(this)" />
+                  </div>
+
+                  <!-- Tool checkboxes -->
+                  <div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:10px;">Select Tools to Run</div>
+                    <div style="display:flex;flex-direction:column;gap:6px;">
+
+                      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
+                        <input type="checkbox" id="bc-chk-render" checked style="accent-color:#C9534B;width:16px;height:16px;" />
+                        <div style="flex:1;">
+                          <div style="font-family:'DM Sans',sans-serif;font-size:11.5px;color:#C8C4BE;font-weight:600;">🖼 Sketch to Image Render</div>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;margin-top:2px;">Photorealistic product render from the uploaded image</div>
+                        </div>
+                        <span style="font-family:'DM Sans',sans-serif;font-size:8px;color:#47453F;">~15s</span>
+                      </label>
+
+                      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
+                        <input type="checkbox" id="bc-chk-estimate" checked style="accent-color:#C9534B;width:16px;height:16px;" />
+                        <div style="flex:1;">
+                          <div style="font-family:'DM Sans',sans-serif;font-size:11.5px;color:#C8C4BE;font-weight:600;">💲 Quick Estimate</div>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;margin-top:2px;">AI-powered cost breakdown and three-tier pricing</div>
+                        </div>
+                        <span style="font-family:'DM Sans',sans-serif;font-size:8px;color:#47453F;">~10s</span>
+                      </label>
+
+                      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
+                        <input type="checkbox" id="bc-chk-marketing" checked style="accent-color:#C9534B;width:16px;height:16px;" />
+                        <div style="flex:1;">
+                          <div style="font-family:'DM Sans',sans-serif;font-size:11.5px;color:#C8C4BE;font-weight:600;">📣 Marketing Copy</div>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;margin-top:2px;">Instagram caption, product description, and e-commerce listing</div>
+                        </div>
+                        <span style="font-family:'DM Sans',sans-serif;font-size:8px;color:#47453F;">~10s</span>
+                      </label>
+
+                      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
+                        <input type="checkbox" id="bc-chk-3d" style="accent-color:#C9534B;width:16px;height:16px;" />
+                        <div style="flex:1;">
+                          <div style="font-family:'DM Sans',sans-serif;font-size:11.5px;color:#C8C4BE;font-weight:600;">📐 3D Model</div>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;margin-top:2px;">Generate a GLB/USDZ 3D model via Meshy.ai</div>
+                        </div>
+                        <span style="font-family:'DM Sans',sans-serif;font-size:8px;color:#47453F;">~2min</span>
+                      </label>
+
+                      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,.06)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
+                        <input type="checkbox" id="bc-chk-cad" style="accent-color:#C9534B;width:16px;height:16px;" />
+                        <div style="flex:1;">
+                          <div style="font-family:'DM Sans',sans-serif;font-size:11.5px;color:#C8C4BE;font-weight:600;">🖥 CAD-Style Render</div>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;margin-top:2px;">Second render treating image as a CAD screenshot</div>
+                        </div>
+                        <span style="font-family:'DM Sans',sans-serif;font-size:8px;color:#47453F;">~15s</span>
+                      </label>
+
+                    </div>
+                  </div>
+
+                  <!-- Generate button -->
+                  <button id="bc-run-btn" onclick="runBatchCreate()" style="padding:12px 0;background:#C9534B;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;box-shadow:0 2px 12px rgba(201,83,75,.25);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                    Run Batch Create
+                  </button>
+
+                </div>
+              </div>
+
+              <!-- RIGHT: Queue + Output -->
+              <div style="display:flex;flex-direction:column;background:#0C0C0A;overflow:hidden;">
+
+                <!-- Header -->
+                <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;display:flex;align-items:center;gap:10px;">
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;flex:1;">Queue &amp; Output</div>
+                  <div id="bc-queue-count" style="font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;"></div>
+                </div>
+
+                <!-- Queue progress -->
+                <div id="bc-queue-wrap" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px;">
+
+                  <!-- Idle state -->
+                  <div id="bc-idle" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:200px;text-align:center;">
+                    <div style="font-size:32px;opacity:.15;">⚡</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#2A2825;line-height:1.7;">Upload an image, select your tools,<br>then click <strong style="color:#3A3835;font-weight:600;">Run Batch Create</strong> to<br>generate all assets at once.</div>
+                  </div>
+
+                  <!-- Queue items populated by JS -->
+                  <div id="bc-queue-items" style="display:none;flex-direction:column;gap:8px;"></div>
+
+                  <!-- Project folder output (shown when complete) -->
+                  <div id="bc-folder-output" style="display:none;margin-top:12px;padding:14px;background:rgba(45,139,85,.04);border:1px solid rgba(45,139,85,.15);border-radius:10px;">
+                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#2D8B55;font-weight:700;margin-bottom:8px;">Project Folder Created</div>
+                    <div id="bc-folder-summary" style="font-family:'DM Sans',sans-serif;font-size:11px;color:#8AB890;line-height:1.6;"></div>
+                    <button onclick="bcOpenInZip()" style="margin-top:10px;padding:8px 18px;background:rgba(45,139,85,.12);border:1px solid rgba(45,139,85,.25);border-radius:8px;color:#2D8B55;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(45,139,85,.2)'" onmouseout="this.style.background='rgba(45,139,85,.12)'">&#8594; Open in Zip Dashboard</button>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- MODIFY — FULL WIDTH WITH LIVE PREVIEW -->
@@ -5060,6 +5224,379 @@ function p3dShowResults(data) {
     }
     texturesSec.style.display = hasTextures ? 'block' : 'none';
   }
+}
+
+
+/* ══════════════════════════════════════════════════════
+   TOOL 08 — BATCH CREATE
+══════════════════════════════════════════════════════ */
+let bcOpen = false, bcBusy = false;
+let bcImageB64 = null, bcImageType = 'image/jpeg';
+const BC_DELAY = 3000; // 3-second delay between queued actions
+
+/* ── Collected results from batch run ── */
+let bcResults = {
+  render: null,      // {url, response_id}
+  cadRender: null,   // {url, response_id}
+  estimate: null,    // {summary, tiers}
+  marketing: null,   // {instagram, description, listing}
+  model3d: null,     // {model_urls, texture_urls}
+};
+
+function toggleBc() {
+  bcOpen = !bcOpen;
+  const p = document.getElementById('bc-preview');
+  p.style.display = bcOpen ? 'block' : 'none';
+  document.getElementById('bc-toggle-icon').textContent = bcOpen ? '\u25BE' : '\u25B6';
+  document.getElementById('bc-toggle-txt').textContent  = bcOpen ? 'Close Preview' : 'Try Batch Create';
+  if (bcOpen) setTimeout(() => p.scrollIntoView({behavior:'smooth', block:'nearest'}), 80);
+}
+
+function resetBc() {
+  bcImageB64 = null; bcBusy = false;
+  bcResults = { render:null, cadRender:null, estimate:null, marketing:null, model3d:null };
+  document.getElementById('bc-file').value = '';
+  document.getElementById('bc-upload-ph').style.display = 'block';
+  document.getElementById('bc-preview-img').style.display = 'none';
+  document.getElementById('bc-idle').style.display = 'flex';
+  document.getElementById('bc-queue-items').style.display = 'none';
+  document.getElementById('bc-queue-items').innerHTML = '';
+  document.getElementById('bc-folder-output').style.display = 'none';
+  document.getElementById('bc-queue-count').textContent = '';
+  document.getElementById('bc-run-btn').style.opacity = '1';
+  // Reset checkboxes
+  ['render','estimate','marketing','3d','cad'].forEach(id => {
+    const el = document.getElementById('bc-chk-' + id);
+    if (el) el.checked = ['render','estimate','marketing'].includes(id);
+  });
+}
+
+function handleBcUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  bcImageType = file.type || 'image/jpeg';
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    bcImageB64 = dataUrl.split(',')[1];
+    const img = document.getElementById('bc-preview-img');
+    img.src = dataUrl;
+    img.style.display = 'block';
+    document.getElementById('bc-upload-ph').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ── Queue item UI helpers ── */
+function bcAddQueueItem(id, label, icon) {
+  const wrap = document.getElementById('bc-queue-items');
+  const item = document.createElement('div');
+  item.id = 'bc-q-' + id;
+  item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;transition:all .3s;';
+  item.innerHTML =
+    '<div style="font-size:14px;width:24px;text-align:center;flex-shrink:0;">' + icon + '</div>' +
+    '<div style="flex:1;min-width:0;">' +
+      '<div style="font-family:\'DM Sans\',sans-serif;font-size:11px;color:#C8C4BE;font-weight:600;">' + label + '</div>' +
+      '<div id="bc-q-' + id + '-status" style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#5A5652;margin-top:2px;">Queued</div>' +
+    '</div>' +
+    '<div id="bc-q-' + id + '-badge" style="padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-family:\'DM Sans\',sans-serif;font-size:8px;font-weight:600;color:#5A5652;">QUEUED</div>';
+  wrap.appendChild(item);
+}
+
+function bcUpdateQueueItem(id, status, badge, color) {
+  const statusEl = document.getElementById('bc-q-' + id + '-status');
+  const badgeEl = document.getElementById('bc-q-' + id + '-badge');
+  const itemEl = document.getElementById('bc-q-' + id);
+  if (statusEl) statusEl.textContent = status;
+  if (badgeEl) {
+    badgeEl.textContent = badge;
+    if (color === 'running') {
+      badgeEl.style.cssText = 'padding:2px 8px;border-radius:8px;background:rgba(201,83,75,.12);border:1px solid rgba(201,83,75,.25);font-family:\'DM Sans\',sans-serif;font-size:8px;font-weight:600;color:#C9534B;';
+      if (itemEl) itemEl.style.borderColor = 'rgba(201,83,75,.25)';
+    } else if (color === 'done') {
+      badgeEl.style.cssText = 'padding:2px 8px;border-radius:8px;background:rgba(45,139,85,.1);border:1px solid rgba(45,139,85,.2);font-family:\'DM Sans\',sans-serif;font-size:8px;font-weight:600;color:#2D8B55;';
+      if (itemEl) { itemEl.style.borderColor = 'rgba(45,139,85,.2)'; itemEl.style.background = 'rgba(45,139,85,.03)'; }
+    } else if (color === 'error') {
+      badgeEl.style.cssText = 'padding:2px 8px;border-radius:8px;background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.2);font-family:\'DM Sans\',sans-serif;font-size:8px;font-weight:600;color:#E74C3C;';
+      if (itemEl) itemEl.style.borderColor = 'rgba(231,76,60,.2)';
+    }
+  }
+}
+
+/* ── Delay helper ── */
+function bcWait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/* ── Individual tool runners ── */
+async function bcRunRender() {
+  const url = (PROXY_URL || '').replace('/api/generate-render', '/api/generate-image');
+  const prompt = 'Edit this image. This is a jewelry reference — a sketch, render, or photo. Convert it into a photorealistic product photograph. Keep the EXACT same design — same shape, same silhouette, same proportions. Use 18k white gold metal with a high polish finish. Scene: white studio background, soft studio lighting. Maintain every detail.';
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, action: 'edit', quality: 'high', input_fidelity: 'high', size: 'auto', input_image: bcImageB64 }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.url) throw new Error(data.error || 'No image returned');
+  bcResults.render = { url: data.url, response_id: data.response_id };
+  return data;
+}
+
+async function bcRunCadRender() {
+  const url = (PROXY_URL || '').replace('/api/generate-render', '/api/generate-image');
+  const prompt = 'Edit this image. This is a CAD screenshot or technical view of a jewelry piece. Transform it into a photorealistic client-presentable product render. Keep the EXACT same design — same shape, proportions, stone placement, angles. Only change the surface materials and environment. Use polished white gold, realistic diamond refraction. Scene: gradient studio background, soft studio lighting, light reflections.';
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, action: 'edit', quality: 'high', input_fidelity: 'high', size: 'auto', input_image: bcImageB64 }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.url) throw new Error(data.error || 'No image returned');
+  bcResults.cadRender = { url: data.url, response_id: data.response_id };
+  return data;
+}
+
+async function bcRunEstimate() {
+  const prompt = 'Analyze this jewelry image carefully. Identify the piece type, metal, stones, and any design details visible. Then produce a professional cost estimate.\n\nRespond with:\n[SUMMARY]\nA brief 2-3 sentence description of the piece and its key materials.\n[/SUMMARY]\n\n[TIERS]\nReturn a JSON array with three pricing tiers:\n[\n  {"tier":"Good","price":0,"label":"Essential Quality","details":"description"},\n  {"tier":"Better","price":0,"label":"Premium Quality","details":"description"},\n  {"tier":"Best","price":0,"label":"Luxury Quality","details":"description"}\n]\n[/TIERS]';
+  const body = {
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 700,
+    system: 'You are a professional jewelry cost estimator for ZipJeweler. Analyze jewelry images and provide accurate pricing based on materials, labor, and market positioning. Always produce the [SUMMARY] and [TIERS] sections.',
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: bcImageType, data: bcImageB64 } },
+        { type: 'text', text: prompt },
+      ],
+    }],
+  };
+  const res = await claudeAPI(body);
+  const data = await res.json();
+  if (!res.ok || !data.content) throw new Error(data.error?.message || data.error || 'Estimate failed');
+  const text = data.content[0]?.text || '';
+  const summaryMatch = text.match(/\[SUMMARY\]([\s\S]*?)\[\/SUMMARY\]/);
+  const tiersMatch = text.match(/\[TIERS\]([\s\S]*?)\[\/TIERS\]/);
+  let tiers = [];
+  try { tiers = JSON.parse(tiersMatch?.[1]?.trim() || '[]'); } catch(e) {}
+  bcResults.estimate = { summary: summaryMatch?.[1]?.trim() || text.substring(0, 300), tiers, raw: text };
+  return bcResults.estimate;
+}
+
+async function bcRunMarketing() {
+  const body = {
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 900,
+    system: 'You are a luxury jewelry marketing copywriter. Write compelling, elegant copy for social media, product pages, and e-commerce listings. Always produce the [INSTAGRAM], [DESCRIPTION], and [LISTING] sections.',
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: bcImageType, data: bcImageB64 } },
+        { type: 'text', text: 'Analyze this jewelry piece. Generate:\n\n[INSTAGRAM]\nAn Instagram caption with relevant hashtags.\n[/INSTAGRAM]\n\n[DESCRIPTION]\nA product description (2-3 sentences).\n[/DESCRIPTION]\n\n[LISTING]\nAn e-commerce product listing with bullet points.\n[/LISTING]' },
+      ],
+    }],
+  };
+  const res = await claudeAPI(body);
+  const data = await res.json();
+  if (!res.ok || !data.content) throw new Error(data.error?.message || data.error || 'Marketing failed');
+  const text = data.content[0]?.text || '';
+  const ig = text.match(/\[INSTAGRAM\]([\s\S]*?)\[\/INSTAGRAM\]/)?.[1]?.trim() || '';
+  const desc = text.match(/\[DESCRIPTION\]([\s\S]*?)\[\/DESCRIPTION\]/)?.[1]?.trim() || '';
+  const listing = text.match(/\[LISTING\]([\s\S]*?)\[\/LISTING\]/)?.[1]?.trim() || '';
+  bcResults.marketing = { instagram: ig, description: desc, listing, raw: text };
+  return bcResults.marketing;
+}
+
+async function bcRun3D() {
+  const imageDataUrl = 'data:' + bcImageType + ';base64,' + bcImageB64;
+  // Create task
+  const createRes = await fetch('/api/generate-3d', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'create', image_url: imageDataUrl, topology: 'triangle', target_polycount: 30000, enable_pbr: false }),
+  });
+  const createData = await createRes.json();
+  if (!createRes.ok || !createData.task_id) throw new Error(createData.error || 'Failed to create 3D task');
+  // Poll
+  const taskId = createData.task_id;
+  for (let i = 0; i < 40; i++) { // up to ~4 minutes
+    await bcWait(6000);
+    const pollRes = await fetch('/api/generate-3d', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'poll', task_id: taskId }),
+    });
+    const poll = await pollRes.json();
+    if (poll.status === 'SUCCEEDED') {
+      bcResults.model3d = { model_urls: poll.model_urls, texture_urls: poll.texture_urls };
+      const statusEl = document.getElementById('bc-q-3d-status');
+      if (statusEl) statusEl.textContent = 'Model generated — GLB ready';
+      return bcResults.model3d;
+    }
+    if (poll.status === 'FAILED' || poll.status === 'EXPIRED') throw new Error(poll.task_error || '3D generation failed');
+    const pct = poll.progress || 0;
+    const statusEl = document.getElementById('bc-q-3d-status');
+    if (statusEl) statusEl.textContent = 'Generating... ' + pct + '%';
+  }
+  throw new Error('3D generation timed out');
+}
+
+/* ── Main batch runner ── */
+async function runBatchCreate() {
+  if (bcBusy) return;
+  if (!bcImageB64) { alert('Please upload an image first.'); return; }
+
+  const checks = {
+    render:    document.getElementById('bc-chk-render').checked,
+    estimate:  document.getElementById('bc-chk-estimate').checked,
+    marketing: document.getElementById('bc-chk-marketing').checked,
+    model3d:   document.getElementById('bc-chk-3d').checked,
+    cad:       document.getElementById('bc-chk-cad').checked,
+  };
+  const selectedCount = Object.values(checks).filter(Boolean).length;
+  if (selectedCount === 0) { alert('Select at least one tool to run.'); return; }
+
+  bcBusy = true;
+  bcResults = { render:null, cadRender:null, estimate:null, marketing:null, model3d:null };
+  document.getElementById('bc-idle').style.display = 'none';
+  document.getElementById('bc-folder-output').style.display = 'none';
+  const queueItems = document.getElementById('bc-queue-items');
+  queueItems.innerHTML = '';
+  queueItems.style.display = 'flex';
+  document.getElementById('bc-run-btn').style.opacity = '.5';
+
+  // Build queue
+  const queue = [];
+  if (checks.render)    { bcAddQueueItem('render', 'Sketch to Image Render', '🖼'); queue.push({ id:'render', fn: bcRunRender }); }
+  if (checks.cad)       { bcAddQueueItem('cad', 'CAD-Style Render', '🖥'); queue.push({ id:'cad', fn: bcRunCadRender }); }
+  if (checks.estimate)  { bcAddQueueItem('estimate', 'Quick Estimate', '💲'); queue.push({ id:'estimate', fn: bcRunEstimate }); }
+  if (checks.marketing) { bcAddQueueItem('marketing', 'Marketing Copy', '📣'); queue.push({ id:'marketing', fn: bcRunMarketing }); }
+  if (checks.model3d)   { bcAddQueueItem('3d', '3D Model Generation', '📐'); queue.push({ id:'3d', fn: bcRun3D }); }
+
+  document.getElementById('bc-queue-count').textContent = '0 / ' + queue.length + ' complete';
+
+  let completed = 0;
+  for (let i = 0; i < queue.length; i++) {
+    const task = queue[i];
+    bcUpdateQueueItem(task.id, 'Running...', 'RUNNING', 'running');
+
+    try {
+      await task.fn();
+      completed++;
+      bcUpdateQueueItem(task.id, 'Complete', 'DONE', 'done');
+    } catch (e) {
+      bcUpdateQueueItem(task.id, 'Error: ' + e.message, 'FAILED', 'error');
+    }
+
+    document.getElementById('bc-queue-count').textContent = completed + ' / ' + queue.length + ' complete';
+
+    // Rate limit delay between actions (skip after last)
+    if (i < queue.length - 1) {
+      const nextTask = queue[i + 1];
+      bcUpdateQueueItem(nextTask.id, 'Starting in 3s...', 'QUEUED', null);
+      await bcWait(BC_DELAY);
+    }
+  }
+
+  // Build project folder from results
+  bcBuildProjectFolder();
+  bcBusy = false;
+  document.getElementById('bc-run-btn').style.opacity = '1';
+}
+
+/* ── Build project folder from batch results ── */
+function bcBuildProjectFolder() {
+  const folder = document.getElementById('bc-folder-output');
+  const summary = document.getElementById('bc-folder-summary');
+  const items = [];
+
+  if (bcResults.render) items.push('Photorealistic render generated');
+  if (bcResults.cadRender) items.push('CAD-style render generated');
+  if (bcResults.estimate) {
+    const tiers = bcResults.estimate.tiers;
+    const priceRange = tiers.length ? ('$' + tiers[0].price + ' – $' + tiers[tiers.length-1].price) : 'See estimate';
+    items.push('Cost estimate: ' + priceRange);
+  }
+  if (bcResults.marketing) items.push('Marketing copy: Instagram, description, listing');
+  if (bcResults.model3d) items.push('3D model: GLB ready for download');
+
+  if (items.length === 0) {
+    folder.style.display = 'none';
+    return;
+  }
+
+  summary.innerHTML = items.map(i => '<div style="display:flex;align-items:center;gap:6px;"><span style="color:#2D8B55;">&#10003;</span> ' + i + '</div>').join('');
+  folder.style.display = 'block';
+
+  // Sync results to Zip's project data
+  bcSyncToZip();
+}
+
+/* ── Sync batch results into Zip's project folder ── */
+function bcSyncToZip() {
+  if (typeof zipProjectData === 'undefined') return;
+
+  // Update overview with estimate summary
+  if (bcResults.estimate?.summary) {
+    zipProjectData.overview['Client Notes'] = bcResults.estimate.summary;
+  }
+  if (bcResults.estimate?.tiers?.length) {
+    const best = bcResults.estimate.tiers[bcResults.estimate.tiers.length - 1];
+    zipProjectData.order['Client Price'] = '$' + (best.price || 0).toLocaleString();
+    zipProjectData.overview['Budget'] = '$' + (best.price || 0).toLocaleString();
+  }
+
+  // Update files with generated assets
+  if (bcResults.render) {
+    zipProjectData.files['Product Render'] = 'batch_render_front.png — AI Generated, Photorealistic';
+  }
+  if (bcResults.cadRender) {
+    zipProjectData.files['CAD Render'] = 'batch_cad_render.png — AI Generated, Studio Lighting';
+  }
+  if (bcResults.model3d?.model_urls?.glb) {
+    zipProjectData.files['3D Model'] = 'batch_model.glb — Meshy.ai, Triangle mesh';
+  }
+  if (bcResults.marketing) {
+    zipProjectData.files['Marketing Copy'] = 'batch_marketing.txt — Instagram, Description, Listing';
+  }
+
+  // Update production notes
+  const parts = [];
+  if (bcResults.render) parts.push('product render');
+  if (bcResults.cadRender) parts.push('CAD render');
+  if (bcResults.estimate) parts.push('cost estimate');
+  if (bcResults.marketing) parts.push('marketing copy');
+  if (bcResults.model3d) parts.push('3D model');
+  zipProjectData.overview['Production Notes'] = 'Batch Create generated: ' + parts.join(', ') + '. All assets attached to project folder.';
+
+  // Store batch images for Zip reference
+  if (!window.bcBatchAssets) window.bcBatchAssets = {};
+  if (bcResults.render?.url) window.bcBatchAssets.renderUrl = bcResults.render.url;
+  if (bcResults.cadRender?.url) window.bcBatchAssets.cadRenderUrl = bcResults.cadRender.url;
+  if (bcResults.marketing) window.bcBatchAssets.marketing = bcResults.marketing;
+  if (bcResults.estimate) window.bcBatchAssets.estimate = bcResults.estimate;
+}
+
+/* ── Open results in Zip Dashboard ── */
+function bcOpenInZip() {
+  // Make sure Zip is open
+  if (!zipOpen) toggleZip();
+  // Navigate to files tab in Zip
+  setTimeout(() => {
+    zipPfGo('files');
+    // Send a message to Zip about the new batch
+    if (!zipBusy) {
+      const parts = [];
+      if (bcResults.render) parts.push('a photorealistic render');
+      if (bcResults.cadRender) parts.push('a CAD-style render');
+      if (bcResults.estimate) parts.push('a cost estimate');
+      if (bcResults.marketing) parts.push('marketing copy');
+      if (bcResults.model3d) parts.push('a 3D model');
+      addZipBubble('assistant', 'A Batch Create job just finished and populated this project folder with ' + parts.join(', ') + '. All assets are now in the <strong>Files</strong> tab. Let me know if you need anything adjusted!');
+    }
+  }, 300);
+  // Scroll Zip into view
+  setTimeout(() => {
+    document.getElementById('zip-preview').scrollIntoView({behavior:'smooth', block:'nearest'});
+  }, 500);
 }
 
 
