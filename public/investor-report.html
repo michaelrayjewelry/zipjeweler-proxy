@@ -713,7 +713,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
   <div class="sec-page-header">
     <div class="sph-inner">
       <div class="sph-title">AI Tools — Studio Suite</div>
-      <div class="sph-meta">8 Tools &nbsp;·&nbsp; Phase 1 + Phase 2<br>AI Studio Development</div>
+      <div class="sph-meta">9 Tools &nbsp;·&nbsp; Phase 1 + Phase 2<br>AI Studio Development</div>
     </div>
     <div class="sph-bar"></div>
   </div>
@@ -1818,9 +1818,234 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
         </div>
 
 
+        <!-- BLEND — FULL WIDTH WITH LIVE PREVIEW -->
+        <div class="tc" id="blend-card" style="border-top:3px solid var(--coral);grid-column:1/-1;padding:28px 24px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:start;margin-bottom:20px;">
+            <div>
+              <div class="tc-top" style="margin-bottom:12px;"><div class="tc-icon">🎨</div><div class="tc-num">Tool 07</div></div>
+              <div class="tc-name" style="font-size:20px;margin-bottom:8px;">Blend</div>
+              <div class="tc-desc">Upload multiple jewelry reference images and paint zones to highlight elements you love — the head style from one ring, the shank from another, the prong work from a third. Blend analyzes each marked zone and synthesizes a brand-new design that fuses your favorite features into one cohesive piece.</div>
+            </div>
+            <div class="tc-feats" style="margin-bottom:0;padding-top:48px;">
+              <div class="tf">Upload 2–4 reference images and paint directly on each to highlight design elements</div>
+              <div class="tf">Label each zone with jewelry terminology — head, shank, halo, gallery, prong style</div>
+              <div class="tf">AI extracts and describes each marked feature for precise design fusion</div>
+              <div class="tf">Generates a new photorealistic render blending all selected elements into one piece</div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="tc-footer" style="margin-bottom:20px;">
+            <div class="tc-layer">AI Studio</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span class="pill pill-build">&#9680; Building Now</span>
+              <button id="blend-toggle" onclick="toggleBlend()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 18px;background:var(--coral);color:#fff;border:none;border-radius:20px;font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                <span id="blend-toggle-icon" style="font-size:12px;">&#9654;</span>
+                <span id="blend-toggle-txt">Try Blend</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Preview Panel -->
+          <div id="blend-preview" style="display:none;border-radius:14px;overflow:hidden;border:1px solid rgba(0,0,0,.15);box-shadow:0 12px 50px rgba(0,0,0,.22);">
+
+            <!-- Chrome bar -->
+            <div style="background:#141410;padding:11px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06);">
+              <div style="display:flex;gap:6px;flex-shrink:0;">
+                <div style="width:11px;height:11px;border-radius:50%;background:#FF5F57;"></div>
+                <div style="width:11px;height:11px;border-radius:50%;background:#FFBD2E;"></div>
+                <div style="width:11px;height:11px;border-radius:50%;background:#28C840;"></div>
+              </div>
+              <div style="flex:1;text-align:center;">
+                <span style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:3px 14px;">
+                  <span style="width:8px;height:8px;border-radius:50%;background:#C9534B;display:inline-block;opacity:.7;"></span>
+                  <span style="font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.5px;">zipjeweler.com/blend</span>
+                </span>
+              </div>
+              <button onclick="resetBlend()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:5px;color:rgba(255,255,255,.35);cursor:pointer;font-size:12px;padding:3px 8px;font-family:'DM Sans',sans-serif;" onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">&#8635; Reset</button>
+            </div>
+
+            <!-- App Shell -->
+            <div id="blend-shell" style="background:#0F0F0D;min-height:600px;display:flex;flex-direction:column;">
+
+              <!-- Top toolbar -->
+              <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(201,83,75,.2),rgba(201,83,75,.07));border:1.5px solid rgba(201,83,75,.35);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">🎨</div>
+                  <div>
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;color:#E8E4DD;letter-spacing:.2px;line-height:1.2;">Blend</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#47453F;letter-spacing:.3px;margin-top:1px;">Multi-Image Design Fusion · ZipJeweler</div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <!-- Brush size -->
+                  <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:6px 10px;">
+                    <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5650;text-transform:uppercase;letter-spacing:1px;">Brush</span>
+                    <input id="blend-brush-size" type="range" min="5" max="60" value="20" style="width:70px;accent-color:#C9534B;" oninput="updateBlendBrush(this.value)" />
+                    <span id="blend-brush-val" style="font-family:'DM Sans',sans-serif;font-size:10px;color:#C9534B;min-width:24px;text-align:right;">20px</span>
+                  </div>
+                  <!-- Eraser toggle -->
+                  <button id="blend-eraser-btn" onclick="toggleBlendEraser()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:6px 12px;color:#5A5650;font-family:'DM Sans',sans-serif;font-size:10px;cursor:pointer;display:flex;align-items:center;gap:5px;">
+                    <span style="font-size:12px;">&#9112;</span> Eraser
+                  </button>
+                </div>
+              </div>
+
+              <!-- Image slots area -->
+              <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+
+                <!-- Image row -->
+                <div id="blend-images-row" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;flex:1;min-height:0;">
+
+                  <!-- Slot 1 -->
+                  <div class="blend-slot" id="blend-slot-0" style="position:relative;background:#0C0C0A;border-right:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;overflow:hidden;">
+                    <div style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+                      <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5650;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;">Image 1</span>
+                      <span id="blend-zone-count-0" style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;">0 zones</span>
+                    </div>
+                    <div style="flex:1;position:relative;min-height:0;">
+                      <label for="blend-file-0" id="blend-drop-0" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:6px;">
+                        <div style="font-size:20px;opacity:.3;">📷</div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#4A4845;text-align:center;line-height:1.5;">Drop image<br><span style="color:#C9534B;font-weight:500;">or click</span></div>
+                      </label>
+                      <input id="blend-file-0" type="file" accept=".png,.jpg,.jpeg" style="display:none;" onchange="handleBlendUpload(0, this)" />
+                      <canvas id="blend-canvas-0" style="display:none;position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- Slot 2 -->
+                  <div class="blend-slot" id="blend-slot-1" style="position:relative;background:#0C0C0A;border-right:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;overflow:hidden;">
+                    <div style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+                      <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5650;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;">Image 2</span>
+                      <span id="blend-zone-count-1" style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;">0 zones</span>
+                    </div>
+                    <div style="flex:1;position:relative;min-height:0;">
+                      <label for="blend-file-1" id="blend-drop-1" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:6px;">
+                        <div style="font-size:20px;opacity:.3;">📷</div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#4A4845;text-align:center;line-height:1.5;">Drop image<br><span style="color:#C9534B;font-weight:500;">or click</span></div>
+                      </label>
+                      <input id="blend-file-1" type="file" accept=".png,.jpg,.jpeg" style="display:none;" onchange="handleBlendUpload(1, this)" />
+                      <canvas id="blend-canvas-1" style="display:none;position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- Slot 3 -->
+                  <div class="blend-slot" id="blend-slot-2" style="position:relative;background:#0C0C0A;border-right:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;overflow:hidden;">
+                    <div style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+                      <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5650;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;">Image 3</span>
+                      <span id="blend-zone-count-2" style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;">0 zones</span>
+                    </div>
+                    <div style="flex:1;position:relative;min-height:0;">
+                      <label for="blend-file-2" id="blend-drop-2" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:6px;">
+                        <div style="font-size:20px;opacity:.3;">📷</div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#4A4845;text-align:center;line-height:1.5;">Drop image<br><span style="color:#C9534B;font-weight:500;">or click</span></div>
+                      </label>
+                      <input id="blend-file-2" type="file" accept=".png,.jpg,.jpeg" style="display:none;" onchange="handleBlendUpload(2, this)" />
+                      <canvas id="blend-canvas-2" style="display:none;position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- Slot 4 -->
+                  <div class="blend-slot" id="blend-slot-3" style="position:relative;background:#0C0C0A;display:flex;flex-direction:column;overflow:hidden;">
+                    <div style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+                      <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5650;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;">Image 4</span>
+                      <span id="blend-zone-count-3" style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;">0 zones</span>
+                    </div>
+                    <div style="flex:1;position:relative;min-height:0;">
+                      <label for="blend-file-3" id="blend-drop-3" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:6px;">
+                        <div style="font-size:20px;opacity:.3;">📷</div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#4A4845;text-align:center;line-height:1.5;">Drop image<br><span style="color:#C9534B;font-weight:500;">or click</span></div>
+                      </label>
+                      <input id="blend-file-3" type="file" accept=".png,.jpg,.jpeg" style="display:none;" onchange="handleBlendUpload(3, this)" />
+                      <canvas id="blend-canvas-3" style="display:none;position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;"></canvas>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- Zones panel + output -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid rgba(255,255,255,.05);">
+
+                  <!-- LEFT: Saved Zones -->
+                  <div style="border-right:1px solid rgba(255,255,255,.05);padding:14px 18px;max-height:260px;overflow-y:auto;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#C9534B;font-weight:700;">Saved Zones</div>
+                      <button id="blend-save-zone-btn" onclick="saveBlendZone()" style="background:rgba(201,83,75,.12);border:1px solid rgba(201,83,75,.25);border-radius:7px;color:#C9534B;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:5px;" onmouseover="this.style.background='rgba(201,83,75,.2)'" onmouseout="this.style.background='rgba(201,83,75,.12)'">
+                        <span style="font-size:11px;">&#10010;</span> Save Current Zone
+                      </button>
+                    </div>
+                    <!-- Zone label input -->
+                    <div id="blend-label-row" style="display:none;margin-bottom:10px;">
+                      <div style="display:flex;gap:6px;">
+                        <select id="blend-zone-label" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:#E8E4DD;font-family:'DM Sans',sans-serif;font-size:11px;padding:7px 10px;outline:none;">
+                          <option value="">Select feature type…</option>
+                          <option value="head">Head / Setting</option>
+                          <option value="shank">Shank / Band</option>
+                          <option value="halo">Halo</option>
+                          <option value="gallery">Gallery / Undercarriage</option>
+                          <option value="prongs">Prong Style</option>
+                          <option value="stone">Center Stone</option>
+                          <option value="accent-stones">Accent Stones</option>
+                          <option value="engraving">Engraving / Detail</option>
+                          <option value="texture">Texture / Finish</option>
+                          <option value="silhouette">Overall Silhouette</option>
+                          <option value="bail">Bail (Pendant)</option>
+                          <option value="clasp">Clasp / Closure</option>
+                          <option value="chain">Chain Style</option>
+                          <option value="other">Other</option>
+                        </select>
+                        <button onclick="confirmSaveZone()" style="background:#C9534B;border:none;border-radius:6px;color:#fff;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;padding:7px 14px;cursor:pointer;">Save</button>
+                        <button onclick="cancelSaveZone()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:6px;color:#5A5650;font-family:'DM Sans',sans-serif;font-size:10px;padding:7px 10px;cursor:pointer;">Cancel</button>
+                      </div>
+                    </div>
+                    <!-- Zone list -->
+                    <div id="blend-zone-list" style="display:flex;flex-direction:column;gap:6px;">
+                      <div id="blend-zones-empty" style="text-align:center;padding:20px;">
+                        <div style="font-size:18px;opacity:.3;margin-bottom:6px;">🎯</div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#3A3835;line-height:1.6;">Paint on an image to highlight a feature,<br>then save the zone with a label.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- RIGHT: Output -->
+                  <div style="padding:14px 18px;display:flex;flex-direction:column;gap:12px;max-height:260px;overflow-y:auto;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#C9534B;font-weight:700;">Blended Result</div>
+                      <button id="blend-gen-btn" onclick="generateBlend()" style="background:linear-gradient(135deg,#C9534B,#D4785F);border:none;border-radius:8px;color:#fff;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:8px 16px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;gap:6px;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                        <span style="font-size:12px;">&#10022;</span> Generate Blend
+                      </button>
+                    </div>
+                    <!-- Idle state -->
+                    <div id="blend-idle" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px;flex:1;">
+                      <div style="font-size:28px;opacity:.25;">✨</div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#3A3835;text-align:center;line-height:1.6;">Save at least 2 zones from different images,<br>then generate your blended design.</div>
+                    </div>
+                    <!-- Spinner -->
+                    <div id="blend-spinner" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;flex:1;">
+                      <div style="width:28px;height:28px;border:2px solid rgba(201,83,75,.15);border-top-color:#C9534B;border-radius:50%;animation:ispin .8s linear infinite;"></div>
+                      <div id="blend-spinner-text" style="font-family:'DM Sans',sans-serif;font-size:10px;color:#5A5650;">Analyzing zones…</div>
+                    </div>
+                    <!-- Result -->
+                    <div id="blend-result" style="display:none;flex-direction:column;gap:10px;flex:1;">
+                      <div id="blend-render-wrap" style="position:relative;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#0A0A08;">
+                        <img id="blend-render-img" style="width:100%;display:block;" />
+                      </div>
+                      <div id="blend-description" style="font-family:'DM Sans',sans-serif;font-size:11px;color:#C8C4BE;line-height:1.7;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:10px 12px;"></div>
+                    </div>
+                    <!-- Key note -->
+                    <div id="blend-key-note" style="display:none;font-family:'DM Sans',sans-serif;font-size:10px;color:#C9534B;text-align:center;padding:8px;">Connect an API key via Imagine or use server keys to generate blended designs.</div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
         <div class="tc" style="border-top:3px solid var(--coral);">
-          
-          <div class="tc-top"><div class="tc-icon">🤖</div><div class="tc-num">Tool 07</div></div>
+
+          <div class="tc-top"><div class="tc-icon">🤖</div><div class="tc-num">Tool 08</div></div>
           <div class="tc-name">Dashboard Assistant</div>
           <div class="tc-desc">An AI that handles the boring parts of studio management through natural language. Edit project folders, upload and organize files, create editable documents and invoices, move orders through stages — all by typing what you want. The platform does the clicking for you.</div>
           <div class="tc-feats">
@@ -1835,7 +2060,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
         <!-- BATCH UPLOAD -->
         <div class="tc" style="border-top:3px solid var(--coral);">
           
-          <div class="tc-top"><div class="tc-icon">📤</div><div class="tc-num">Tool 08</div></div>
+          <div class="tc-top"><div class="tc-icon">📤</div><div class="tc-num">Tool 09</div></div>
           <div class="tc-name">Batch Upload</div>
           <div class="tc-desc">Upload up to 10 pages or images at once. The system automatically identifies each item, applies selected tools (Sketch to Image, Quick Estimate, etc.), and creates individual organized project folders for each upload. Onboard an entire backlog of pieces in one session.</div>
           <div class="tc-feats">
@@ -5835,6 +6060,505 @@ async function analyzePCV() {
   btn.textContent = '✦ Analyze Point Cloud';
   btn.style.opacity = '1';
   btn.disabled = false;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BLEND — Multi-Image Zone Painting & Design Fusion
+   ═══════════════════════════════════════════════════════════════════ */
+
+let blendOpen = false, blendBusy = false;
+let blendSlots = [null, null, null, null]; // { img, b64, type, canvas, maskCanvas, w, h }
+let blendZones = []; // { slotIdx, label, maskB64, cropB64, featureDesc }
+let blendBrushSize = 20;
+let blendEraser = false;
+let blendPainting = false;
+let blendActiveSlot = -1;
+
+const BLEND_ZONE_COLORS = [
+  'rgba(201,83,75,.45)',  'rgba(75,140,201,.45)',
+  'rgba(75,201,120,.45)', 'rgba(201,170,75,.45)',
+  'rgba(160,75,201,.45)', 'rgba(201,75,150,.45)'
+];
+
+function toggleBlend() {
+  blendOpen = !blendOpen;
+  const p = document.getElementById('blend-preview');
+  p.style.display = blendOpen ? 'block' : 'none';
+  document.getElementById('blend-toggle-icon').textContent = blendOpen ? '\u25BE' : '\u25B6';
+  document.getElementById('blend-toggle-txt').textContent  = blendOpen ? 'Close Preview' : 'Try Blend';
+  if (blendOpen) setTimeout(() => p.scrollIntoView({behavior:'smooth', block:'nearest'}), 80);
+}
+
+function resetBlend() {
+  blendBusy = false;
+  blendSlots = [null, null, null, null];
+  blendZones = [];
+  blendActiveSlot = -1;
+  blendEraser = false;
+  blendPainting = false;
+
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('blend-file-' + i).value = '';
+    document.getElementById('blend-drop-' + i).style.display = 'flex';
+    const c = document.getElementById('blend-canvas-' + i);
+    c.style.display = 'none';
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, c.width, c.height);
+    document.getElementById('blend-zone-count-' + i).textContent = '0 zones';
+  }
+
+  document.getElementById('blend-zone-list').innerHTML =
+    '<div id="blend-zones-empty" style="text-align:center;padding:20px;"><div style="font-size:18px;opacity:.3;margin-bottom:6px;">🎯</div><div style="font-family:\'DM Sans\',sans-serif;font-size:10px;color:#3A3835;line-height:1.6;">Paint on an image to highlight a feature,<br>then save the zone with a label.</div></div>';
+  document.getElementById('blend-label-row').style.display = 'none';
+  document.getElementById('blend-idle').style.display = 'flex';
+  document.getElementById('blend-spinner').style.display = 'none';
+  document.getElementById('blend-result').style.display = 'none';
+  document.getElementById('blend-key-note').style.display = 'none';
+  document.getElementById('blend-gen-btn').style.opacity = '1';
+
+  const eraserBtn = document.getElementById('blend-eraser-btn');
+  eraserBtn.style.background = 'rgba(255,255,255,.04)';
+  eraserBtn.style.color = '#5A5650';
+}
+
+function updateBlendBrush(val) {
+  blendBrushSize = parseInt(val);
+  document.getElementById('blend-brush-val').textContent = val + 'px';
+}
+
+function toggleBlendEraser() {
+  blendEraser = !blendEraser;
+  const btn = document.getElementById('blend-eraser-btn');
+  btn.style.background = blendEraser ? 'rgba(201,83,75,.15)' : 'rgba(255,255,255,.04)';
+  btn.style.color = blendEraser ? '#C9534B' : '#5A5650';
+}
+
+/* ── Multi-image upload ── */
+
+function handleBlendUpload(slotIdx, input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    const img = new Image();
+    img.onload = () => {
+      initBlendSlot(slotIdx, img, dataUrl, file.type || 'image/jpeg');
+    };
+    img.src = dataUrl;
+  };
+  reader.readAsDataURL(file);
+}
+
+function initBlendSlot(slotIdx, img, dataUrl, mimeType) {
+  const canvas = document.getElementById('blend-canvas-' + slotIdx);
+  const container = canvas.parentElement;
+  const cw = container.clientWidth || 300;
+  const ch = container.clientHeight || 300;
+
+  // Scale image to fit container
+  let w = img.width, h = img.height;
+  const scale = Math.min(cw / w, ch / h, 1);
+  w = Math.round(w * scale);
+  h = Math.round(h * scale);
+
+  canvas.width = w;
+  canvas.height = h;
+  canvas.style.display = 'block';
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  canvas.style.position = 'absolute';
+  canvas.style.left = ((cw - w) / 2) + 'px';
+  canvas.style.top = ((ch - h) / 2) + 'px';
+
+  // Draw image
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, w, h);
+
+  // Create mask overlay canvas (same size, tracked separately)
+  const maskCanvas = document.createElement('canvas');
+  maskCanvas.width = w;
+  maskCanvas.height = h;
+
+  blendSlots[slotIdx] = {
+    img, b64: dataUrl.split(',')[1], type: mimeType,
+    canvas, maskCanvas, w, h, dataUrl
+  };
+
+  // Hide upload prompt
+  document.getElementById('blend-drop-' + slotIdx).style.display = 'none';
+
+  // Attach painting events
+  canvas.onmousedown  = e => startBlendPaint(slotIdx, e);
+  canvas.onmousemove  = e => doBlendPaint(slotIdx, e);
+  canvas.onmouseup    = () => stopBlendPaint();
+  canvas.onmouseleave = () => stopBlendPaint();
+
+  // Touch support
+  canvas.ontouchstart = e => { e.preventDefault(); startBlendPaint(slotIdx, e.touches[0]); };
+  canvas.ontouchmove  = e => { e.preventDefault(); doBlendPaint(slotIdx, e.touches[0]); };
+  canvas.ontouchend   = () => stopBlendPaint();
+}
+
+/* ── Canvas painting / masking ── */
+
+function getCanvasPos(slotIdx, evt) {
+  const canvas = blendSlots[slotIdx].canvas;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return {
+    x: (evt.clientX - rect.left) * scaleX,
+    y: (evt.clientY - rect.top) * scaleY
+  };
+}
+
+function startBlendPaint(slotIdx, evt) {
+  if (!blendSlots[slotIdx]) return;
+  blendPainting = true;
+  blendActiveSlot = slotIdx;
+  doBlendPaint(slotIdx, evt);
+}
+
+function doBlendPaint(slotIdx, evt) {
+  if (!blendPainting || blendActiveSlot !== slotIdx) return;
+  const slot = blendSlots[slotIdx];
+  if (!slot) return;
+
+  const pos = getCanvasPos(slotIdx, evt);
+  const maskCtx = slot.maskCanvas.getContext('2d');
+
+  if (blendEraser) {
+    maskCtx.globalCompositeOperation = 'destination-out';
+    maskCtx.beginPath();
+    maskCtx.arc(pos.x, pos.y, blendBrushSize, 0, Math.PI * 2);
+    maskCtx.fill();
+    maskCtx.globalCompositeOperation = 'source-over';
+  } else {
+    const colorIdx = blendZones.filter(z => z.slotIdx === slotIdx).length % BLEND_ZONE_COLORS.length;
+    maskCtx.fillStyle = BLEND_ZONE_COLORS[colorIdx];
+    maskCtx.beginPath();
+    maskCtx.arc(pos.x, pos.y, blendBrushSize, 0, Math.PI * 2);
+    maskCtx.fill();
+  }
+
+  // Redraw canvas: image + mask overlay
+  redrawBlendCanvas(slotIdx);
+}
+
+function stopBlendPaint() {
+  blendPainting = false;
+}
+
+function redrawBlendCanvas(slotIdx) {
+  const slot = blendSlots[slotIdx];
+  if (!slot) return;
+  const ctx = slot.canvas.getContext('2d');
+  ctx.clearRect(0, 0, slot.w, slot.h);
+  ctx.drawImage(slot.img, 0, 0, slot.w, slot.h);
+
+  // Draw all saved zone masks for this slot (dimmed)
+  blendZones.forEach((z, zi) => {
+    if (z.slotIdx !== slotIdx) return;
+    const zImg = new Image();
+    zImg.src = z.maskDataUrl;
+    ctx.globalAlpha = 0.4;
+    ctx.drawImage(zImg, 0, 0);
+    ctx.globalAlpha = 1.0;
+  });
+
+  // Draw current painting mask
+  ctx.drawImage(slot.maskCanvas, 0, 0);
+}
+
+/* ── Zone saving & labeling ── */
+
+function saveBlendZone() {
+  if (blendActiveSlot < 0 || !blendSlots[blendActiveSlot]) return;
+
+  // Check if mask has any painted pixels
+  const slot = blendSlots[blendActiveSlot];
+  const maskCtx = slot.maskCanvas.getContext('2d');
+  const maskData = maskCtx.getImageData(0, 0, slot.w, slot.h);
+  let hasPixels = false;
+  for (let i = 3; i < maskData.data.length; i += 4) {
+    if (maskData.data[i] > 10) { hasPixels = true; break; }
+  }
+  if (!hasPixels) return;
+
+  document.getElementById('blend-label-row').style.display = 'block';
+  document.getElementById('blend-zone-label').value = '';
+  document.getElementById('blend-zone-label').focus();
+}
+
+function cancelSaveZone() {
+  document.getElementById('blend-label-row').style.display = 'none';
+}
+
+function confirmSaveZone() {
+  const label = document.getElementById('blend-zone-label').value;
+  if (!label) { document.getElementById('blend-zone-label').style.borderColor = '#C9534B'; return; }
+
+  const slotIdx = blendActiveSlot;
+  const slot = blendSlots[slotIdx];
+  if (!slot) return;
+
+  // Save mask as data URL
+  const maskDataUrl = slot.maskCanvas.toDataURL('image/png');
+
+  // Create cropped region: original image with mask applied
+  const cropCanvas = document.createElement('canvas');
+  cropCanvas.width = slot.w;
+  cropCanvas.height = slot.h;
+  const cropCtx = cropCanvas.getContext('2d');
+
+  // Draw original
+  cropCtx.drawImage(slot.img, 0, 0, slot.w, slot.h);
+
+  // Use mask as alpha — only keep painted areas
+  const origData = cropCtx.getImageData(0, 0, slot.w, slot.h);
+  const maskPixels = slot.maskCanvas.getContext('2d').getImageData(0, 0, slot.w, slot.h);
+  for (let i = 0; i < origData.data.length; i += 4) {
+    const maskAlpha = maskPixels.data[i + 3];
+    if (maskAlpha < 10) {
+      origData.data[i + 3] = 0; // transparent where not painted
+    }
+  }
+  cropCtx.putImageData(origData, 0, 0);
+  const cropB64 = cropCanvas.toDataURL('image/png').split(',')[1];
+
+  const zone = {
+    slotIdx,
+    label,
+    labelDisplay: document.getElementById('blend-zone-label').options[document.getElementById('blend-zone-label').selectedIndex].text,
+    maskDataUrl,
+    maskB64: maskDataUrl.split(',')[1],
+    cropB64,
+    sourceB64: slot.b64,
+    sourceType: slot.type,
+    featureDesc: '' // filled by AI later
+  };
+  blendZones.push(zone);
+
+  // Clear current mask for next zone
+  const maskCtx = slot.maskCanvas.getContext('2d');
+  maskCtx.clearRect(0, 0, slot.w, slot.h);
+  redrawBlendCanvas(slotIdx);
+
+  // Update UI
+  document.getElementById('blend-label-row').style.display = 'none';
+  updateBlendZoneList();
+  updateBlendZoneCounts();
+}
+
+function updateBlendZoneCounts() {
+  for (let i = 0; i < 4; i++) {
+    const count = blendZones.filter(z => z.slotIdx === i).length;
+    document.getElementById('blend-zone-count-' + i).textContent = count + ' zone' + (count !== 1 ? 's' : '');
+  }
+}
+
+function updateBlendZoneList() {
+  const list = document.getElementById('blend-zone-list');
+  if (blendZones.length === 0) {
+    list.innerHTML = '<div id="blend-zones-empty" style="text-align:center;padding:20px;"><div style="font-size:18px;opacity:.3;margin-bottom:6px;">🎯</div><div style="font-family:\'DM Sans\',sans-serif;font-size:10px;color:#3A3835;line-height:1.6;">Paint on an image to highlight a feature,<br>then save the zone with a label.</div></div>';
+    return;
+  }
+
+  let html = '';
+  blendZones.forEach((z, i) => {
+    const color = BLEND_ZONE_COLORS[i % BLEND_ZONE_COLORS.length].replace('.45', '1');
+    html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;border-left:3px solid ' + BLEND_ZONE_COLORS[i % BLEND_ZONE_COLORS.length].replace('.45', '.8') + ';">'
+      + '<div style="width:36px;height:36px;border-radius:6px;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,255,255,.08);"><img src="data:image/png;base64,' + z.cropB64 + '" style="width:100%;height:100%;object-fit:cover;" /></div>'
+      + '<div style="flex:1;min-width:0;">'
+      + '<div style="font-family:\'DM Sans\',sans-serif;font-size:10px;color:#E8E4DD;font-weight:600;">' + z.labelDisplay + '</div>'
+      + '<div style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#47453F;">Image ' + (z.slotIdx + 1) + '</div>'
+      + '</div>'
+      + '<button onclick="removeBlendZone(' + i + ')" style="background:none;border:none;color:#3A3835;font-size:14px;cursor:pointer;padding:2px 4px;" onmouseover="this.style.color=\'#C9534B\'" onmouseout="this.style.color=\'#3A3835\'">&times;</button>'
+      + '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function removeBlendZone(idx) {
+  blendZones.splice(idx, 1);
+  updateBlendZoneList();
+  updateBlendZoneCounts();
+  // Redraw all canvases
+  for (let i = 0; i < 4; i++) {
+    if (blendSlots[i]) redrawBlendCanvas(i);
+  }
+}
+
+/* ── AI-powered blend generation ── */
+
+async function generateBlend() {
+  if (blendBusy) return;
+  if (!anthropicKey && !useServerKeys) {
+    document.getElementById('blend-key-note').style.display = 'block';
+    return;
+  }
+  if (blendZones.length < 2) {
+    document.getElementById('blend-idle').querySelector('div:last-child').textContent =
+      'Save at least 2 zones from your images to generate a blend.';
+    return;
+  }
+
+  blendBusy = true;
+  document.getElementById('blend-key-note').style.display = 'none';
+  document.getElementById('blend-idle').style.display = 'none';
+  document.getElementById('blend-result').style.display = 'none';
+  document.getElementById('blend-spinner').style.display = 'flex';
+  document.getElementById('blend-spinner-text').textContent = 'Analyzing marked zones…';
+  document.getElementById('blend-gen-btn').style.opacity = '.5';
+
+  try {
+    // Step 1: Analyze each zone with Claude vision
+    document.getElementById('blend-spinner-text').textContent = 'AI analyzing ' + blendZones.length + ' zones…';
+
+    const zoneDescriptions = [];
+    for (let i = 0; i < blendZones.length; i++) {
+      const z = blendZones[i];
+      document.getElementById('blend-spinner-text').textContent =
+        'Analyzing zone ' + (i + 1) + '/' + blendZones.length + ': ' + z.labelDisplay + '…';
+
+      const desc = await analyzeBlendZone(z);
+      z.featureDesc = desc;
+      zoneDescriptions.push({
+        label: z.labelDisplay,
+        feature: z.label,
+        imageNum: z.slotIdx + 1,
+        description: desc
+      });
+    }
+
+    // Step 2: Generate blended design description
+    document.getElementById('blend-spinner-text').textContent = 'Creating blended design concept…';
+
+    const blendPrompt = buildBlendPrompt(zoneDescriptions);
+
+    // Step 3: Generate the render
+    document.getElementById('blend-spinner-text').textContent = 'Generating blended render…';
+
+    const renderResult = await generateBlendRender(blendPrompt, zoneDescriptions);
+
+    // Show result
+    document.getElementById('blend-spinner').style.display = 'none';
+    document.getElementById('blend-result').style.display = 'flex';
+
+    if (renderResult.imageUrl) {
+      document.getElementById('blend-render-img').src = renderResult.imageUrl;
+    }
+    document.getElementById('blend-description').innerHTML = renderResult.description || '';
+
+  } catch(e) {
+    document.getElementById('blend-spinner').style.display = 'none';
+    document.getElementById('blend-idle').style.display = 'flex';
+    document.getElementById('blend-idle').querySelector('div:last-child').textContent = '\u26A0\uFE0F ' + e.message;
+  }
+
+  blendBusy = false;
+  document.getElementById('blend-gen-btn').style.opacity = '1';
+}
+
+async function analyzeBlendZone(zone) {
+  const res = await claudeAPI({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 300,
+    system: `You are a jewelry design analyst. You will see a jewelry image with a highlighted/masked region. Describe ONLY the design element in the highlighted area in precise jewelry terminology.
+
+Focus on: shape, proportions, style (art deco, vintage, modern, etc.), structural details, number of prongs, stone arrangement pattern, metalwork texture, curvature, thickness.
+
+Be specific and visual — your description will be used to recreate this exact element in a new design.
+Output 2-3 sentences of dense visual description. No labels or preamble.`,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: 'image/png', data: zone.cropB64 } },
+        { type: 'text', text: 'This is a masked region from a jewelry image. The highlighted zone is labeled as "' + zone.labelDisplay + '" (feature type: ' + zone.label + '). Describe this specific design element in detail.' }
+      ]
+    }]
+  });
+
+  if (!res.ok) throw new Error('Zone analysis failed (HTTP ' + res.status + ')');
+  const data = await res.json();
+  return data.content?.[0]?.text || 'Unable to analyze zone';
+}
+
+function buildBlendPrompt(zoneDescs) {
+  let prompt = 'Create a single cohesive jewelry piece that combines these specific design elements from multiple reference images:\n\n';
+  zoneDescs.forEach((z, i) => {
+    prompt += (i + 1) + '. ' + z.label.toUpperCase() + ' (from Image ' + z.imageNum + '): ' + z.description + '\n\n';
+  });
+  prompt += 'The final piece should seamlessly integrate all these elements into one harmonious design. ';
+  prompt += 'Maintain the exact style, proportions, and character of each referenced element while ensuring they flow together naturally.';
+  return prompt;
+}
+
+async function generateBlendRender(blendPrompt, zoneDescs) {
+  // Build a description using Claude
+  const descRes = await claudeAPI({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 600,
+    system: `You are ZipJeweler's design fusion engine. Given descriptions of design elements from multiple jewelry references, produce two things:
+
+1. A rich FLUX image generation prompt (2-4 sentences) that describes the blended jewelry piece in vivid visual detail. Lead with the most distinctive feature. Include metal color, finish, stone specifics, and photography direction.
+
+2. A brief client-facing description of the blended design concept.
+
+Output format:
+[PROMPT]Your FLUX image prompt here[/PROMPT]
+[DESCRIPTION]Your design concept description here[/DESCRIPTION]`,
+    messages: [{
+      role: 'user',
+      content: blendPrompt
+    }]
+  });
+
+  if (!descRes.ok) throw new Error('Blend concept generation failed');
+  const descData = await descRes.json();
+  const descText = descData.content?.[0]?.text || '';
+
+  const promptMatch = descText.match(/\[PROMPT\]([\s\S]*?)\[\/PROMPT\]/);
+  const descMatch = descText.match(/\[DESCRIPTION\]([\s\S]*?)\[\/DESCRIPTION\]/);
+
+  const fluxPrompt = promptMatch ? promptMatch[1].trim() : blendPrompt;
+  const description = descMatch ? descMatch[1].trim() : '';
+
+  // Try render via /api/generate-render
+  let imageUrl = null;
+  const PROXY_URL = '/api/generate-render';
+  try {
+    const renderRes = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: fluxPrompt, aspect_ratio: '1:1' })
+    });
+    const renderData = await renderRes.json();
+    if (renderRes.ok && renderData.url) {
+      imageUrl = renderData.url;
+    }
+  } catch(e) { /* render proxy not available */ }
+
+  // Format description
+  let htmlDesc = '<div style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#C9534B;font-weight:700;margin-bottom:6px;">Design Concept</div>';
+  htmlDesc += '<div style="font-family:\'DM Sans\',sans-serif;font-size:11px;color:#C8C4BE;line-height:1.7;margin-bottom:10px;">' + description + '</div>';
+  htmlDesc += '<div style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:6px;">Elements Used</div>';
+  htmlDesc += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
+  zoneDescs.forEach(z => {
+    htmlDesc += '<span style="font-family:\'DM Sans\',sans-serif;font-size:9px;padding:3px 8px;background:rgba(201,83,75,.08);border:1px solid rgba(201,83,75,.15);border-radius:10px;color:#C9534B;">' + z.label + ' (Img ' + z.imageNum + ')</span>';
+  });
+  htmlDesc += '</div>';
+
+  if (!imageUrl) {
+    htmlDesc += '<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;">'
+      + '<div style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:4px;">Render Prompt</div>'
+      + '<div style="font-family:\'DM Sans\',sans-serif;font-size:10px;color:#5A5650;line-height:1.6;font-style:italic;">' + fluxPrompt + '</div>'
+      + '</div>';
+  }
+
+  return { imageUrl, description: htmlDesc };
 }
 
 </script>
