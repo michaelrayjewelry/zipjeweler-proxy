@@ -3,6 +3,9 @@
 // For S2I: sketch-to-image generation/editing with multi-turn correction support
 // Now uses the same Responses API + gpt-4.1 approach as C2R's generate-image route
 
+// Extend serverless function timeout for image generation (OpenAI can take 30-60s)
+export const maxDuration = 60;
+
 export async function OPTIONS() {
   return new Response(null, {
     status: 200,

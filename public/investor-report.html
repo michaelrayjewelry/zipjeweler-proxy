@@ -4247,18 +4247,32 @@ function handleS2IUpload(input) {
     img.src = dataUrl;
     img.style.display = 'block';
     document.getElementById('s2i-upload-ph').style.display = 'none';
-    // Show zone annotation section
-    document.getElementById('s2i-zone-section').style.display = 'block';
-    // Reset any existing zones
-    s2iZones = [];
-    s2iZonePainterOpen = false;
-    s2iZoneHistory = [];
-    s2iZoneTempMask = null;
-    document.getElementById('s2i-zone-wrap').style.display = 'none';
-    document.getElementById('s2i-zone-toolbar').style.display = 'none';
-    document.getElementById('s2i-zone-note-bar').style.display = 'none';
-    document.getElementById('s2i-zone-list').innerHTML = '';
-    document.getElementById('s2i-zone-toggle-btn').textContent = '+ Add Zones';
+    // Show zone annotation section (optional inpainting)
+    try {
+      const zoneSection = document.getElementById('s2i-zone-section');
+      if (zoneSection) {
+        zoneSection.style.display = 'block';
+        zoneSection.style.visibility = 'visible';
+        zoneSection.style.opacity = '1';
+      }
+      // Reset any existing zones
+      s2iZones = [];
+      s2iZonePainterOpen = false;
+      s2iZoneHistory = [];
+      s2iZoneTempMask = null;
+      const wrap = document.getElementById('s2i-zone-wrap');
+      if (wrap) wrap.style.display = 'none';
+      const toolbar = document.getElementById('s2i-zone-toolbar');
+      if (toolbar) toolbar.style.display = 'none';
+      const noteBar = document.getElementById('s2i-zone-note-bar');
+      if (noteBar) noteBar.style.display = 'none';
+      const zoneList = document.getElementById('s2i-zone-list');
+      if (zoneList) zoneList.innerHTML = '';
+      const toggleBtn = document.getElementById('s2i-zone-toggle-btn');
+      if (toggleBtn) toggleBtn.textContent = '+ Add Zones';
+    } catch (zoneErr) {
+      console.warn('S2I zone init error:', zoneErr);
+    }
   };
   reader.readAsDataURL(file);
 }
@@ -4356,11 +4370,23 @@ async function renderS2IDirect(correctionText) {
       }
     }
 
+    // Use AbortController with 90s timeout (image generation can take 30-60s)
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 90000);
+
     const res = await fetch(responsesUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
+
+    // Handle 502/504 gateway errors from serverless function timeout
+    if (res.status === 502 || res.status === 504) {
+      throw new Error('Server timed out generating the image. The render may take longer than the server allows. Please try again — sometimes a second attempt succeeds faster.');
+    }
+
     const data = await res.json();
 
     document.getElementById('s2i-spinner').style.display = 'none';
@@ -4387,7 +4413,10 @@ async function renderS2IDirect(correctionText) {
   } catch(e) {
     document.getElementById('s2i-spinner').style.display = 'none';
     document.getElementById('s2i-idle').style.display = 'flex';
-    document.getElementById('s2i-idle').querySelector('div:last-child').textContent = e.message;
+    const msg = e.name === 'AbortError'
+      ? 'Request timed out — image generation took too long. Please try again.'
+      : e.message;
+    document.getElementById('s2i-idle').querySelector('div:last-child').textContent = msg;
   }
 
   s2iAnalyzing = false;
