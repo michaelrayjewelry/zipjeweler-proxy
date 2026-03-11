@@ -2772,6 +2772,9 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
             <div class="tf">AI surfaces what needs attention — overdue stages, missing files, unapproved items</div>
           </div>
           <div class="tc-footer"><div class="tc-layer">Production Hub</div><span class="pill pill-live">● Live</span></div>
+          <div style="margin-top:14px;text-align:center;">
+            <button onclick="openDashboardPreview()" style="font-family:var(--sans);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:600;color:var(--white);background:var(--green);border:none;border-radius:6px;padding:9px 22px;cursor:pointer;transition:all .18s;box-shadow:0 2px 8px rgba(45,139,85,.25);" onmouseover="this.style.background='#238A48';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 14px rgba(45,139,85,.35)'" onmouseout="this.style.background='var(--green)';this.style.transform='none';this.style.boxShadow='0 2px 8px rgba(45,139,85,.25)'">Preview Dashboard</button>
+          </div>
         </div>
 
         <!-- PROJECT FOLDERS -->
@@ -7891,6 +7894,277 @@ async function retryRender(tool) {
   }
 }
 
+/* ─── DASHBOARD PREVIEW (mock overlay — no tool interference) ─── */
+function openDashboardPreview(){ document.getElementById('dash-preview-overlay').style.display='flex'; document.body.style.overflow='hidden'; }
+function closeDashboardPreview(){ document.getElementById('dash-preview-overlay').style.display='none'; document.body.style.overflow=''; }
+
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MOCK DASHBOARD PREVIEW OVERLAY
+     Pure visual mockup — does NOT call any API or modify any tool state.
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="dash-preview-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(10,12,8,.88);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:24px;animation:rise .25s ease;" onclick="if(event.target===this)closeDashboardPreview()">
+
+  <!-- Window chrome -->
+  <div style="width:100%;max-width:1120px;max-height:92vh;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.1);box-shadow:0 24px 80px rgba(0,0,0,.45);display:flex;flex-direction:column;">
+
+    <!-- Title bar -->
+    <div style="background:#1A1C17;padding:11px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;">
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <div onclick="closeDashboardPreview()" style="width:11px;height:11px;border-radius:50%;background:#FF5F57;cursor:pointer;" title="Close preview"></div>
+        <div style="width:11px;height:11px;border-radius:50%;background:#FFBD2E;"></div>
+        <div style="width:11px;height:11px;border-radius:50%;background:#28C840;"></div>
+      </div>
+      <div style="flex:1;text-align:center;">
+        <span style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:3px 14px;">
+          <span style="width:7px;height:7px;border-radius:50%;background:#2D8B55;display:inline-block;opacity:.8;"></span>
+          <span style="font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.5px;">zipjeweler.com / dashboard</span>
+        </span>
+      </div>
+      <div style="width:64px;text-align:right;">
+        <span onclick="closeDashboardPreview()" style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.25);cursor:pointer;padding:4px 8px;border:1px solid rgba(255,255,255,.08);border-radius:4px;" onmouseover="this.style.color='rgba(255,255,255,.5)'" onmouseout="this.style.color='rgba(255,255,255,.25)'">ESC</span>
+      </div>
+    </div>
+
+    <!-- Dashboard body -->
+    <div style="background:#0E100C;overflow-y:auto;flex:1;">
+      <div style="display:grid;grid-template-columns:200px 1fr;min-height:600px;">
+
+        <!-- ── SIDEBAR ── -->
+        <div style="background:#141810;border-right:1px solid rgba(255,255,255,.05);padding:0;display:flex;flex-direction:column;">
+
+          <!-- Logo -->
+          <div style="padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,.05);">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;color:#CFB584;letter-spacing:1px;">ZipJeweler</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:8px;color:#3A3835;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px;">Dashboard</div>
+          </div>
+
+          <!-- Sidebar nav -->
+          <nav style="flex:1;padding:10px 0;overflow-y:auto;">
+            <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#2A2825;font-weight:700;padding:4px 18px 8px;">Hub</div>
+
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;background:rgba(207,181,132,.08);border-left:2px solid #CFB584;cursor:default;">
+              <span style="font-size:13px;">🗃</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#D8D4CE;">Dashboard</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:default;opacity:.5;">
+              <span style="font-size:13px;">📁</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">Project Folders</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:default;opacity:.5;">
+              <span style="font-size:13px;">⬡</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">Products</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:default;opacity:.5;">
+              <span style="font-size:13px;">🗂</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">File Hub</span>
+            </div>
+
+            <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#2A2825;font-weight:700;padding:16px 18px 8px;">AI Tools</div>
+
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:default;opacity:.5;">
+              <span style="font-size:13px;">💬</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">Imagine</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:default;opacity:.5;">
+              <span style="font-size:13px;">🖼</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">Sketch-to-Image</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:default;opacity:.5;">
+              <span style="font-size:13px;">🔄</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">CAD-to-Render</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:default;opacity:.5;">
+              <span style="font-size:13px;">📐</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">Spec Assistant</span>
+            </div>
+          </nav>
+
+          <!-- Sidebar footer -->
+          <div style="padding:12px 18px;border-top:1px solid rgba(255,255,255,.05);">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#CFB584,#A08650);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-family:'DM Sans',sans-serif;font-weight:600;">MR</div>
+              <div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#D8D4CE;font-weight:500;">Michael Ray</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:8px;color:#47453F;">Studio Owner</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── MAIN CONTENT ── -->
+        <div style="padding:28px 32px;overflow-y:auto;">
+
+          <!-- Header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
+            <div>
+              <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#47453F;font-weight:600;margin-bottom:4px;">Welcome back</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:#D8D4CE;">Studio Dashboard</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <div style="padding:6px 14px;background:rgba(45,139,85,.12);border:1px solid rgba(45,139,85,.25);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;font-weight:600;color:#2D8B55;cursor:default;">+ New Project</div>
+              <div style="padding:6px 14px;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.18);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;font-weight:600;color:#CFB584;cursor:default;">Upload Files</div>
+            </div>
+          </div>
+
+          <!-- Stats row -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;">
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:16px;">
+              <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#47453F;font-weight:600;margin-bottom:6px;">Active Projects</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:#D8D4CE;">12</div>
+              <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#2D8B55;margin-top:2px;">3 need attention</div>
+            </div>
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:16px;">
+              <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#47453F;font-weight:600;margin-bottom:6px;">Products</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:#D8D4CE;">34</div>
+              <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#CFB584;margin-top:2px;">8 published</div>
+            </div>
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:16px;">
+              <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#47453F;font-weight:600;margin-bottom:6px;">File Hub</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:#D8D4CE;">7</div>
+              <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#6B6860;margin-top:2px;">Unprocessed items</div>
+            </div>
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:16px;">
+              <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#47453F;font-weight:600;margin-bottom:6px;">Pending Orders</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:#D8D4CE;">5</div>
+              <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#E8524A;margin-top:2px;">2 overdue</div>
+            </div>
+          </div>
+
+          <!-- AI Attention Banner -->
+          <div style="background:linear-gradient(135deg,rgba(207,181,132,.06),rgba(45,139,85,.06));border:1px solid rgba(207,181,132,.12);border-radius:10px;padding:16px 20px;margin-bottom:28px;display:flex;align-items:center;gap:14px;">
+            <div style="font-size:20px;">✨</div>
+            <div style="flex:1;">
+              <div style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#CFB584;margin-bottom:2px;">Dashboard Assistant</div>
+              <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;line-height:1.5;">3 items need your attention — <span style="color:#E8524A;">Celestine Ring missing CAD file</span>, <span style="color:#CFB584;">Heritage Cuff awaiting approval</span>, <span style="color:#2D8B55;">Astral Pendant ready for production</span></div>
+            </div>
+            <div style="padding:5px 12px;background:rgba(207,181,132,.1);border:1px solid rgba(207,181,132,.2);border-radius:5px;font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;font-weight:600;color:#CFB584;cursor:default;white-space:nowrap;">Review All</div>
+          </div>
+
+          <!-- Two-column: Recent Projects + Quick Tools -->
+          <div style="display:grid;grid-template-columns:1fr 280px;gap:20px;">
+
+            <!-- Recent Project Folders -->
+            <div>
+              <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#47453F;font-weight:700;margin-bottom:14px;">Recent Project Folders</div>
+
+              <!-- Project row 1 -->
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:8px;margin-bottom:8px;">
+                <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,rgba(207,181,132,.15),rgba(207,181,132,.05));border:1px solid rgba(207,181,132,.2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">💍</div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;color:#D8D4CE;">Celestine Oval Ring</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;">Bridal Collection · In Review</div>
+                </div>
+                <div style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.18);border-radius:10px;">
+                  <div style="width:5px;height:5px;border-radius:50%;background:#CFB584;"></div>
+                  <span style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:.8px;text-transform:uppercase;color:#CFB584;font-weight:600;">In Review</span>
+                </div>
+              </div>
+
+              <!-- Project row 2 -->
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:8px;margin-bottom:8px;">
+                <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,rgba(45,139,85,.15),rgba(45,139,85,.05));border:1px solid rgba(45,139,85,.2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">📿</div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;color:#D8D4CE;">Heritage Chain Bracelet</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;">Heritage Collection · Ready</div>
+                </div>
+                <div style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(45,139,85,.08);border:1px solid rgba(45,139,85,.18);border-radius:10px;">
+                  <div style="width:5px;height:5px;border-radius:50%;background:#2D8B55;"></div>
+                  <span style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:.8px;text-transform:uppercase;color:#2D8B55;font-weight:600;">Ready</span>
+                </div>
+              </div>
+
+              <!-- Project row 3 -->
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:8px;margin-bottom:8px;">
+                <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,rgba(232,82,74,.15),rgba(232,82,74,.05));border:1px solid rgba(232,82,74,.2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">✨</div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;color:#D8D4CE;">Astral Pendant Necklace</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;">Astral Collection · In Progress</div>
+                </div>
+                <div style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(232,82,74,.08);border:1px solid rgba(232,82,74,.18);border-radius:10px;">
+                  <div style="width:5px;height:5px;border-radius:50%;background:#E8524A;"></div>
+                  <span style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:.8px;text-transform:uppercase;color:#E8524A;font-weight:600;">In Progress</span>
+                </div>
+              </div>
+
+              <!-- Project row 4 -->
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:8px;margin-bottom:8px;">
+                <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,rgba(112,80,168,.15),rgba(112,80,168,.05));border:1px solid rgba(112,80,168,.2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">👑</div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;color:#D8D4CE;">Royal Tiara Set</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;">Custom · Draft</div>
+                </div>
+                <div style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(90,90,90,.08);border:1px solid rgba(255,255,255,.06);border-radius:10px;">
+                  <div style="width:5px;height:5px;border-radius:50%;background:#5A5A5A;"></div>
+                  <span style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:.8px;text-transform:uppercase;color:#6B6860;font-weight:600;">Draft</span>
+                </div>
+              </div>
+
+              <!-- Project row 5 -->
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:8px;">
+                <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,rgba(207,181,132,.15),rgba(207,181,132,.05));border:1px solid rgba(207,181,132,.2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">💎</div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;color:#D8D4CE;">Sapphire Eternity Band</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;">Bridal Collection · In Review</div>
+                </div>
+                <div style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.18);border-radius:10px;">
+                  <div style="width:5px;height:5px;border-radius:50%;background:#CFB584;"></div>
+                  <span style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:.8px;text-transform:uppercase;color:#CFB584;font-weight:600;">In Review</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Access Tools -->
+            <div>
+              <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#47453F;font-weight:700;margin-bottom:14px;">Quick Access Tools</div>
+
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="padding:14px;background:rgba(232,82,74,.04);border:1px solid rgba(232,82,74,.12);border-radius:8px;cursor:default;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                    <span style="font-size:14px;">💬</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#D8D4CE;">Imagine</span>
+                  </div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;line-height:1.4;">Describe a piece, get a full project folder with renders</div>
+                </div>
+
+                <div style="padding:14px;background:rgba(232,82,74,.04);border:1px solid rgba(232,82,74,.12);border-radius:8px;cursor:default;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                    <span style="font-size:14px;">🖼</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#D8D4CE;">Sketch-to-Image</span>
+                  </div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;line-height:1.4;">Transform hand sketches into photorealistic renders</div>
+                </div>
+
+                <div style="padding:14px;background:rgba(232,82,74,.04);border:1px solid rgba(232,82,74,.12);border-radius:8px;cursor:default;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                    <span style="font-size:14px;">🔄</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#D8D4CE;">CAD-to-Render</span>
+                  </div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;line-height:1.4;">Convert CAD screenshots into lifestyle product photos</div>
+                </div>
+
+                <div style="padding:14px;background:rgba(232,82,74,.04);border:1px solid rgba(232,82,74,.12);border-radius:8px;cursor:default;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                    <span style="font-size:14px;">📐</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#D8D4CE;">Spec Assistant</span>
+                  </div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;line-height:1.4;">AI-powered spec sheets, cost estimates, and production notes</div>
+                </div>
+
+                <div style="padding:14px;background:rgba(45,139,85,.04);border:1px solid rgba(45,139,85,.12);border-radius:8px;cursor:default;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                    <span style="font-size:14px;">📦</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#D8D4CE;">Batch Upload</span>
+                  </div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;line-height:1.4;">Process multiple files into organized project folders</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mock preview badge -->
+          <div style="text-align:center;margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,.04);">
+            <span style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#2A2825;font-weight:600;">Mock Preview · Visual Concept Only</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
