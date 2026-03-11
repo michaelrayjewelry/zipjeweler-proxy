@@ -387,6 +387,20 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
 #evolve-prompt{flex:1;min-width:120px;padding:5px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#E8E4DD;font-family:'DM Sans',sans-serif;font-size:9.5px;outline:none;}
 #evolve-prompt:focus{border-color:rgba(207,181,132,.4);}
 
+/* ══ S2I ZONE PAINTER ════════════════════════════════════════════════ */
+#s2i-zone-wrap{position:relative;display:none;border-radius:6px;overflow:hidden;background:#0A0A08;}
+#s2i-zone-canvas{position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;touch-action:none;z-index:2;}
+#s2i-zone-img{display:block;width:100%;height:auto;max-height:240px;object-fit:contain;border-radius:6px;}
+#s2i-zone-toolbar{display:flex;padding:6px 10px;background:#141410;border:1px solid rgba(255,255,255,.06);border-radius:0 0 8px 8px;gap:6px;align-items:center;flex-wrap:wrap;font-family:'DM Sans',sans-serif;font-size:9px;color:#9A958D;}
+#s2i-zone-toolbar button{padding:3px 9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#D0CCC5;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;cursor:pointer;transition:all .15s;}
+#s2i-zone-toolbar button:hover{background:rgba(255,255,255,.1);}
+#s2i-zone-toolbar button.s2iz-active{background:rgba(201,83,75,.15);border-color:rgba(201,83,75,.35);color:#C9534B;}
+.s2i-zone-chip{display:flex;align-items:center;gap:6px;padding:5px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:10px;color:#C8C4BE;cursor:default;transition:border-color .15s;}
+.s2i-zone-chip:hover{border-color:rgba(201,83,75,.3);}
+.s2i-zone-chip .s2iz-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.s2i-zone-chip .s2iz-remove{cursor:pointer;color:#5A5652;font-size:12px;margin-left:2px;line-height:1;}
+.s2i-zone-chip .s2iz-remove:hover{color:#C9534B;}
+
 /* Key input prompt */
 #ik-prompt{padding:40px 28px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0F0F0D;min-height:300px;}
 #ik-prompt label{font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#5A5650;font-weight:600;}
@@ -962,6 +976,35 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                       <img id="s2i-preview-img" style="display:none;max-width:100%;max-height:200px;border-radius:6px;object-fit:contain;" />
                     </label>
                     <input id="s2i-file" type="file" accept="image/*" style="display:none;" onchange="handleS2IUpload(this)" />
+                  </div>
+
+                  <!-- Zone painter (shown after image upload) -->
+                  <div id="s2i-zone-section" style="display:none;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;">Annotate Zones <span style="color:#2E2C28;text-transform:none;letter-spacing:0;">(optional)</span></div>
+                      <button id="s2i-zone-toggle-btn" onclick="s2iToggleZonePainter()" style="padding:3px 10px;background:rgba(201,83,75,.08);border:1px solid rgba(201,83,75,.2);border-radius:10px;color:#C9534B;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;cursor:pointer;transition:all .15s;" onmouseover="this.style.background='rgba(201,83,75,.15)'" onmouseout="this.style.background='rgba(201,83,75,.08)'">+ Add Zones</button>
+                    </div>
+                    <div id="s2i-zone-wrap">
+                      <img id="s2i-zone-img" />
+                      <canvas id="s2i-zone-canvas"></canvas>
+                    </div>
+                    <div id="s2i-zone-toolbar" style="display:none;">
+                      <button id="s2i-zone-paint-btn" class="s2iz-active" onclick="s2iSetZoneTool('paint')">Paint</button>
+                      <button id="s2i-zone-erase-btn" onclick="s2iSetZoneTool('erase')">Erase</button>
+                      <span style="color:#3A3835;">Size</span>
+                      <input type="range" id="s2i-zone-brush" min="5" max="60" value="24" style="width:55px;accent-color:#C9534B;height:3px;" oninput="s2iZoneBrushSize=+this.value" />
+                      <span style="width:1px;height:16px;background:rgba(255,255,255,.06);"></span>
+                      <button onclick="s2iUndoZoneStroke()">Undo</button>
+                      <button onclick="s2iFinishZone()" style="background:rgba(201,83,75,.12);border-color:rgba(201,83,75,.25);color:#C9534B;">Done — Add Note</button>
+                    </div>
+                    <!-- Active zone note input (shown after finishing a painted zone) -->
+                    <div id="s2i-zone-note-bar" style="display:none;padding:8px 10px;background:#141410;border:1px solid rgba(201,83,75,.15);border-radius:0 0 8px 8px;gap:6px;align-items:center;">
+                      <span id="s2i-zone-note-dot" style="width:10px;height:10px;border-radius:50%;flex-shrink:0;"></span>
+                      <input id="s2i-zone-note-input" type="text" placeholder="e.g. emerald green stone, pavé diamonds, hammered gold…" style="flex:1;padding:5px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#E8E4DD;font-family:'DM Sans',sans-serif;font-size:10px;outline:none;" onkeydown="if(event.key==='Enter')s2iSaveZoneNote()" />
+                      <button onclick="s2iSaveZoneNote()" style="padding:4px 12px;background:#C9534B;border:none;border-radius:8px;color:#fff;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;cursor:pointer;">Save</button>
+                    </div>
+                    <!-- Zone list -->
+                    <div id="s2i-zone-list" style="display:flex;flex-direction:column;gap:4px;margin-top:6px;"></div>
                   </div>
 
                   <!-- Spec controls -->
@@ -4179,6 +4222,17 @@ function resetS2I() {
   document.getElementById('s2i-spinner').style.display = 'none';
   document.getElementById('s2i-results').style.display = 'none';
   document.getElementById('s2i-key-note').style.display = 'none';
+  // Reset zone painter
+  s2iZones = [];
+  s2iZonePainterOpen = false;
+  s2iZoneHistory = [];
+  s2iZoneTempMask = null;
+  s2iZoneCtx = null;
+  document.getElementById('s2i-zone-section').style.display = 'none';
+  document.getElementById('s2i-zone-wrap').style.display = 'none';
+  document.getElementById('s2i-zone-toolbar').style.display = 'none';
+  document.getElementById('s2i-zone-note-bar').style.display = 'none';
+  document.getElementById('s2i-zone-list').innerHTML = '';
 }
 
 function handleS2IUpload(input) {
@@ -4193,6 +4247,18 @@ function handleS2IUpload(input) {
     img.src = dataUrl;
     img.style.display = 'block';
     document.getElementById('s2i-upload-ph').style.display = 'none';
+    // Show zone annotation section
+    document.getElementById('s2i-zone-section').style.display = 'block';
+    // Reset any existing zones
+    s2iZones = [];
+    s2iZonePainterOpen = false;
+    s2iZoneHistory = [];
+    s2iZoneTempMask = null;
+    document.getElementById('s2i-zone-wrap').style.display = 'none';
+    document.getElementById('s2i-zone-toolbar').style.display = 'none';
+    document.getElementById('s2i-zone-note-bar').style.display = 'none';
+    document.getElementById('s2i-zone-list').innerHTML = '';
+    document.getElementById('s2i-zone-toggle-btn').textContent = '+ Add Zones';
   };
   reader.readAsDataURL(file);
 }
@@ -4224,6 +4290,9 @@ function buildS2IInstruction(corrections) {
   prompt += 'Scene: white studio background, soft studio lighting.\n';
 
   if (notes) prompt += notes + '\n';
+
+  // Append zone-specific instructions if user annotated zones
+  prompt += s2iBuildZonePrompt();
 
   return prompt;
 }
@@ -4273,13 +4342,18 @@ async function renderS2IDirect(correctionText) {
       size: 'auto',
     };
 
-    // First render: send the sketch image
+    // First render: send the sketch image (+annotated image if zones exist)
     // Correction renders: chain via previous_response_id (image already in context)
     if (s2iResponseId && correctionText) {
       payload.previous_response_id = s2iResponseId;
     } else {
       payload.input_image = s2iImageB64;
       s2iResponseId = null;
+      // If user annotated zones, send the overlay image as a second reference
+      const annotatedB64 = s2iGetAnnotatedImage();
+      if (annotatedB64) {
+        payload.input_image_2 = annotatedB64;
+      }
     }
 
     const res = await fetch(responsesUrl, {
@@ -4320,6 +4394,248 @@ async function renderS2IDirect(correctionText) {
   document.getElementById('s2i-analyze-btn').style.opacity = '1';
 }
 
+
+/* ══════════════════════════════════════════════════════
+   S2I ZONE PAINTER — optional inpainting annotations
+══════════════════════════════════════════════════════ */
+const S2I_ZONE_COLORS = [
+  { fill: 'rgba(201,83,75,.35)',  stroke: '#C9534B', label: '#C9534B' },   // red
+  { fill: 'rgba(75,140,201,.35)', stroke: '#4B8CC9', label: '#4B8CC9' },   // blue
+  { fill: 'rgba(75,180,100,.35)', stroke: '#4BB464', label: '#4BB464' },   // green
+  { fill: 'rgba(207,181,132,.35)',stroke: '#CFB584', label: '#CFB584' },   // gold
+  { fill: 'rgba(160,90,200,.35)', stroke: '#A05AC8', label: '#A05AC8' },   // purple
+  { fill: 'rgba(220,150,50,.35)', stroke: '#DC9632', label: '#DC9632' },   // orange
+];
+let s2iZones = [];             // { color, maskData, note }
+let s2iZonePainterOpen = false;
+let s2iZoneCtx = null;
+let s2iZoneBrushSize = 24;
+let s2iZoneDrawing = false;
+let s2iZoneErasing = false;
+let s2iZoneHistory = [];       // ImageData snapshots for undo
+let s2iZoneTempMask = null;    // current zone being painted (before note)
+
+function s2iToggleZonePainter() {
+  s2iZonePainterOpen = !s2iZonePainterOpen;
+  const wrap = document.getElementById('s2i-zone-wrap');
+  const toolbar = document.getElementById('s2i-zone-toolbar');
+  const btn = document.getElementById('s2i-zone-toggle-btn');
+  if (s2iZonePainterOpen) {
+    wrap.style.display = 'block';
+    toolbar.style.display = 'flex';
+    btn.textContent = 'Hide Zones';
+    s2iInitZoneCanvas();
+  } else {
+    wrap.style.display = 'none';
+    toolbar.style.display = 'none';
+    document.getElementById('s2i-zone-note-bar').style.display = 'none';
+    btn.textContent = '+ Add Zones';
+  }
+}
+
+function s2iInitZoneCanvas() {
+  const img = document.getElementById('s2i-zone-img');
+  const canvas = document.getElementById('s2i-zone-canvas');
+  img.src = 'data:' + (s2iImageType || 'image/jpeg') + ';base64,' + s2iImageB64;
+  img.onload = () => {
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    s2iZoneCtx = canvas.getContext('2d');
+    s2iZoneCtx.lineCap = 'round';
+    s2iZoneCtx.lineJoin = 'round';
+    s2iRedrawAllZones();
+  };
+
+  // Drawing events
+  canvas.onpointerdown = e => {
+    s2iZoneDrawing = true;
+    s2iZoneHistory.push(s2iZoneCtx.getImageData(0, 0, canvas.width, canvas.height));
+    const r = canvas.getBoundingClientRect();
+    const sx = canvas.width / r.width;
+    const sy = canvas.height / r.height;
+    s2iZoneCtx.beginPath();
+    s2iZoneCtx.moveTo((e.clientX - r.left) * sx, (e.clientY - r.top) * sy);
+    canvas.setPointerCapture(e.pointerId);
+  };
+  canvas.onpointermove = e => {
+    if (!s2iZoneDrawing) return;
+    const r = canvas.getBoundingClientRect();
+    const sx = canvas.width / r.width;
+    const sy = canvas.height / r.height;
+    const x = (e.clientX - r.left) * sx;
+    const y = (e.clientY - r.top) * sy;
+    if (s2iZoneErasing) {
+      s2iZoneCtx.globalCompositeOperation = 'destination-out';
+      s2iZoneCtx.lineWidth = s2iZoneBrushSize * sx * 1.5;
+    } else {
+      s2iZoneCtx.globalCompositeOperation = 'source-over';
+      const ci = s2iZones.length % S2I_ZONE_COLORS.length;
+      s2iZoneCtx.strokeStyle = S2I_ZONE_COLORS[ci].fill;
+      s2iZoneCtx.lineWidth = s2iZoneBrushSize * sx;
+    }
+    s2iZoneCtx.lineTo(x, y);
+    s2iZoneCtx.stroke();
+    s2iZoneCtx.beginPath();
+    s2iZoneCtx.moveTo(x, y);
+  };
+  canvas.onpointerup = canvas.onpointercancel = () => { s2iZoneDrawing = false; };
+}
+
+function s2iSetZoneTool(tool) {
+  s2iZoneErasing = (tool === 'erase');
+  document.getElementById('s2i-zone-paint-btn').classList.toggle('s2iz-active', !s2iZoneErasing);
+  document.getElementById('s2i-zone-erase-btn').classList.toggle('s2iz-active', s2iZoneErasing);
+}
+
+function s2iUndoZoneStroke() {
+  if (!s2iZoneHistory.length || !s2iZoneCtx) return;
+  const prev = s2iZoneHistory.pop();
+  s2iZoneCtx.putImageData(prev, 0, 0);
+}
+
+function s2iFinishZone() {
+  if (!s2iZoneCtx) return;
+  const canvas = document.getElementById('s2i-zone-canvas');
+  // Save the current mask state as this zone's mask
+  s2iZoneTempMask = s2iZoneCtx.getImageData(0, 0, canvas.width, canvas.height);
+  // Show note input
+  const ci = s2iZones.length % S2I_ZONE_COLORS.length;
+  const noteBar = document.getElementById('s2i-zone-note-bar');
+  noteBar.style.display = 'flex';
+  document.getElementById('s2i-zone-note-dot').style.background = S2I_ZONE_COLORS[ci].stroke;
+  const noteInput = document.getElementById('s2i-zone-note-input');
+  noteInput.value = '';
+  noteInput.focus();
+}
+
+function s2iSaveZoneNote() {
+  const noteInput = document.getElementById('s2i-zone-note-input');
+  const note = noteInput.value.trim();
+  if (!note) { noteInput.style.borderColor = '#C9534B'; return; }
+  noteInput.style.borderColor = 'rgba(255,255,255,.08)';
+
+  const ci = s2iZones.length % S2I_ZONE_COLORS.length;
+  const canvas = document.getElementById('s2i-zone-canvas');
+
+  // Extract just this zone's mask (difference between current state and the zones already saved)
+  s2iZones.push({
+    color: S2I_ZONE_COLORS[ci],
+    maskData: s2iZoneTempMask,
+    note: note,
+  });
+
+  // Hide note bar, clear temp
+  document.getElementById('s2i-zone-note-bar').style.display = 'none';
+  s2iZoneTempMask = null;
+  s2iZoneHistory = [];
+
+  // Rebuild zone list
+  s2iRenderZoneList();
+
+  // Clear canvas and redraw all zones (ready for next zone)
+  s2iRedrawAllZones();
+}
+
+function s2iRedrawAllZones() {
+  if (!s2iZoneCtx) return;
+  const canvas = document.getElementById('s2i-zone-canvas');
+  s2iZoneCtx.clearRect(0, 0, canvas.width, canvas.height);
+  // Redraw all saved zones
+  s2iZones.forEach(z => {
+    s2iZoneCtx.putImageData(z.maskData, 0, 0);
+  });
+  // If we have multiple zones, composite them all
+  if (s2iZones.length > 1) {
+    s2iZoneCtx.clearRect(0, 0, canvas.width, canvas.height);
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempCtx = tempCanvas.getContext('2d');
+    s2iZones.forEach(z => {
+      tempCtx.putImageData(z.maskData, 0, 0);
+      s2iZoneCtx.drawImage(tempCanvas, 0, 0);
+    });
+  }
+}
+
+function s2iRenderZoneList() {
+  const list = document.getElementById('s2i-zone-list');
+  list.innerHTML = s2iZones.map((z, i) => `
+    <div class="s2i-zone-chip">
+      <span class="s2iz-dot" style="background:${z.color.stroke}"></span>
+      <span style="flex:1;font-size:10px;">Zone ${i + 1}: ${z.note}</span>
+      <span class="s2iz-remove" onclick="s2iRemoveZone(${i})">&times;</span>
+    </div>
+  `).join('');
+}
+
+function s2iRemoveZone(index) {
+  s2iZones.splice(index, 1);
+  s2iRenderZoneList();
+  s2iRedrawAllZones();
+}
+
+// Build the zone annotation text for the prompt
+function s2iBuildZonePrompt() {
+  if (s2iZones.length === 0) return '';
+  let text = '\n\nSPECIFIC ZONE INSTRUCTIONS — apply these material/detail overrides to the highlighted regions of the image:\n';
+  s2iZones.forEach((z, i) => {
+    text += '  Zone ' + (i + 1) + ' (' + z.color.stroke + ' highlighted area): ' + z.note + '\n';
+  });
+  text += 'Each zone is highlighted with a colored overlay on the attached annotated image. Apply the specified materials/details ONLY to the highlighted areas, preserving everything else exactly.\n';
+  return text;
+}
+
+// Generate a composite image with zone overlays baked in for the API
+function s2iGetAnnotatedImage() {
+  if (s2iZones.length === 0) return null;
+  const canvas = document.getElementById('s2i-zone-canvas');
+  if (!canvas || !s2iZoneCtx) return null;
+
+  // Composite: source image + zone overlays + zone labels
+  const comp = document.createElement('canvas');
+  comp.width = canvas.width;
+  comp.height = canvas.height;
+  const ctx = comp.getContext('2d');
+
+  // Draw source image
+  const img = document.getElementById('s2i-zone-img');
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  // Draw zone overlays
+  ctx.drawImage(canvas, 0, 0);
+
+  // Draw zone number labels at the center of each zone's painted area
+  s2iZones.forEach((z, i) => {
+    // Find approximate center of zone by scanning mask
+    const data = z.maskData.data;
+    let sx = 0, sy = 0, count = 0;
+    for (let y = 0; y < canvas.height; y += 4) {
+      for (let x = 0; x < canvas.width; x += 4) {
+        const idx = (y * canvas.width + x) * 4;
+        if (data[idx + 3] > 30) { sx += x; sy += y; count++; }
+      }
+    }
+    if (count > 0) {
+      const cx = sx / count;
+      const cy = sy / count;
+      const fontSize = Math.max(14, Math.min(canvas.width * 0.04, 36));
+      ctx.font = 'bold ' + fontSize + 'px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // Background circle
+      ctx.beginPath();
+      ctx.arc(cx, cy, fontSize * 0.8, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,0,0,.6)';
+      ctx.fill();
+      // Number
+      ctx.fillStyle = z.color.stroke;
+      ctx.fillText((i + 1).toString(), cx, cy);
+    }
+  });
+
+  return comp.toDataURL('image/png').split(',')[1];
+}
 
 /* ══════════════════════════════════════════════════════
    CAD TO RENDER
