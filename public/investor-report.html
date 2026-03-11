@@ -438,6 +438,9 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
   #p3d-shell > div:last-child{display:none;}
 }
 @media(max-width:720px){
+  #pcv-shell{grid-template-columns:1fr !important;grid-template-rows:auto 400px;}
+}
+@media(max-width:720px){
   #c2r-shell{grid-template-columns:1fr !important;}
   #c2r-shell > div:last-child{display:none;}
 }
@@ -512,6 +515,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
 @media(max-width:900px){
   #pf-card .pf-render-thumb{height:80px;}
 }
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -2538,7 +2542,149 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
               <div class="tf">Per-point color and intensity mapping for photorealistic scan visualization</div>
               <div class="tf">Lightweight enough to embed inside project folders for client-facing remote review</div>
             </div>
-            <div class="tc-footer"><div class="tc-layer">AI Studio</div><span class="pill pill-exp">&#9830; Experimental</span></div>
+            <div class="tc-footer" style="margin-bottom:20px;">
+              <div class="tc-layer">AI Studio</div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span class="pill pill-exp">&#9830; Experimental</span>
+                <button id="pcv-toggle" onclick="togglePCV()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 18px;background:#B8960C;color:#fff;border:none;border-radius:20px;font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                  <span id="pcv-toggle-icon" style="font-size:12px;">&#9654;</span>
+                  <span id="pcv-toggle-txt">Try Point Cloud Viewer</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- ── LIVE PREVIEW ─────────────────────────────────────── -->
+            <div id="pcv-preview" style="display:none;border-radius:14px;overflow:hidden;border:1px solid rgba(0,0,0,.15);box-shadow:0 12px 50px rgba(0,0,0,.22);">
+
+              <!-- macOS-style chrome bar -->
+              <div style="background:#141410;padding:11px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06);">
+                <div style="display:flex;gap:6px;flex-shrink:0;">
+                  <div style="width:11px;height:11px;border-radius:50%;background:#FF5F57;"></div>
+                  <div style="width:11px;height:11px;border-radius:50%;background:#FFBD2E;"></div>
+                  <div style="width:11px;height:11px;border-radius:50%;background:#28C840;"></div>
+                </div>
+                <div style="flex:1;text-align:center;">
+                  <span style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:3px 14px;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#B8960C;display:inline-block;opacity:.7;"></span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.5px;">zipjeweler.com/point-cloud</span>
+                  </span>
+                </div>
+                <button onclick="resetPCV()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:5px;color:rgba(255,255,255,.35);cursor:pointer;font-size:12px;padding:3px 8px;font-family:'DM Sans',sans-serif;" onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">&#8635; Reset</button>
+              </div>
+
+              <!-- App Shell: controls | 3D viewport -->
+              <div id="pcv-shell" style="display:grid;grid-template-columns:300px 1fr;background:#0F0F0D;min-height:560px;">
+
+                <!-- LEFT: Controls -->
+                <div style="display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.05);overflow:hidden;">
+
+                  <!-- Header -->
+                  <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:12px;flex-shrink:0;">
+                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(184,150,12,.2),rgba(184,150,12,.07));border:1.5px solid rgba(184,150,12,.35);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">☁️</div>
+                    <div>
+                      <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;color:#E8E4DD;">Point Cloud Viewer</div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#47453F;margin-top:1px;">3D Scan Visualization · Experimental</div>
+                    </div>
+                  </div>
+
+                  <div style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;">
+
+                    <!-- Upload zone -->
+                    <div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:8px;">Point Cloud File</div>
+                      <label for="pcv-file" id="pcv-drop" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1.5px dashed rgba(255,255,255,.1);border-radius:10px;padding:20px 16px;cursor:pointer;transition:border-color .2s;min-height:100px;" onmouseover="this.style.borderColor='rgba(184,150,12,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)'">
+                        <div id="pcv-upload-ph" style="text-align:center;">
+                          <div style="font-size:24px;margin-bottom:6px;opacity:.4;">☁️</div>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#4A4845;line-height:1.6;">Drop a .PLY file here<br><span style="color:#B8960C;font-weight:500;">or click to browse</span></div>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#2E2C28;margin-top:4px;">PLY point cloud format</div>
+                        </div>
+                        <div id="pcv-file-info" style="display:none;text-align:center;">
+                          <div style="font-size:20px;margin-bottom:4px;">✅</div>
+                          <div id="pcv-file-name" style="font-family:'DM Sans',sans-serif;font-size:11px;color:#B8960C;font-weight:500;"></div>
+                          <div id="pcv-file-stats" style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;margin-top:2px;"></div>
+                        </div>
+                      </label>
+                      <input id="pcv-file" type="file" accept=".ply" style="display:none;" onchange="handlePCVUpload(this)" />
+                    </div>
+
+                    <!-- Demo presets -->
+                    <div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:8px;">Demo Presets</div>
+                      <div style="display:flex;flex-direction:column;gap:6px;">
+                        <button onclick="loadPCVPreset('ring')" style="width:100%;text-align:left;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11px;padding:10px 12px;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(184,150,12,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'">💍 Solitaire Ring &mdash; <span style="color:#47453F;">60k pts</span></button>
+                        <button onclick="loadPCVPreset('pendant')" style="width:100%;text-align:left;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11px;padding:10px 12px;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(184,150,12,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'">📿 Pendant &mdash; <span style="color:#47453F;">45k pts</span></button>
+                        <button onclick="loadPCVPreset('bracelet')" style="width:100%;text-align:left;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:#C8C4BE;font-family:'DM Sans',sans-serif;font-size:11px;padding:10px 12px;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(184,150,12,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'">⌚ Bracelet &mdash; <span style="color:#47453F;">80k pts</span></button>
+                      </div>
+                    </div>
+
+                    <!-- Display controls -->
+                    <div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:8px;">Display</div>
+                      <div style="display:flex;flex-direction:column;gap:10px;">
+                        <div>
+                          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                            <span style="font-family:'DM Sans',sans-serif;font-size:10px;color:#5A5650;">Point Size</span>
+                            <span id="pcv-size-val" style="font-family:'DM Sans',sans-serif;font-size:10px;color:#B8960C;">2.0</span>
+                          </div>
+                          <input id="pcv-size" type="range" min="0.5" max="6" step="0.1" value="2.0" oninput="updatePCVSize(this.value)" style="width:100%;accent-color:#B8960C;" />
+                        </div>
+                        <div>
+                          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                            <span style="font-family:'DM Sans',sans-serif;font-size:10px;color:#5A5650;">Rotation Speed</span>
+                            <span id="pcv-speed-val" style="font-family:'DM Sans',sans-serif;font-size:10px;color:#B8960C;">1.0</span>
+                          </div>
+                          <input id="pcv-speed" type="range" min="0" max="4" step="0.1" value="1.0" oninput="updatePCVSpeed(this.value)" style="width:100%;accent-color:#B8960C;" />
+                        </div>
+                        <div style="display:flex;gap:6px;">
+                          <button id="pcv-btn-glow" onclick="togglePCVGlow()" style="flex:1;background:rgba(184,150,12,.15);border:1px solid rgba(184,150,12,.3);border-radius:7px;color:#B8960C;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;padding:8px;cursor:pointer;">✦ Glow: ON</button>
+                          <button id="pcv-btn-axes" onclick="togglePCVAxes()" style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:7px;color:#5A5650;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;padding:8px;cursor:pointer;">⊞ Axes: OFF</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- AI Analysis -->
+                    <div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:8px;">AI Analysis</div>
+                      <button id="pcv-analyze-btn" onclick="analyzePCV()" style="width:100%;background:linear-gradient(135deg,#B8960C,#D4A80C);border:none;border-radius:8px;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px;cursor:pointer;transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">&#10022; Analyze Point Cloud</button>
+                      <div id="pcv-analysis" style="display:none;margin-top:10px;background:rgba(184,150,12,.06);border:1px solid rgba(184,150,12,.15);border-radius:8px;padding:12px;">
+                        <div id="pcv-analysis-text" style="font-family:'DM Sans',sans-serif;font-size:11px;color:#C8C4BE;line-height:1.7;"></div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <!-- RIGHT: 3D Viewport -->
+                <div style="position:relative;overflow:hidden;">
+                  <canvas id="pcv-canvas" style="width:100%;height:100%;display:block;"></canvas>
+                  <!-- HUD overlay -->
+                  <div id="pcv-hud" style="position:absolute;top:14px;right:14px;display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none;">
+                    <div style="background:rgba(0,0,0,.6);border:1px solid rgba(184,150,12,.2);border-radius:6px;padding:6px 10px;backdrop-filter:blur(8px);">
+                      <span id="pcv-hud-pts" style="font-family:'DM Sans',sans-serif;font-size:10px;color:#B8960C;font-weight:600;">0 points</span>
+                    </div>
+                    <div style="background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:6px 10px;backdrop-filter:blur(8px);">
+                      <span id="pcv-hud-fps" style="font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5650;">-- fps</span>
+                    </div>
+                  </div>
+                  <!-- Loading overlay -->
+                  <div id="pcv-loading" style="display:none;position:absolute;inset:0;background:rgba(15,15,13,.85);align-items:center;justify-content:center;">
+                    <div style="text-align:center;">
+                      <div style="font-size:32px;margin-bottom:8px;animation:spin 1.5s linear infinite;">☁️</div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#5A5650;">Loading point cloud…</div>
+                    </div>
+                  </div>
+                  <!-- Empty state -->
+                  <div id="pcv-empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                    <div style="text-align:center;max-width:280px;">
+                      <div style="font-size:48px;opacity:.3;margin-bottom:12px;">☁️</div>
+                      <div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:#5A5650;font-weight:600;margin-bottom:6px;">No Point Cloud Loaded</div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#3A3835;line-height:1.6;">Upload a .PLY file or try a demo preset to view an interactive 3D point cloud.</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
 
           </div>
         </div>
@@ -4887,6 +5033,541 @@ async function retryRender(tool) {
       + corrections;
     renderC2RDirect(correctionPrompt);
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   POINT CLOUD VIEWER — Experimental Tool
+   Three.js loaded dynamically on first open
+   ═══════════════════════════════════════════════════════════════════ */
+
+let pcvOpen = false, pcvScene = null, pcvCamera = null, pcvRenderer = null;
+let pcvControls = null, pcvPoints = null, pcvAnimId = null, pcvAxes = null;
+let pcvGlow = true, pcvThreeLoaded = false, pcvTHREE = null;
+let pcvPointCount = 0, pcvFrames = 0, pcvLastFps = 0, pcvFpsTime = 0;
+
+function togglePCV() {
+  pcvOpen = !pcvOpen;
+  const p = document.getElementById('pcv-preview');
+  p.style.display = pcvOpen ? 'block' : 'none';
+  document.getElementById('pcv-toggle-icon').textContent = pcvOpen ? '\u25BE' : '\u25B6';
+  document.getElementById('pcv-toggle-txt').textContent  = pcvOpen ? 'Close Preview' : 'Try Point Cloud Viewer';
+  if (pcvOpen) {
+    setTimeout(() => p.scrollIntoView({behavior:'smooth', block:'nearest'}), 80);
+    if (!pcvThreeLoaded) loadThreeJS();
+  }
+}
+
+function resetPCV() {
+  if (pcvPoints && pcvScene) { pcvScene.remove(pcvPoints); pcvPoints = null; }
+  if (pcvAxes && pcvScene) { pcvScene.remove(pcvAxes); pcvAxes = null; }
+  pcvPointCount = 0;
+  document.getElementById('pcv-hud-pts').textContent = '0 points';
+  document.getElementById('pcv-file').value = '';
+  document.getElementById('pcv-upload-ph').style.display = 'block';
+  document.getElementById('pcv-file-info').style.display = 'none';
+  document.getElementById('pcv-empty').style.display = 'flex';
+  document.getElementById('pcv-analysis').style.display = 'none';
+  document.getElementById('pcv-size').value = 2.0;
+  document.getElementById('pcv-size-val').textContent = '2.0';
+  document.getElementById('pcv-speed').value = 1.0;
+  document.getElementById('pcv-speed-val').textContent = '1.0';
+  pcvGlow = true;
+  document.getElementById('pcv-btn-glow').textContent = '✦ Glow: ON';
+  document.getElementById('pcv-btn-glow').style.background = 'rgba(184,150,12,.15)';
+  document.getElementById('pcv-btn-glow').style.color = '#B8960C';
+  document.getElementById('pcv-btn-axes').textContent = '⊞ Axes: OFF';
+  document.getElementById('pcv-btn-axes').style.background = 'rgba(255,255,255,.04)';
+  document.getElementById('pcv-btn-axes').style.color = '#5A5650';
+  if (pcvControls) pcvControls.autoRotateSpeed = 1.0;
+  if (pcvRenderer) pcvRenderer.render(pcvScene, pcvCamera);
+}
+
+function loadThreeJS() {
+  const script = document.createElement('script');
+  script.type = 'importmap';
+  script.textContent = JSON.stringify({
+    imports: {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/"
+    }
+  });
+  document.head.appendChild(script);
+
+  const mod = document.createElement('script');
+  mod.type = 'module';
+  mod.textContent = `
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    window._THREE = THREE;
+    window._OrbitControls = OrbitControls;
+    window.dispatchEvent(new Event('three-ready'));
+  `;
+  document.head.appendChild(mod);
+
+  window.addEventListener('three-ready', () => {
+    pcvTHREE = window._THREE;
+    pcvThreeLoaded = true;
+    initPCVScene();
+  }, { once: true });
+}
+
+function initPCVScene() {
+  const THREE = pcvTHREE;
+  const canvas = document.getElementById('pcv-canvas');
+  const container = canvas.parentElement;
+
+  pcvScene = new THREE.Scene();
+  pcvScene.background = new THREE.Color(0x0F0F0D);
+
+  pcvCamera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
+  pcvCamera.position.set(4, 3, 5);
+
+  pcvRenderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  pcvRenderer.setSize(container.clientWidth, container.clientHeight);
+  pcvRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  pcvControls = new window._OrbitControls(pcvCamera, canvas);
+  pcvControls.enableDamping = true;
+  pcvControls.dampingFactor = 0.08;
+  pcvControls.autoRotate = true;
+  pcvControls.autoRotateSpeed = 1.0;
+  pcvControls.maxDistance = 20;
+  pcvControls.minDistance = 1;
+
+  // Subtle ambient grid
+  const gridHelper = new THREE.GridHelper(10, 20, 0x1A1A18, 0x1A1A18);
+  gridHelper.position.y = -1.5;
+  pcvScene.add(gridHelper);
+
+  pcvFpsTime = performance.now();
+  pcvFrames = 0;
+
+  function animate() {
+    pcvAnimId = requestAnimationFrame(animate);
+    pcvControls.update();
+    pcvRenderer.render(pcvScene, pcvCamera);
+
+    // FPS counter
+    pcvFrames++;
+    const now = performance.now();
+    if (now - pcvFpsTime >= 1000) {
+      pcvLastFps = pcvFrames;
+      pcvFrames = 0;
+      pcvFpsTime = now;
+      const el = document.getElementById('pcv-hud-fps');
+      if (el) el.textContent = pcvLastFps + ' fps';
+    }
+  }
+  animate();
+
+  // Resize observer
+  const ro = new ResizeObserver(() => {
+    const w = container.clientWidth, h = container.clientHeight;
+    if (w === 0 || h === 0) return;
+    pcvCamera.aspect = w / h;
+    pcvCamera.updateProjectionMatrix();
+    pcvRenderer.setSize(w, h);
+  });
+  ro.observe(container);
+}
+
+function setPCVPoints(positions, colors, count) {
+  const THREE = pcvTHREE;
+  if (!THREE || !pcvScene) return;
+  if (pcvPoints) pcvScene.remove(pcvPoints);
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geometry.computeBoundingSphere();
+
+  const material = new THREE.PointsMaterial({
+    size: parseFloat(document.getElementById('pcv-size').value) * 0.02,
+    sizeAttenuation: true,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.9,
+    depthWrite: !pcvGlow,
+    blending: pcvGlow ? THREE.AdditiveBlending : THREE.NormalBlending,
+  });
+
+  pcvPoints = new THREE.Points(geometry, material);
+  pcvScene.add(pcvPoints);
+
+  // Center camera on bounding sphere
+  const bs = geometry.boundingSphere;
+  const dist = bs.radius * 2.8;
+  pcvCamera.position.set(dist * 0.7, dist * 0.5, dist * 0.9);
+  pcvControls.target.copy(bs.center);
+  pcvControls.update();
+
+  pcvPointCount = count;
+  document.getElementById('pcv-hud-pts').textContent = count.toLocaleString() + ' points';
+  document.getElementById('pcv-empty').style.display = 'none';
+}
+
+/* ── Procedural jewelry presets ── */
+
+function generateRingCloud(count) {
+  const THREE = pcvTHREE;
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const gold1 = new THREE.Color(0xFFD700);
+  const gold2 = new THREE.Color(0xFFA500);
+  const gemColor = new THREE.Color(0x4488FF);
+
+  const bandCount = Math.floor(count * 0.8);
+  const gemCount = count - bandCount;
+
+  // Ring band (torus)
+  for (let i = 0; i < bandCount; i++) {
+    const i3 = i * 3;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.random() * Math.PI * 2;
+    const R = 1.2, r = 0.18 * (0.85 + Math.random() * 0.3);
+    positions[i3]     = (R + r * Math.cos(phi)) * Math.cos(theta);
+    positions[i3 + 1] = r * Math.sin(phi);
+    positions[i3 + 2] = (R + r * Math.cos(phi)) * Math.sin(theta);
+    const t = (Math.sin(theta * 2) + 1) / 2;
+    const c = gold1.clone().lerp(gold2, t * 0.4);
+    // Surface shimmer
+    const shimmer = 0.85 + Math.random() * 0.15;
+    colors[i3] = c.r * shimmer; colors[i3+1] = c.g * shimmer; colors[i3+2] = c.b * shimmer;
+  }
+
+  // Gemstone (sphere cluster on top)
+  for (let i = 0; i < gemCount; i++) {
+    const i3 = (bandCount + i) * 3;
+    const u = Math.random(), v = Math.random();
+    const theta2 = 2 * Math.PI * u;
+    const phi2 = Math.acos(2 * v - 1);
+    const rad = 0.25 * Math.cbrt(Math.random());
+    positions[i3]     = rad * Math.sin(phi2) * Math.cos(theta2);
+    positions[i3 + 1] = 0.38 + rad * Math.sin(phi2) * Math.sin(theta2);
+    positions[i3 + 2] = rad * Math.cos(phi2);
+    const sparkle = 0.5 + Math.random() * 0.5;
+    colors[i3] = gemColor.r * sparkle + (1 - sparkle) * 0.9;
+    colors[i3+1] = gemColor.g * sparkle + (1 - sparkle) * 0.95;
+    colors[i3+2] = gemColor.b * sparkle + (1 - sparkle) * 1.0;
+  }
+  return { positions, colors, count };
+}
+
+function generatePendantCloud(count) {
+  const THREE = pcvTHREE;
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const silver = new THREE.Color(0xC0C0C0);
+  const roseGold = new THREE.Color(0xE8A090);
+
+  const chainCount = Math.floor(count * 0.3);
+  const pendantCount = count - chainCount;
+
+  // Pendant body (teardrop / pear shape)
+  for (let i = 0; i < pendantCount; i++) {
+    const i3 = i * 3;
+    const t = Math.random();
+    const angle = Math.random() * Math.PI * 2;
+    // Parametric teardrop
+    const yPos = -1.5 + t * 1.8;
+    const radius = 0.5 * Math.sin(t * Math.PI) * (1.0 + 0.2 * (1 - t));
+    const noise = 0.92 + Math.random() * 0.16;
+    const r = radius * noise;
+    positions[i3]     = r * Math.cos(angle);
+    positions[i3 + 1] = yPos;
+    positions[i3 + 2] = r * Math.sin(angle) * 0.3; // flatten
+    const blend = t * 0.6;
+    const c = silver.clone().lerp(roseGold, blend);
+    const sh = 0.8 + Math.random() * 0.2;
+    colors[i3] = c.r * sh; colors[i3+1] = c.g * sh; colors[i3+2] = c.b * sh;
+  }
+
+  // Chain (helix)
+  for (let i = 0; i < chainCount; i++) {
+    const i3 = (pendantCount + i) * 3;
+    const t = i / chainCount;
+    const y = 0.3 + t * 2.5;
+    const swing = 0.15 * Math.sin(t * Math.PI * 12);
+    positions[i3] = swing + (Math.random() - 0.5) * 0.03;
+    positions[i3 + 1] = y;
+    positions[i3 + 2] = (Math.random() - 0.5) * 0.03;
+    const sh = 0.7 + Math.random() * 0.3;
+    colors[i3] = silver.r * sh; colors[i3+1] = silver.g * sh; colors[i3+2] = silver.b * sh;
+  }
+  return { positions, colors, count };
+}
+
+function generateBraceletCloud(count) {
+  const THREE = pcvTHREE;
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const gold = new THREE.Color(0xDAA520);
+  const platinum = new THREE.Color(0xD8D8D8);
+  const ruby = new THREE.Color(0xCC2244);
+
+  const bandPts = Math.floor(count * 0.7);
+  const linkPts = Math.floor(count * 0.15);
+  const stonePts = count - bandPts - linkPts;
+
+  // Band (open torus, wider)
+  for (let i = 0; i < bandPts; i++) {
+    const i3 = i * 3;
+    const theta = (Math.random() * 0.85 + 0.075) * Math.PI * 2; // slight gap
+    const phi = Math.random() * Math.PI * 2;
+    const R = 2.0, r = 0.12 * (0.85 + Math.random() * 0.3);
+    positions[i3]     = (R + r * Math.cos(phi)) * Math.cos(theta);
+    positions[i3 + 1] = r * Math.sin(phi);
+    positions[i3 + 2] = (R + r * Math.cos(phi)) * Math.sin(theta);
+    const seg = Math.floor(theta / (Math.PI * 2) * 8) % 2;
+    const c = seg ? gold.clone() : platinum.clone();
+    const sh = 0.85 + Math.random() * 0.15;
+    colors[i3] = c.r*sh; colors[i3+1] = c.g*sh; colors[i3+2] = c.b*sh;
+  }
+
+  // Link accents
+  for (let i = 0; i < linkPts; i++) {
+    const i3 = (bandPts + i) * 3;
+    const seg = Math.floor(Math.random() * 8);
+    const theta = (seg / 8) * Math.PI * 2;
+    const phi = Math.random() * Math.PI * 2;
+    const R = 2.0, r = 0.18;
+    positions[i3]     = (R + r * Math.cos(phi)) * Math.cos(theta);
+    positions[i3 + 1] = r * Math.sin(phi);
+    positions[i3 + 2] = (R + r * Math.cos(phi)) * Math.sin(theta);
+    colors[i3] = 0.9; colors[i3+1] = 0.85; colors[i3+2] = 0.5;
+  }
+
+  // Gemstones at intervals
+  for (let i = 0; i < stonePts; i++) {
+    const i3 = (bandPts + linkPts + i) * 3;
+    const seg = Math.floor(Math.random() * 4);
+    const theta = (seg / 4 + 0.0625) * Math.PI * 2;
+    const R = 2.0;
+    const cx = R * Math.cos(theta), cz = R * Math.sin(theta);
+    const u = Math.random(), v = Math.random();
+    const t2 = 2 * Math.PI * u, p2 = Math.acos(2*v-1);
+    const rad = 0.1 * Math.cbrt(Math.random());
+    positions[i3]     = cx + rad * Math.sin(p2) * Math.cos(t2);
+    positions[i3 + 1] = 0.2 + rad * Math.sin(p2) * Math.sin(t2);
+    positions[i3 + 2] = cz + rad * Math.cos(p2);
+    const sp = 0.5 + Math.random() * 0.5;
+    colors[i3] = ruby.r * sp + 0.2; colors[i3+1] = ruby.g * sp; colors[i3+2] = ruby.b * sp + 0.1;
+  }
+  return { positions, colors, count };
+}
+
+function loadPCVPreset(type) {
+  if (!pcvThreeLoaded) return;
+  document.getElementById('pcv-upload-ph').style.display = 'none';
+  document.getElementById('pcv-file-info').style.display = 'block';
+  document.getElementById('pcv-analysis').style.display = 'none';
+
+  let data, name;
+  if (type === 'ring') {
+    data = generateRingCloud(60000);
+    name = 'Solitaire Ring';
+  } else if (type === 'pendant') {
+    data = generatePendantCloud(45000);
+    name = 'Pendant';
+  } else {
+    data = generateBraceletCloud(80000);
+    name = 'Bracelet';
+  }
+
+  document.getElementById('pcv-file-name').textContent = name + ' (Demo)';
+  document.getElementById('pcv-file-stats').textContent = data.count.toLocaleString() + ' points · procedural';
+  setPCVPoints(data.positions, data.colors, data.count);
+}
+
+/* ── PLY file parser ── */
+
+function parsePLY(buffer) {
+  const THREE = pcvTHREE;
+  const decoder = new TextDecoder();
+  const text = decoder.decode(buffer);
+  const headerEnd = text.indexOf('end_header');
+  if (headerEnd === -1) throw new Error('Invalid PLY: no end_header');
+
+  const header = text.substring(0, headerEnd);
+  const vertexMatch = header.match(/element vertex (\d+)/);
+  if (!vertexMatch) throw new Error('Invalid PLY: no vertex count');
+  const vertexCount = parseInt(vertexMatch[1]);
+
+  // Detect properties
+  const hasColor = /property\s+uchar\s+red/.test(header);
+  const isBinary = /format binary/.test(header);
+
+  if (isBinary) {
+    // Binary PLY parsing
+    const dataStart = headerEnd + 'end_header\n'.length;
+    const dataBytes = new Uint8Array(buffer, new TextEncoder().encode(text.substring(0, dataStart)).length);
+    const positions = new Float32Array(vertexCount * 3);
+    const colors = new Float32Array(vertexCount * 3);
+    const view = new DataView(dataBytes.buffer, dataBytes.byteOffset);
+    const isLE = /format binary_little_endian/.test(header);
+    let offset = 0;
+    for (let i = 0; i < vertexCount; i++) {
+      const i3 = i * 3;
+      positions[i3]     = view.getFloat32(offset, isLE); offset += 4;
+      positions[i3 + 1] = view.getFloat32(offset, isLE); offset += 4;
+      positions[i3 + 2] = view.getFloat32(offset, isLE); offset += 4;
+      if (hasColor) {
+        colors[i3]     = dataBytes[offset] / 255; offset++;
+        colors[i3 + 1] = dataBytes[offset] / 255; offset++;
+        colors[i3 + 2] = dataBytes[offset] / 255; offset++;
+        if (/property\s+uchar\s+alpha/.test(header)) offset++; // skip alpha
+      } else {
+        colors[i3] = 0.85; colors[i3+1] = 0.75; colors[i3+2] = 0.4; // default gold
+      }
+    }
+    return { positions, colors, count: vertexCount };
+  } else {
+    // ASCII PLY parsing
+    const lines = text.substring(headerEnd + 'end_header'.length).trim().split('\n');
+    const positions = new Float32Array(vertexCount * 3);
+    const colors = new Float32Array(vertexCount * 3);
+
+    for (let i = 0; i < Math.min(vertexCount, lines.length); i++) {
+      const parts = lines[i].trim().split(/\s+/);
+      const i3 = i * 3;
+      positions[i3]     = parseFloat(parts[0]) || 0;
+      positions[i3 + 1] = parseFloat(parts[1]) || 0;
+      positions[i3 + 2] = parseFloat(parts[2]) || 0;
+      if (hasColor && parts.length >= 6) {
+        colors[i3]     = (parseFloat(parts[3]) || 0) / 255;
+        colors[i3 + 1] = (parseFloat(parts[4]) || 0) / 255;
+        colors[i3 + 2] = (parseFloat(parts[5]) || 0) / 255;
+      } else {
+        colors[i3] = 0.85; colors[i3+1] = 0.75; colors[i3+2] = 0.4;
+      }
+    }
+    return { positions, colors, count: vertexCount };
+  }
+}
+
+function handlePCVUpload(input) {
+  const file = input.files[0]; if (!file) return;
+  if (!pcvThreeLoaded) return;
+
+  document.getElementById('pcv-upload-ph').style.display = 'none';
+  document.getElementById('pcv-file-info').style.display = 'block';
+  document.getElementById('pcv-file-name').textContent = file.name;
+  document.getElementById('pcv-file-stats').textContent = 'Loading…';
+  document.getElementById('pcv-analysis').style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = parsePLY(e.target.result);
+      document.getElementById('pcv-file-stats').textContent = data.count.toLocaleString() + ' points · ' + (file.size / 1024).toFixed(0) + ' KB';
+      setPCVPoints(data.positions, data.colors, data.count);
+    } catch(err) {
+      document.getElementById('pcv-file-stats').textContent = 'Error: ' + err.message;
+      document.getElementById('pcv-file-stats').style.color = '#C9534B';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* ── Display controls ── */
+
+function updatePCVSize(val) {
+  document.getElementById('pcv-size-val').textContent = parseFloat(val).toFixed(1);
+  if (pcvPoints) pcvPoints.material.size = parseFloat(val) * 0.02;
+}
+
+function updatePCVSpeed(val) {
+  document.getElementById('pcv-speed-val').textContent = parseFloat(val).toFixed(1);
+  if (pcvControls) pcvControls.autoRotateSpeed = parseFloat(val);
+}
+
+function togglePCVGlow() {
+  if (!pcvTHREE) return;
+  pcvGlow = !pcvGlow;
+  const btn = document.getElementById('pcv-btn-glow');
+  btn.textContent = pcvGlow ? '✦ Glow: ON' : '✦ Glow: OFF';
+  btn.style.background = pcvGlow ? 'rgba(184,150,12,.15)' : 'rgba(255,255,255,.04)';
+  btn.style.color = pcvGlow ? '#B8960C' : '#5A5650';
+  if (pcvPoints) {
+    pcvPoints.material.blending = pcvGlow ? pcvTHREE.AdditiveBlending : pcvTHREE.NormalBlending;
+    pcvPoints.material.depthWrite = !pcvGlow;
+    pcvPoints.material.needsUpdate = true;
+  }
+}
+
+function togglePCVAxes() {
+  if (!pcvTHREE || !pcvScene) return;
+  const btn = document.getElementById('pcv-btn-axes');
+  if (pcvAxes) {
+    pcvScene.remove(pcvAxes);
+    pcvAxes = null;
+    btn.textContent = '⊞ Axes: OFF';
+    btn.style.background = 'rgba(255,255,255,.04)';
+    btn.style.color = '#5A5650';
+  } else {
+    pcvAxes = new pcvTHREE.AxesHelper(3);
+    pcvScene.add(pcvAxes);
+    btn.textContent = '⊞ Axes: ON';
+    btn.style.background = 'rgba(184,150,12,.15)';
+    btn.style.color = '#B8960C';
+  }
+}
+
+/* ── AI Analysis via claudeAPI ── */
+
+async function analyzePCV() {
+  if (pcvPointCount === 0) return;
+  const btn = document.getElementById('pcv-analyze-btn');
+  const out = document.getElementById('pcv-analysis');
+  const txt = document.getElementById('pcv-analysis-text');
+
+  btn.textContent = '⏳ Analyzing…';
+  btn.style.opacity = '0.6';
+  btn.disabled = true;
+  out.style.display = 'block';
+  txt.innerHTML = '<span style="color:#5A5650;">Running AI analysis on point cloud data…</span>';
+
+  // Gather stats from the loaded geometry
+  let stats = { points: pcvPointCount };
+  if (pcvPoints) {
+    const pos = pcvPoints.geometry.attributes.position.array;
+    let minX=Infinity, maxX=-Infinity, minY=Infinity, maxY=-Infinity, minZ=Infinity, maxZ=-Infinity;
+    for (let i = 0; i < pos.length; i += 3) {
+      if (pos[i] < minX) minX = pos[i];     if (pos[i] > maxX) maxX = pos[i];
+      if (pos[i+1] < minY) minY = pos[i+1]; if (pos[i+1] > maxY) maxY = pos[i+1];
+      if (pos[i+2] < minZ) minZ = pos[i+2]; if (pos[i+2] > maxZ) maxZ = pos[i+2];
+    }
+    stats.bounds = {
+      x: (maxX - minX).toFixed(2), y: (maxY - minY).toFixed(2), z: (maxZ - minZ).toFixed(2)
+    };
+    stats.center = {
+      x: ((minX+maxX)/2).toFixed(2), y: ((minY+maxY)/2).toFixed(2), z: ((minZ+maxZ)/2).toFixed(2)
+    };
+  }
+
+  try {
+    const resp = await claudeAPI({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 500,
+      system: 'You are ZipJeweler\'s 3D scan analysis assistant. Analyze point cloud metadata and provide a brief quality assessment for jewelry production. Keep it concise — 3-4 short bullet points. Use jewelry-specific terminology (prong, shank, pavilion, girdle, etc). Assess scan density, dimensional ratios, and production readiness.',
+      messages: [{
+        role: 'user',
+        content: 'Analyze this point cloud scan:\n\nPoint count: ' + stats.points.toLocaleString()
+          + '\nBounding box: ' + stats.bounds.x + ' × ' + stats.bounds.y + ' × ' + stats.bounds.z + ' units'
+          + '\nCenter: (' + stats.center.x + ', ' + stats.center.y + ', ' + stats.center.z + ')'
+          + '\n\nProvide a brief quality/production-readiness assessment for this jewelry scan.'
+      }]
+    });
+
+    const content = resp.content ? resp.content[0].text : (resp.choices ? resp.choices[0].message.content : '');
+    txt.innerHTML = content.replace(/\n/g, '<br>').replace(/•/g, '<span style="color:#B8960C;">•</span>').replace(/\*\*(.+?)\*\*/g, '<strong style="color:#E8E4DD;">$1</strong>');
+  } catch(e) {
+    txt.innerHTML = '<span style="color:#C9534B;">Analysis unavailable — connect an API key via the Imagine tool first.</span>';
+  }
+
+  btn.textContent = '✦ Analyze Point Cloud';
+  btn.style.opacity = '1';
+  btn.disabled = false;
 }
 
 </script>
