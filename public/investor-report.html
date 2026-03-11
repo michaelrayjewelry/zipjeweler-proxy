@@ -2808,6 +2808,9 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
             <div class="tf">AI-generated listing copy and social captions created from product data</div>
           </div>
           <div class="tc-footer"><div class="tc-layer">Production Hub</div><span class="pill pill-build">◐ Building Now</span></div>
+          <div style="margin-top:14px;text-align:center;">
+            <button onclick="openProductsPreview()" style="font-family:var(--sans);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:600;color:var(--white);background:var(--green);border:none;border-radius:6px;padding:9px 22px;cursor:pointer;transition:all .18s;box-shadow:0 2px 8px rgba(45,139,85,.25);" onmouseover="this.style.background='#238A48';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 14px rgba(45,139,85,.35)'" onmouseout="this.style.background='var(--green)';this.style.transform='none';this.style.boxShadow='0 2px 8px rgba(45,139,85,.25)'">Preview Products</button>
+          </div>
         </div>
 
         <!-- FILE HUB -->
@@ -8135,6 +8138,35 @@ async function sendPf2() {
   pf2Busy = false;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   PRODUCTS PAGE PREVIEW OVERLAY
+   Selling-focused view: catalog, collections, orders, storefronts.
+   ═══════════════════════════════════════════════════════════════ */
+let prodActiveTab = 'catalog';
+
+function openProductsPreview() {
+  document.getElementById('prod-preview-overlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  prodSwitchTab('catalog');
+}
+function closeProductsPreview() {
+  document.getElementById('prod-preview-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function prodSwitchTab(tab) {
+  prodActiveTab = tab;
+  document.querySelectorAll('.prod-nav-item').forEach(el => {
+    const isActive = el.dataset.tab === tab;
+    el.style.background = isActive ? 'rgba(207,181,132,.08)' : 'none';
+    el.style.borderLeftColor = isActive ? '#CFB584' : 'transparent';
+    el.querySelector('span:last-child').style.color = isActive ? '#D8D4CE' : '#6B6860';
+  });
+  document.querySelectorAll('.prod-tab-panel').forEach(el => {
+    el.style.display = el.id === 'prod-panel-' + tab ? 'block' : 'none';
+  });
+}
+
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════
@@ -8594,5 +8626,611 @@ async function sendPf2() {
   </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════
+     PRODUCTS PAGE PREVIEW OVERLAY
+     Selling-focused: catalog, collections, marketing, orders, storefronts.
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="prod-preview-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(10,12,8,.88);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:24px;animation:rise .25s ease;" onclick="if(event.target===this)closeProductsPreview()">
+
+  <!-- Window chrome -->
+  <div style="width:100%;max-width:1220px;max-height:92vh;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.1);box-shadow:0 24px 80px rgba(0,0,0,.45);display:flex;flex-direction:column;">
+
+    <!-- Title bar -->
+    <div style="background:#1A1C17;padding:11px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;">
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <div onclick="closeProductsPreview()" style="width:11px;height:11px;border-radius:50%;background:#FF5F57;cursor:pointer;" title="Close preview"></div>
+        <div style="width:11px;height:11px;border-radius:50%;background:#FFBD2E;"></div>
+        <div style="width:11px;height:11px;border-radius:50%;background:#28C840;"></div>
+      </div>
+      <div style="flex:1;text-align:center;">
+        <span style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:3px 14px;">
+          <span style="width:7px;height:7px;border-radius:50%;background:#2D8B55;display:inline-block;opacity:.8;"></span>
+          <span style="font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.5px;">zipjeweler.com / products</span>
+        </span>
+      </div>
+      <div style="width:64px;text-align:right;">
+        <span onclick="closeProductsPreview()" style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.25);cursor:pointer;padding:4px 8px;border:1px solid rgba(255,255,255,.08);border-radius:4px;" onmouseover="this.style.color='rgba(255,255,255,.5)'" onmouseout="this.style.color='rgba(255,255,255,.25)'">ESC</span>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div style="background:#0E100C;overflow-y:auto;flex:1;">
+      <div style="display:grid;grid-template-columns:200px 1fr;min-height:650px;">
+
+        <!-- ── SIDEBAR ── -->
+        <div style="background:#141810;border-right:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;">
+
+          <!-- Logo -->
+          <div style="padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,.05);">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;color:#CFB584;letter-spacing:1px;">ZipJeweler</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:8px;color:#3A3835;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px;">Production Platform</div>
+          </div>
+
+          <!-- Sidebar nav -->
+          <nav style="flex:1;padding:10px 0;overflow-y:auto;">
+            <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#2A2825;font-weight:700;padding:4px 18px 8px;">Hub</div>
+
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:default;opacity:.5;">
+              <span style="font-size:13px;">🗃</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">Dashboard</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:default;opacity:.5;">
+              <span style="font-size:13px;">📁</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">Project Folders</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;background:rgba(207,181,132,.08);border-left:2px solid #CFB584;cursor:default;">
+              <span style="font-size:13px;">⬡</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#D8D4CE;">Products</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:default;opacity:.5;">
+              <span style="font-size:13px;">🗂</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">File Hub</span>
+            </div>
+
+            <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#2A2825;font-weight:700;padding:16px 18px 8px;">Selling</div>
+
+            <div class="prod-nav-item" data-tab="catalog" onclick="prodSwitchTab('catalog')" style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:pointer;border-left:2px solid #CFB584;background:rgba(207,181,132,.08);transition:all .15s;">
+              <span style="font-size:13px;">📦</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#D8D4CE;">Catalog</span>
+            </div>
+            <div class="prod-nav-item" data-tab="collections" onclick="prodSwitchTab('collections')" style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:pointer;border-left:2px solid transparent;transition:all .15s;">
+              <span style="font-size:13px;">💎</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">Collections</span>
+            </div>
+            <div class="prod-nav-item" data-tab="orders" onclick="prodSwitchTab('orders')" style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:pointer;border-left:2px solid transparent;transition:all .15s;">
+              <span style="font-size:13px;">📋</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">Orders</span>
+            </div>
+            <div class="prod-nav-item" data-tab="storefront" onclick="prodSwitchTab('storefront')" style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:pointer;border-left:2px solid transparent;transition:all .15s;">
+              <span style="font-size:13px;">🛍</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">Storefront</span>
+            </div>
+            <div class="prod-nav-item" data-tab="manufacturing" onclick="prodSwitchTab('manufacturing')" style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:pointer;border-left:2px solid transparent;transition:all .15s;">
+              <span style="font-size:13px;">🏭</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">Manufacturing</span>
+            </div>
+          </nav>
+
+          <!-- Sidebar footer -->
+          <div style="padding:12px 18px;border-top:1px solid rgba(255,255,255,.05);">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#CFB584,#A08650);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-family:'DM Sans',sans-serif;font-weight:600;">MR</div>
+              <div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#D8D4CE;font-weight:500;">Michael Ray</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:8px;color:#47453F;">Studio Owner</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── MAIN CONTENT ── -->
+        <div style="padding:28px 32px;overflow-y:auto;">
+
+          <!-- Header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+            <div>
+              <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#47453F;font-weight:600;margin-bottom:4px;">Product Catalog</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:#D8D4CE;">Products</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <div style="padding:6px 14px;background:rgba(45,139,85,.12);border:1px solid rgba(45,139,85,.25);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;font-weight:600;color:#2D8B55;cursor:default;">+ New Product</div>
+              <div style="padding:6px 14px;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.18);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;font-weight:600;color:#CFB584;cursor:default;">Promote from Project</div>
+            </div>
+          </div>
+
+          <!-- Stats row -->
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px;">
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:14px;">
+              <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#47453F;font-weight:600;margin-bottom:4px;">Total Products</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:#D8D4CE;">34</div>
+              <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#2D8B55;margin-top:2px;">+6 this month</div>
+            </div>
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:14px;">
+              <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#47453F;font-weight:600;margin-bottom:4px;">Published</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:#2D8B55;">18</div>
+              <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;margin-top:2px;">Live on storefront</div>
+            </div>
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:14px;">
+              <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#47453F;font-weight:600;margin-bottom:4px;">Collections</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:#CFB584;">5</div>
+              <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;margin-top:2px;">3 published</div>
+            </div>
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:14px;">
+              <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#47453F;font-weight:600;margin-bottom:4px;">Active Orders</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:#E8524A;">12</div>
+              <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#E8524A;margin-top:2px;">3 need shipping</div>
+            </div>
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:14px;">
+              <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#47453F;font-weight:600;margin-bottom:4px;">Revenue (MTD)</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:#CFB584;">$47.2k</div>
+              <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#2D8B55;margin-top:2px;">↑ 18% vs last month</div>
+            </div>
+          </div>
+
+          <!-- ═══ TAB PANELS ═══ -->
+
+          <!-- CATALOG TAB -->
+          <div id="prod-panel-catalog" class="prod-tab-panel" style="display:block;">
+
+            <!-- Filter bar -->
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+              <div style="padding:5px 12px;background:rgba(207,181,132,.1);border:1px solid rgba(207,181,132,.22);border-radius:14px;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;color:#CFB584;cursor:default;">All Products</div>
+              <div style="padding:5px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:500;color:#6B6860;cursor:default;">Published</div>
+              <div style="padding:5px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:500;color:#6B6860;cursor:default;">Draft</div>
+              <div style="padding:5px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:500;color:#6B6860;cursor:default;">Made-to-Order</div>
+              <div style="flex:1;"></div>
+              <div style="padding:5px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:9px;color:#6B6860;cursor:default;">🔍 Search products…</div>
+            </div>
+
+            <!-- Product grid -->
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+
+              <!-- Product 1 -->
+              <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:10px;overflow:hidden;cursor:default;transition:border-color .15s;" onmouseover="this.style.borderColor='rgba(207,181,132,.25)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)'">
+                <div style="height:130px;background:linear-gradient(135deg,#1A1A18,#141412);display:flex;align-items:center;justify-content:center;position:relative;">
+                  <img src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=300&h=260&fit=crop&q=80" style="width:100%;height:100%;object-fit:cover;opacity:.9;" />
+                  <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px;">
+                    <span style="padding:2px 6px;border-radius:6px;background:rgba(45,139,85,.2);font-family:'DM Sans',sans-serif;font-size:7px;font-weight:700;color:#2D8B55;letter-spacing:.5px;">PUBLISHED</span>
+                  </div>
+                </div>
+                <div style="padding:12px 14px;">
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;color:#D8D4CE;">Celestine Oval Ring</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;margin-top:2px;">Bridal Collection · 18k White Gold</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+                    <span style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:#CFB584;">$14,500</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:8px;color:#2D8B55;">12 sold</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Product 2 -->
+              <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:10px;overflow:hidden;cursor:default;transition:border-color .15s;" onmouseover="this.style.borderColor='rgba(207,181,132,.25)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)'">
+                <div style="height:130px;background:linear-gradient(135deg,#1A1A18,#141412);display:flex;align-items:center;justify-content:center;position:relative;">
+                  <img src="https://images.unsplash.com/photo-1515562141589-67f0d569b6f4?w=300&h=260&fit=crop&q=80" style="width:100%;height:100%;object-fit:cover;opacity:.9;" />
+                  <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px;">
+                    <span style="padding:2px 6px;border-radius:6px;background:rgba(45,139,85,.2);font-family:'DM Sans',sans-serif;font-size:7px;font-weight:700;color:#2D8B55;letter-spacing:.5px;">PUBLISHED</span>
+                  </div>
+                </div>
+                <div style="padding:12px 14px;">
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;color:#D8D4CE;">Heritage Chain Bracelet</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;margin-top:2px;">Heritage Collection · 14k Yellow Gold</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+                    <span style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:#CFB584;">$4,200</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:8px;color:#2D8B55;">8 sold</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Product 3 -->
+              <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:10px;overflow:hidden;cursor:default;transition:border-color .15s;" onmouseover="this.style.borderColor='rgba(207,181,132,.25)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)'">
+                <div style="height:130px;background:linear-gradient(135deg,#1A1A18,#141412);display:flex;align-items:center;justify-content:center;position:relative;">
+                  <img src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=300&h=260&fit=crop&q=80" style="width:100%;height:100%;object-fit:cover;opacity:.9;" />
+                  <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px;">
+                    <span style="padding:2px 6px;border-radius:6px;background:rgba(207,181,132,.2);font-family:'DM Sans',sans-serif;font-size:7px;font-weight:700;color:#CFB584;letter-spacing:.5px;">MADE-TO-ORDER</span>
+                  </div>
+                </div>
+                <div style="padding:12px 14px;">
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;color:#D8D4CE;">Astral Pendant Necklace</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;margin-top:2px;">Astral Collection · Platinum</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+                    <span style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:#CFB584;">$8,900</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:8px;color:#CFB584;">Made-to-order</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Product 4 -->
+              <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:10px;overflow:hidden;cursor:default;transition:border-color .15s;" onmouseover="this.style.borderColor='rgba(207,181,132,.25)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)'">
+                <div style="height:130px;background:linear-gradient(135deg,#1A1A18,#141412);display:flex;align-items:center;justify-content:center;position:relative;">
+                  <img src="https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=300&h=260&fit=crop&q=80" style="width:100%;height:100%;object-fit:cover;opacity:.9;" />
+                  <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px;">
+                    <span style="padding:2px 6px;border-radius:6px;background:rgba(45,139,85,.2);font-family:'DM Sans',sans-serif;font-size:7px;font-weight:700;color:#2D8B55;letter-spacing:.5px;">PUBLISHED</span>
+                  </div>
+                </div>
+                <div style="padding:12px 14px;">
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;color:#D8D4CE;">Sapphire Eternity Band</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;margin-top:2px;">Bridal Collection · 18k White Gold</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+                    <span style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:#CFB584;">$6,800</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:8px;color:#2D8B55;">5 sold</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Product 5 -->
+              <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:10px;overflow:hidden;cursor:default;transition:border-color .15s;" onmouseover="this.style.borderColor='rgba(207,181,132,.25)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)'">
+                <div style="height:130px;background:linear-gradient(135deg,#1A1A18,#141412);display:flex;align-items:center;justify-content:center;position:relative;">
+                  <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=300&h=260&fit=crop&q=80" style="width:100%;height:100%;object-fit:cover;opacity:.9;" />
+                  <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px;">
+                    <span style="padding:2px 6px;border-radius:6px;background:rgba(90,90,90,.3);font-family:'DM Sans',sans-serif;font-size:7px;font-weight:700;color:#6B6860;letter-spacing:.5px;">DRAFT</span>
+                  </div>
+                </div>
+                <div style="padding:12px 14px;">
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;color:#D8D4CE;">Royal Tiara Set</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;margin-top:2px;">Custom · 18k Rose Gold + Platinum</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+                    <span style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:#CFB584;">$32,000</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:8px;color:#6B6860;">Draft</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Product 6 -->
+              <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:10px;overflow:hidden;cursor:default;transition:border-color .15s;" onmouseover="this.style.borderColor='rgba(207,181,132,.25)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)'">
+                <div style="height:130px;background:linear-gradient(135deg,#1A1A18,#141412);display:flex;align-items:center;justify-content:center;position:relative;">
+                  <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=300&h=260&fit=crop&q=80" style="width:100%;height:100%;object-fit:cover;opacity:.9;" />
+                  <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px;">
+                    <span style="padding:2px 6px;border-radius:6px;background:rgba(45,139,85,.2);font-family:'DM Sans',sans-serif;font-size:7px;font-weight:700;color:#2D8B55;letter-spacing:.5px;">PUBLISHED</span>
+                  </div>
+                </div>
+                <div style="padding:12px 14px;">
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;color:#D8D4CE;">Midnight Cluster Earrings</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;margin-top:2px;">Astral Collection · 14k White Gold</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+                    <span style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:#CFB584;">$3,400</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:8px;color:#2D8B55;">21 sold</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- COLLECTIONS TAB -->
+          <div id="prod-panel-collections" class="prod-tab-panel" style="display:none;">
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+              <!-- Collection 1: Bridal -->
+              <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;">
+                <div style="height:100px;background:linear-gradient(135deg,rgba(207,181,132,.12),rgba(207,181,132,.03));display:flex;align-items:center;justify-content:center;">
+                  <span style="font-size:32px;">💍</span>
+                </div>
+                <div style="padding:16px;">
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:#D8D4CE;">Bridal Collection</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;margin-top:4px;line-height:1.5;">Engagement rings, wedding bands, and bridal sets crafted for life's most meaningful moments.</div>
+                  <div style="display:flex;gap:8px;margin-top:10px;">
+                    <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#CFB584;font-weight:600;">14 products</span>
+                    <span style="color:#2A2825;">·</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#2D8B55;font-weight:600;">Published</span>
+                  </div>
+                  <div style="display:flex;gap:6px;margin-top:10px;">
+                    <div style="padding:4px 10px;background:rgba(45,139,85,.08);border:1px solid rgba(45,139,85,.18);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#2D8B55;cursor:default;">View Products</div>
+                    <div style="padding:4px 10px;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.18);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#CFB584;cursor:default;">Edit Collection</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Collection 2: Heritage -->
+              <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;">
+                <div style="height:100px;background:linear-gradient(135deg,rgba(180,140,60,.12),rgba(180,140,60,.03));display:flex;align-items:center;justify-content:center;">
+                  <span style="font-size:32px;">📿</span>
+                </div>
+                <div style="padding:16px;">
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:#D8D4CE;">Heritage Collection</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;margin-top:4px;line-height:1.5;">Chain bracelets, link necklaces, and heirloom-quality pieces with timeless silhouettes.</div>
+                  <div style="display:flex;gap:8px;margin-top:10px;">
+                    <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#CFB584;font-weight:600;">8 products</span>
+                    <span style="color:#2A2825;">·</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#2D8B55;font-weight:600;">Published</span>
+                  </div>
+                  <div style="display:flex;gap:6px;margin-top:10px;">
+                    <div style="padding:4px 10px;background:rgba(45,139,85,.08);border:1px solid rgba(45,139,85,.18);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#2D8B55;cursor:default;">View Products</div>
+                    <div style="padding:4px 10px;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.18);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#CFB584;cursor:default;">Edit Collection</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Collection 3: Astral -->
+              <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;">
+                <div style="height:100px;background:linear-gradient(135deg,rgba(112,80,168,.12),rgba(112,80,168,.03));display:flex;align-items:center;justify-content:center;">
+                  <span style="font-size:32px;">✨</span>
+                </div>
+                <div style="padding:16px;">
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:#D8D4CE;">Astral Collection</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;margin-top:4px;line-height:1.5;">Celestial-inspired pendants, earrings, and statement rings with cosmic geometry.</div>
+                  <div style="display:flex;gap:8px;margin-top:10px;">
+                    <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#CFB584;font-weight:600;">6 products</span>
+                    <span style="color:#2A2825;">·</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#2D8B55;font-weight:600;">Published</span>
+                  </div>
+                  <div style="display:flex;gap:6px;margin-top:10px;">
+                    <div style="padding:4px 10px;background:rgba(45,139,85,.08);border:1px solid rgba(45,139,85,.18);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#2D8B55;cursor:default;">View Products</div>
+                    <div style="padding:4px 10px;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.18);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#CFB584;cursor:default;">Edit Collection</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Collection 4: Signature -->
+              <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;">
+                <div style="height:100px;background:linear-gradient(135deg,rgba(201,83,75,.12),rgba(201,83,75,.03));display:flex;align-items:center;justify-content:center;">
+                  <span style="font-size:32px;">🔥</span>
+                </div>
+                <div style="padding:16px;">
+                  <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:#D8D4CE;">Signature Pieces</div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;margin-top:4px;line-height:1.5;">One-of-a-kind statement pieces and bespoke commissions. High-value, single-edition.</div>
+                  <div style="display:flex;gap:8px;margin-top:10px;">
+                    <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#CFB584;font-weight:600;">4 products</span>
+                    <span style="color:#2A2825;">·</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#6B6860;font-weight:600;">Draft</span>
+                  </div>
+                  <div style="display:flex;gap:6px;margin-top:10px;">
+                    <div style="padding:4px 10px;background:rgba(45,139,85,.08);border:1px solid rgba(45,139,85,.18);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#2D8B55;cursor:default;">View Products</div>
+                    <div style="padding:4px 10px;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.18);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#CFB584;cursor:default;">Publish Collection</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Add new collection -->
+              <div style="background:rgba(255,255,255,.01);border:1.5px dashed rgba(255,255,255,.08);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;cursor:default;gap:8px;">
+                <div style="width:40px;height:40px;border-radius:50%;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.15);display:flex;align-items:center;justify-content:center;font-size:18px;color:#CFB584;">+</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#47453F;font-weight:600;">New Collection</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ORDERS TAB -->
+          <div id="prod-panel-orders" class="prod-tab-panel" style="display:none;">
+
+            <!-- Order filters -->
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+              <div style="padding:5px 12px;background:rgba(207,181,132,.1);border:1px solid rgba(207,181,132,.22);border-radius:14px;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;color:#CFB584;cursor:default;">All Orders</div>
+              <div style="padding:5px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:500;color:#6B6860;cursor:default;">In Production</div>
+              <div style="padding:5px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:500;color:#6B6860;cursor:default;">Ready to Ship</div>
+              <div style="padding:5px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:500;color:#6B6860;cursor:default;">Completed</div>
+            </div>
+
+            <!-- Order table -->
+            <div style="border:1px solid rgba(255,255,255,.06);border-radius:10px;overflow:hidden;">
+
+              <!-- Table header -->
+              <div style="display:grid;grid-template-columns:100px 1.2fr .8fr .6fr .7fr 80px;padding:10px 14px;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06);font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#47453F;font-weight:700;">
+                <div>Order</div>
+                <div>Product</div>
+                <div>Customer</div>
+                <div>Total</div>
+                <div>Status</div>
+                <div></div>
+              </div>
+
+              <!-- Order 1 -->
+              <div style="display:grid;grid-template-columns:100px 1.2fr .8fr .6fr .7fr 80px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.04);align-items:center;">
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#CFB584;font-weight:600;">#ZJ-0287</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#D8D4CE;">Celestine Oval Ring</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#6B6860;">Sarah Chen</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#CFB584;font-weight:600;">$14,500</div>
+                <div><span style="padding:2px 8px;border-radius:8px;background:rgba(207,181,132,.1);border:1px solid rgba(207,181,132,.2);font-family:'DM Sans',sans-serif;font-size:8px;font-weight:700;color:#CFB584;">In Production</span></div>
+                <div style="text-align:right;"><span style="font-family:'DM Sans',sans-serif;font-size:8px;color:#47453F;cursor:default;">View →</span></div>
+              </div>
+
+              <!-- Order 2 -->
+              <div style="display:grid;grid-template-columns:100px 1.2fr .8fr .6fr .7fr 80px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.04);align-items:center;">
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#CFB584;font-weight:600;">#ZJ-0285</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#D8D4CE;">Sapphire Eternity Band</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#6B6860;">Amanda Torres</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#CFB584;font-weight:600;">$6,800</div>
+                <div><span style="padding:2px 8px;border-radius:8px;background:rgba(232,82,74,.1);border:1px solid rgba(232,82,74,.2);font-family:'DM Sans',sans-serif;font-size:8px;font-weight:700;color:#E8524A;">Ready to Ship</span></div>
+                <div style="text-align:right;"><span style="font-family:'DM Sans',sans-serif;font-size:8px;color:#47453F;cursor:default;">View →</span></div>
+              </div>
+
+              <!-- Order 3 -->
+              <div style="display:grid;grid-template-columns:100px 1.2fr .8fr .6fr .7fr 80px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.04);align-items:center;">
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#CFB584;font-weight:600;">#ZJ-0283</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#D8D4CE;">Midnight Cluster Earrings</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#6B6860;">Lydia Park</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#CFB584;font-weight:600;">$3,400</div>
+                <div><span style="padding:2px 8px;border-radius:8px;background:rgba(45,139,85,.1);border:1px solid rgba(45,139,85,.2);font-family:'DM Sans',sans-serif;font-size:8px;font-weight:700;color:#2D8B55;">Delivered</span></div>
+                <div style="text-align:right;"><span style="font-family:'DM Sans',sans-serif;font-size:8px;color:#47453F;cursor:default;">View →</span></div>
+              </div>
+
+              <!-- Order 4 -->
+              <div style="display:grid;grid-template-columns:100px 1.2fr .8fr .6fr .7fr 80px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.04);align-items:center;">
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#CFB584;font-weight:600;">#ZJ-0281</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#D8D4CE;">Heritage Chain Bracelet x3</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#6B6860;">Marcus Ellis (Wholesale)</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#CFB584;font-weight:600;">$10,080</div>
+                <div><span style="padding:2px 8px;border-radius:8px;background:rgba(207,181,132,.1);border:1px solid rgba(207,181,132,.2);font-family:'DM Sans',sans-serif;font-size:8px;font-weight:700;color:#CFB584;">In Production</span></div>
+                <div style="text-align:right;"><span style="font-family:'DM Sans',sans-serif;font-size:8px;color:#47453F;cursor:default;">View →</span></div>
+              </div>
+
+              <!-- Order 5 -->
+              <div style="display:grid;grid-template-columns:100px 1.2fr .8fr .6fr .7fr 80px;padding:12px 14px;align-items:center;">
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#CFB584;font-weight:600;">#ZJ-0279</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#D8D4CE;">Astral Pendant Necklace</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#6B6860;">Priya Sharma</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#CFB584;font-weight:600;">$8,900</div>
+                <div><span style="padding:2px 8px;border-radius:8px;background:rgba(232,82,74,.1);border:1px solid rgba(232,82,74,.2);font-family:'DM Sans',sans-serif;font-size:8px;font-weight:700;color:#E8524A;">Ready to Ship</span></div>
+                <div style="text-align:right;"><span style="font-family:'DM Sans',sans-serif;font-size:8px;color:#47453F;cursor:default;">View →</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STOREFRONT TAB -->
+          <div id="prod-panel-storefront" class="prod-tab-panel" style="display:none;">
+
+            <!-- Storefront connections -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+
+              <!-- Your Storefront -->
+              <div style="background:rgba(45,139,85,.04);border:1px solid rgba(45,139,85,.15);border-radius:12px;padding:20px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                  <div style="width:36px;height:36px;border-radius:8px;background:rgba(45,139,85,.12);border:1px solid rgba(45,139,85,.2);display:flex;align-items:center;justify-content:center;font-size:16px;">🛍</div>
+                  <div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:#D8D4CE;">ZipJeweler Storefront</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#2D8B55;">Connected · Live</div>
+                  </div>
+                  <div style="margin-left:auto;width:8px;height:8px;border-radius:50%;background:#28C840;box-shadow:0 0 6px rgba(40,200,64,.4);"></div>
+                </div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#6B6860;line-height:1.5;margin-bottom:12px;">Your branded storefront with 18 published products. Customers can browse collections, configure made-to-order pieces, and place deposits directly.</div>
+                <div style="display:flex;gap:8px;">
+                  <div style="padding:5px 12px;background:rgba(45,139,85,.12);border:1px solid rgba(45,139,85,.22);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;color:#2D8B55;cursor:default;">Visit Storefront</div>
+                  <div style="padding:5px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;color:#6B6860;cursor:default;">Customize Theme</div>
+                </div>
+              </div>
+
+              <!-- Shopify -->
+              <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:20px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                  <div style="width:36px;height:36px;border-radius:8px;background:rgba(150,191,72,.08);border:1px solid rgba(150,191,72,.15);display:flex;align-items:center;justify-content:center;font-size:16px;">🛒</div>
+                  <div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:#D8D4CE;">Shopify</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#CFB584;">Synced · 14 products</div>
+                  </div>
+                </div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#6B6860;line-height:1.5;margin-bottom:12px;">Auto-sync product listings, inventory, and orders between ZipJeweler and your Shopify store. AI-generated descriptions pushed automatically.</div>
+                <div style="display:flex;gap:8px;">
+                  <div style="padding:5px 12px;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.18);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;color:#CFB584;cursor:default;">Sync Settings</div>
+                  <div style="padding:5px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;color:#6B6860;cursor:default;">View Store</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Marketing section -->
+            <div style="margin-bottom:20px;">
+              <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#47453F;font-weight:700;margin-bottom:12px;">Marketing & Social</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+                <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:16px;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                    <span style="font-size:16px;">📱</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#D8D4CE;">Instagram</span>
+                  </div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#6B6860;line-height:1.5;">AI-generated captions and product shots ready to post. Schedule directly from your catalog.</div>
+                  <div style="margin-top:8px;padding:4px 10px;display:inline-block;background:rgba(201,83,75,.08);border:1px solid rgba(201,83,75,.18);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#C9534B;cursor:default;">Generate Posts</div>
+                </div>
+                <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:16px;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                    <span style="font-size:16px;">📧</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#D8D4CE;">Email Campaigns</span>
+                  </div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#6B6860;line-height:1.5;">Send new collection announcements and product spotlights. Built-in templates with your renders.</div>
+                  <div style="margin-top:8px;padding:4px 10px;display:inline-block;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.18);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#CFB584;cursor:default;">Create Campaign</div>
+                </div>
+                <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:16px;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                    <span style="font-size:16px;">📊</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#D8D4CE;">Analytics</span>
+                  </div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#6B6860;line-height:1.5;">Track views, conversions, and revenue across all channels. See which products perform best.</div>
+                  <div style="margin-top:8px;padding:4px 10px;display:inline-block;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#6B6860;cursor:default;">View Reports</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Wholesale Portal -->
+            <div style="background:linear-gradient(135deg,rgba(207,181,132,.04),rgba(45,139,85,.04));border:1px solid rgba(207,181,132,.12);border-radius:10px;padding:16px 20px;display:flex;align-items:center;gap:14px;">
+              <div style="font-size:20px;">🤝</div>
+              <div style="flex:1;">
+                <div style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#CFB584;margin-bottom:2px;">Wholesale Buyer Portal</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#6B6860;line-height:1.5;">Share a private catalog link with wholesale buyers. They see your products with wholesale pricing, place bulk orders, and download line sheets — all self-service.</div>
+              </div>
+              <div style="padding:5px 14px;background:rgba(207,181,132,.1);border:1px solid rgba(207,181,132,.2);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;font-weight:600;color:#CFB584;cursor:default;white-space:nowrap;">Configure Portal</div>
+            </div>
+          </div>
+
+          <!-- MANUFACTURING TAB -->
+          <div id="prod-panel-manufacturing" class="prod-tab-panel" style="display:none;">
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+
+              <!-- Production packages -->
+              <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:20px;">
+                <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#47453F;font-weight:700;margin-bottom:14px;">Production Packages</div>
+
+                <!-- Package 1 -->
+                <div style="padding:12px;background:rgba(207,181,132,.04);border:1px solid rgba(207,181,132,.12);border-radius:8px;margin-bottom:10px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                    <span style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;color:#D8D4CE;">Single Piece</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;color:#CFB584;">From $250</span>
+                  </div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#6B6860;line-height:1.5;">One-off production with full QC. Includes casting, stone setting, and finishing. 2–4 week turnaround.</div>
+                </div>
+
+                <!-- Package 2 -->
+                <div style="padding:12px;background:rgba(45,139,85,.04);border:1px solid rgba(45,139,85,.12);border-radius:8px;margin-bottom:10px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                    <span style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;color:#D8D4CE;">Small Batch (5–25)</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;color:#2D8B55;">15% off per unit</span>
+                  </div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#6B6860;line-height:1.5;">Batch casting with shared mold. Ideal for retail inventory or trunk show stock. 3–5 week turnaround.</div>
+                </div>
+
+                <!-- Package 3 -->
+                <div style="padding:12px;background:rgba(112,80,168,.04);border:1px solid rgba(112,80,168,.12);border-radius:8px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                    <span style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;color:#D8D4CE;">Volume Run (25+)</span>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;color:#9070C0;">30% off per unit</span>
+                  </div>
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#6B6860;line-height:1.5;">Dedicated production line. Volume pricing, priority scheduling, and dedicated QC team. 4–8 week turnaround.</div>
+                </div>
+              </div>
+
+              <!-- Manufacturing partners -->
+              <div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:20px;">
+                <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#47453F;font-weight:700;margin-bottom:14px;">Manufacturing Partners</div>
+
+                <!-- Partner 1 -->
+                <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);">
+                  <div style="width:36px;height:36px;border-radius:8px;background:rgba(207,181,132,.1);border:1px solid rgba(207,181,132,.15);display:flex;align-items:center;justify-content:center;font-size:14px;">🏭</div>
+                  <div style="flex:1;">
+                    <div style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#D8D4CE;">Artisan Castings NYC</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;">Casting, Stone Setting · New York</div>
+                  </div>
+                  <span style="padding:2px 8px;border-radius:8px;background:rgba(45,139,85,.1);border:1px solid rgba(45,139,85,.2);font-family:'DM Sans',sans-serif;font-size:8px;font-weight:700;color:#2D8B55;">Active</span>
+                </div>
+
+                <!-- Partner 2 -->
+                <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);">
+                  <div style="width:36px;height:36px;border-radius:8px;background:rgba(201,83,75,.08);border:1px solid rgba(201,83,75,.15);display:flex;align-items:center;justify-content:center;font-size:14px;">⚒</div>
+                  <div style="flex:1;">
+                    <div style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#D8D4CE;">Precision Metals LA</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;">CNC Milling, Finishing · Los Angeles</div>
+                  </div>
+                  <span style="padding:2px 8px;border-radius:8px;background:rgba(45,139,85,.1);border:1px solid rgba(45,139,85,.2);font-family:'DM Sans',sans-serif;font-size:8px;font-weight:700;color:#2D8B55;">Active</span>
+                </div>
+
+                <!-- Partner 3 -->
+                <div style="display:flex;align-items:center;gap:12px;padding:10px 0;">
+                  <div style="width:36px;height:36px;border-radius:8px;background:rgba(112,80,168,.08);border:1px solid rgba(112,80,168,.15);display:flex;align-items:center;justify-content:center;font-size:14px;">💎</div>
+                  <div style="flex:1;">
+                    <div style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#D8D4CE;">GemSource International</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;">Stone Sourcing, Calibrated Melee · Mumbai</div>
+                  </div>
+                  <span style="padding:2px 8px;border-radius:8px;background:rgba(207,181,132,.1);border:1px solid rgba(207,181,132,.2);font-family:'DM Sans',sans-serif;font-size:8px;font-weight:700;color:#CFB584;">Preferred</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Production file export -->
+            <div style="background:linear-gradient(135deg,rgba(207,181,132,.04),rgba(112,80,168,.04));border:1px solid rgba(207,181,132,.12);border-radius:10px;padding:16px 20px;display:flex;align-items:center;gap:14px;">
+              <div style="font-size:20px;">📋</div>
+              <div style="flex:1;">
+                <div style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#CFB584;margin-bottom:2px;">Production File Export</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#6B6860;line-height:1.5;">Generate a complete production package for any product — CAD files, spec sheets, stone lists, cost breakdowns, and QC checklists — bundled into a single ZIP file ready for your manufacturer.</div>
+              </div>
+              <div style="padding:5px 14px;background:rgba(207,181,132,.1);border:1px solid rgba(207,181,132,.2);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;font-weight:600;color:#CFB584;cursor:default;white-space:nowrap;">Export Package</div>
+            </div>
+          </div>
+
+          <!-- Mock preview badge -->
+          <div style="text-align:center;margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,.04);">
+            <span style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#2A2825;font-weight:600;">Mock Preview · Visual Concept Only</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
