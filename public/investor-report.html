@@ -366,6 +366,37 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
 }
 
 
+/* ══ DOCS TAB ═════════════════════════════════════════════════════════ */
+.doc-tool{background:var(--white);border-radius:12px;border:1px solid var(--bdr);box-shadow:var(--shadow-sm);margin-bottom:16px;overflow:hidden;}
+.doc-toggle{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;cursor:pointer;user-select:none;transition:background .15s;}
+.doc-toggle:hover{background:rgba(0,0,0,.015);}
+.doc-toggle-left{display:flex;align-items:center;gap:12px;}
+.doc-toggle-ico{font-size:22px;flex-shrink:0;}
+.doc-toggle-name{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--blk);}
+.doc-toggle-sub{font-family:var(--sans);font-size:11px;color:var(--lt);margin-top:2px;}
+.doc-toggle-arrow{font-size:12px;color:var(--lt);transition:transform .2s;}
+.doc-tool.open .doc-toggle-arrow{transform:rotate(90deg);}
+.doc-body{display:none;padding:0 22px 22px;border-top:1px solid var(--bdr);}
+.doc-tool.open .doc-body{display:block;animation:rise .3s ease;}
+.doc-section{margin-top:18px;}
+.doc-section-title{font-family:var(--sans);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--coral);font-weight:700;margin-bottom:8px;}
+.doc-text{font-family:var(--sans);font-size:12.5px;color:var(--mid);line-height:1.72;}
+.doc-code{background:var(--bg);border:1px solid var(--bdr);border-radius:6px;padding:12px 14px;font-family:'DM Sans',monospace;font-size:11px;color:var(--txt);line-height:1.65;overflow-x:auto;white-space:pre-wrap;word-break:break-all;margin-top:6px;}
+.doc-flow{display:flex;align-items:center;gap:0;overflow-x:auto;padding:10px 0 6px;scrollbar-width:none;}
+.doc-flow::-webkit-scrollbar{display:none;}
+.doc-flow-step{display:flex;flex-direction:column;align-items:center;min-width:90px;flex-shrink:0;}
+.doc-flow-box{background:var(--coral-lt);border:1px solid rgba(232,82,74,.18);border-radius:8px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:10px;color:var(--coral);font-weight:600;text-align:center;white-space:nowrap;}
+.doc-flow-box.green{background:var(--green-bg);border-color:rgba(45,139,85,.2);color:var(--green);}
+.doc-flow-box.gray{background:rgba(90,90,90,.06);border-color:var(--bdr);color:var(--lt);}
+.doc-flow-lbl{font-family:var(--sans);font-size:9px;color:var(--lt);margin-top:4px;text-align:center;}
+.doc-flow-arrow{font-size:14px;color:var(--bdr);margin:0 4px;flex-shrink:0;}
+.doc-fn{margin:4px 0;padding:6px 10px;background:rgba(232,82,74,.04);border-left:2px solid var(--coral);border-radius:0 4px 4px 0;font-family:'DM Sans',monospace;font-size:11px;color:var(--txt);}
+.doc-fn-name{font-weight:600;color:var(--coral);}
+.doc-detail-toggle{font-family:var(--sans);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--coral);font-weight:600;cursor:pointer;background:none;border:1px solid var(--coral-lt);border-radius:4px;padding:4px 10px;margin-top:8px;transition:all .15s;}
+.doc-detail-toggle:hover{background:var(--coral-lt);}
+.doc-detail{display:none;margin-top:10px;}
+.doc-detail.open{display:block;animation:rise .3s ease;}
+
 /* ══ IMAGINE PREVIEW ══════════════════════════════════════════════════ */
 @keyframes ibounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
 @keyframes imsg-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -493,6 +524,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
     <button class="nt" onclick="go('production')">Production</button>
     <button class="nt" onclick="go('business')">Business Model</button>
     <button class="nt" onclick="go('roadmap')">Roadmap</button>
+    <button class="nt" onclick="go('docs')">Docs</button>
   </div>
   <div class="nav-r">
     <div class="nav-tag">Investor Brief · 2026</div>
@@ -522,6 +554,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
     <button class="mbt" id="mbt-roadmap" onclick="go('roadmap')">
       <span class="mbt-ico">→</span>
       <span class="mbt-lbl">Roadmap</span>
+    </button>
+    <button class="mbt" id="mbt-docs" onclick="go('docs')">
+      <span class="mbt-ico">☰</span>
+      <span class="mbt-lbl">Docs</span>
     </button>
   </div>
 </div>
@@ -2490,6 +2526,708 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
 </div>
 
 
+<!-- ════════════════════════════ DOCS ════════════════════════════ -->
+<div class="sec" id="s-docs">
+
+  <div class="sec-page-header">
+    <div class="sph-inner">
+      <div class="sph-title">Tools Documentation</div>
+      <div class="sph-meta">Technical Rebuild Reference<br>Architecture, APIs, Data Flows</div>
+    </div>
+    <div class="sph-bar"></div>
+  </div>
+
+  <div class="section-block">
+    <div class="pg">
+      <div style="text-align:center;margin-bottom:48px;">
+        <div class="eyebrow coral">Technical Reference</div>
+        <div class="h1">How Each Tool Works</div>
+        <p class="body" style="max-width:580px;margin:0 auto;">Complete documentation of every tool's architecture, API calls, system prompts, and data flows — everything needed to rebuild each tool in a new environment.</p>
+      </div>
+
+      <!-- ── ARCHITECTURE OVERVIEW ── -->
+      <div class="card" style="padding:24px;margin-bottom:32px;">
+        <div class="h3" style="margin-bottom:12px;">Platform Architecture</div>
+        <div class="doc-text" style="margin-bottom:14px;">ZipJeweler runs as a <strong>Next.js 14 serverless application</strong> with a vanilla HTML/JS frontend served via iframe. All AI tool logic lives in a single HTML file. The backend provides proxy API routes that keep API keys server-side.</div>
+        <div class="doc-section-title">Core API Helper</div>
+        <div class="doc-text">All Claude-powered tools share a single <code>claudeAPI(body)</code> function that routes requests either through the server proxy or directly to Anthropic:</div>
+        <div class="doc-code">// Shared API wrapper — used by every Claude-powered tool
+async function claudeAPI(body) {
+  if (useServerKeys) {
+    // Route through server proxy (keeps API key off client)
+    return fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+  }
+  // Direct browser call (requires user-provided key)
+  return fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': anthropicKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify(body)
+  });
+}</div>
+        <div class="doc-section-title" style="margin-top:16px;">Backend API Routes</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:8px;">
+          <div class="card-sm" style="padding:14px;">
+            <div style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--blk);">POST /api/chat</div>
+            <div style="font-family:var(--sans);font-size:10.5px;color:var(--lt);margin-top:4px;">Anthropic Messages API proxy. Forwards model, messages, system, max_tokens. Keeps ANTHROPIC_API_KEY server-side.</div>
+          </div>
+          <div class="card-sm" style="padding:14px;">
+            <div style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--blk);">POST /api/generate-image</div>
+            <div style="font-family:var(--sans);font-size:10.5px;color:var(--lt);margin-top:4px;">OpenAI Responses API (gpt-4.1). Image editing/generation with multi-turn corrections via previous_response_id. Used by C2R and S2I.</div>
+          </div>
+          <div class="card-sm" style="padding:14px;">
+            <div style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--blk);">POST /api/generate-render</div>
+            <div style="font-family:var(--sans);font-size:10.5px;color:var(--lt);margin-top:4px;">OpenAI Responses API (primary) + Higgsfield FLUX (fallback). Supports 1-4 input images, mask-based editing, aspect ratio control.</div>
+          </div>
+          <div class="card-sm" style="padding:14px;">
+            <div style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--blk);">GET /api/config</div>
+            <div style="font-family:var(--sans);font-size:10.5px;color:var(--lt);margin-top:4px;">Reports which API keys are configured (hasAnthropicKey, hasOpenAI, hasHiggsfield). Never exposes actual key values.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════ TOOL 1: IMAGINE ════════════════ -->
+      <div class="doc-tool" id="doc-imagine">
+        <div class="doc-toggle" onclick="toggleDoc('doc-imagine')">
+          <div class="doc-toggle-left">
+            <div class="doc-toggle-ico">💬</div>
+            <div>
+              <div class="doc-toggle-name">Imagine — AI Project Brief Builder</div>
+              <div class="doc-toggle-sub">Conversational AI that extracts 26 structured fields from natural jewelry design discussion</div>
+            </div>
+          </div>
+          <div class="doc-toggle-arrow">▶</div>
+        </div>
+        <div class="doc-body">
+          <!-- Architecture Overview -->
+          <div class="doc-section">
+            <div class="doc-section-title">Data Flow</div>
+            <div class="doc-flow">
+              <div class="doc-flow-step"><div class="doc-flow-box">User Message</div><div class="doc-flow-lbl">Text input</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">sendImagine()</div><div class="doc-flow-lbl">Capture input</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">callImagine()</div><div class="doc-flow-lbl">Build messages</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box green">claudeAPI()</div><div class="doc-flow-lbl">Anthropic API</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">parseFields()</div><div class="doc-flow-lbl">Extract JSON</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">applyFields()</div><div class="doc-flow-lbl">Update UI</div></div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">How It Works</div>
+            <div class="doc-text">Imagine is a multi-turn conversational tool that guides jewelers through creating a project brief. The AI asks one question at a time in priority order (piece type → metal → stones → dimensions → client → budget → timeline → render preferences). Every response includes a <code>[FIELDS]{"key":"value"}[/FIELDS]</code> block that gets parsed and applied to a 26-field form in real time. A readiness score tracks how many fields are filled.</div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">Key Functions</div>
+            <div class="doc-fn"><span class="doc-fn-name">startWithKey(auto)</span> — Initializes the tool. If <code>auto=true</code>, uses server-side keys (no prompt). Otherwise reads user-entered API key from input field.</div>
+            <div class="doc-fn"><span class="doc-fn-name">callImagine(userMsg)</span> — Core function. Appends user message to conversation history, calls Claude via <code>claudeAPI()</code>, parses response for <code>[FIELDS]</code> block, applies extracted fields, adds chat bubbles.</div>
+            <div class="doc-fn"><span class="doc-fn-name">sendImagine()</span> — Reads text from input field, clears it, calls <code>callImagine(text)</code>.</div>
+            <div class="doc-fn"><span class="doc-fn-name">parseFields(text)</span> — Regex extraction: <code>text.match(/\[FIELDS\]([\s\S]*?)\[\/FIELDS\]/)</code> → <code>JSON.parse(match[1])</code>. Falls back to legacy <code>&lt;fields&gt;</code> tags.</div>
+            <div class="doc-fn"><span class="doc-fn-name">applyFields(obj)</span> — Iterates extracted key-value pairs, updates form field DOM elements, triggers highlight animation on changed fields, updates readiness score.</div>
+            <div class="doc-fn"><span class="doc-fn-name">buildRenderPrompt()</span> — Uses Claude to synthesize conversation history + extracted fields into an optimized image generation prompt for FLUX/OpenAI.</div>
+            <div class="doc-fn"><span class="doc-fn-name">generateRender()</span> — Calls <code>buildRenderPrompt()</code>, then sends the prompt to <code>POST /api/generate-render</code> to create a jewelry render.</div>
+          </div>
+
+          <button class="doc-detail-toggle" onclick="toggleDocDetail('doc-imagine-detail')">Show Code Details</button>
+          <div class="doc-detail" id="doc-imagine-detail">
+            <div class="doc-section-title">API Call Shape</div>
+            <div class="doc-code">claudeAPI({
+  model: 'claude-sonnet-4-20250514',
+  max_tokens: 600,
+  system: SYS,  // See system prompt below
+  messages: history  // Full conversation array [{role, content}, ...]
+})</div>
+            <div class="doc-section-title" style="margin-top:14px;">System Prompt (Summary)</div>
+            <div class="doc-code">Role: "Imagine, ZipJeweler's AI production designer"
+Rules:
+- Ask ONE question per message, 1-2 sentences + question
+- Priority order: piece type → metal → stones/setting → dimensions → client → budget → timeline → render style
+- Append [FIELDS]{"key":"value"}[/FIELDS] to EVERY reply
+
+26 extractable fields across 8 groups:
+  Overview: projectName, collection
+  Client: clientName, clientEmail
+  Design: pieceType, metalType, metalWeight, finish, designDescription
+  Stones: stoneType, stoneCount, stoneCaratWeight, settingStyle
+  Specs: ringSize, dimensions, engravingNotes
+  Order: budget, timeline, status, priority, deliveryMethod
+  Files: referenceNotes, productionNotes
+  Render: renderStyle, renderAngle, renderBackground
+
+Enum constraints:
+  pieceType: ring|necklace|bracelet|earrings|pendant|brooch|...
+  metalType: 14k yellow gold|18k white gold|platinum|sterling silver|...
+  finish: high polish|matte|satin|hammered|brushed|...
+  renderStyle: photorealistic|product studio|lifestyle|artistic sketch|3D render
+  renderAngle: front|side|top-down|45 degree|flat lay|multi-angle
+  renderBackground: white studio|black studio|velvet|marble|lifestyle|...</div>
+            <div class="doc-section-title" style="margin-top:14px;">State Variables</div>
+            <div class="doc-code">let anthropicKey = '';       // User-entered Anthropic API key
+let history = [];            // Conversation messages [{role:'user'|'assistant', content:string}]
+let fieldValues = {};        // Extracted field values {key: string}
+let isLoading = false;       // Prevents concurrent API calls
+let isStarted = false;       // Tracks if conversation has begun
+let useServerKeys = false;   // True if server has ANTHROPIC_API_KEY configured</div>
+            <div class="doc-section-title" style="margin-top:14px;">Render Prompt Builder</div>
+            <div class="doc-code">// buildRenderPrompt() uses a second Claude call to synthesize
+// all extracted fields + conversation into an image gen prompt:
+claudeAPI({
+  model: 'claude-sonnet-4-20250514',
+  max_tokens: 400,
+  system: 'You write image generation prompts for FLUX...',
+  messages: [{
+    role: 'user',
+    content: `EXTRACTED FIELDS:\n${fieldSummary}\n\nRECENT CONVERSATION:\n${recentMsgs}`
+  }]
+})
+// Output: 2-4 sentence prompt dense with visual detail
+// Fallback: manual prompt assembly from field values if Claude call fails</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════ TOOL 2: SKETCH TO IMAGE ════════════════ -->
+      <div class="doc-tool" id="doc-s2i">
+        <div class="doc-toggle" onclick="toggleDoc('doc-s2i')">
+          <div class="doc-toggle-left">
+            <div class="doc-toggle-ico">🖼</div>
+            <div>
+              <div class="doc-toggle-name">Sketch to Image (S2I)</div>
+              <div class="doc-toggle-sub">Converts hand-drawn jewelry sketches into photorealistic renders via OpenAI image editing</div>
+            </div>
+          </div>
+          <div class="doc-toggle-arrow">▶</div>
+        </div>
+        <div class="doc-body">
+          <div class="doc-section">
+            <div class="doc-section-title">Data Flow</div>
+            <div class="doc-flow">
+              <div class="doc-flow-step"><div class="doc-flow-box">Upload Sketch</div><div class="doc-flow-lbl">FileReader</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">Base64 Convert</div><div class="doc-flow-lbl">handleS2IUpload</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">Build Instruction</div><div class="doc-flow-lbl">buildS2IInstruction</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box green">POST /api/generate-image</div><div class="doc-flow-lbl">OpenAI Responses</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">Display Render</div><div class="doc-flow-lbl">Show result</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">gradeFidelity()</div><div class="doc-flow-lbl">Auto-grade</div></div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">How It Works</div>
+            <div class="doc-text">S2I takes a hand-drawn sketch image and converts it to a photorealistic product photo using OpenAI's Responses API with <code>action: "edit"</code>. The user selects material options (metal, stone, setting, finish) from dropdowns. The tool builds a short instruction prompt that tells the model to preserve the exact design while only changing surface materials and environment. Multi-turn corrections are supported via <code>previous_response_id</code> chaining — subsequent correction renders don't need to resend the image.</div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">Key Functions</div>
+            <div class="doc-fn"><span class="doc-fn-name">handleS2IUpload(input)</span> — Reads file via FileReader, converts to base64, stores in <code>s2iImageB64</code>, shows preview.</div>
+            <div class="doc-fn"><span class="doc-fn-name">buildS2IInstruction(corrections)</span> — Assembles prompt from dropdown values. Starts with "Edit this image. This is a hand-drawn jewelry sketch. Make it look like a photorealistic product photo." Adds materials, scene, notes.</div>
+            <div class="doc-fn"><span class="doc-fn-name">renderS2IDirect(correctionText)</span> — Core render function. Sends sketch + instruction to <code>/api/generate-image</code> with <code>action:"edit"</code>. Chains corrections via <code>previous_response_id</code>. Triggers <code>gradeFidelity()</code> on success.</div>
+            <div class="doc-fn"><span class="doc-fn-name">gradeFidelity(tool, sourceB64, sourceType, renderUrl, prompt)</span> — Shared function. Sends both source + render images to Claude for comparison. Returns scores for silhouette_match, proportion_match, stone_layout_match, setting_match, extra_element_penalty, material_accuracy. Auto-generates correction instructions if score &lt; 0.75.</div>
+          </div>
+
+          <button class="doc-detail-toggle" onclick="toggleDocDetail('doc-s2i-detail')">Show Code Details</button>
+          <div class="doc-detail" id="doc-s2i-detail">
+            <div class="doc-section-title">Frontend → Backend Request</div>
+            <div class="doc-code">// renderS2IDirect() sends to /api/generate-image:
+fetch('/api/generate-image', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    prompt: buildS2IInstruction(),  // Material instruction text
+    action: 'edit',                 // Force EDIT mode
+    quality: 'high',
+    input_fidelity: 'high',        // Preserve fine details
+    size: 'auto',
+    input_image: s2iImageB64,      // Base64 sketch (first render only)
+    previous_response_id: s2iResponseId  // For corrections (omit on first)
+  })
+})</div>
+            <div class="doc-section-title" style="margin-top:14px;">Backend Processing (/api/generate-image)</div>
+            <div class="doc-code">// route.js builds OpenAI Responses API request:
+const requestBody = {
+  model: 'gpt-4.1',
+  input: [{ role: 'user', content: [
+    { type: 'input_image', image_url: 'data:image/png;base64,...' },
+    { type: 'input_text', text: prompt }
+  ]}],
+  tools: [{
+    type: 'image_generation',
+    quality: 'high',
+    input_fidelity: 'high',
+    size: 'auto',
+    action: 'edit'  // Forces editing input image vs generating new
+  }]
+};
+// For corrections: input = prompt (string), previous_response_id set
+
+// POST → https://api.openai.com/v1/responses
+// Response: data.output[].type === 'image_generation_call'
+// Returns: { url: 'data:image/png;base64,...', response_id, mode, action }</div>
+            <div class="doc-section-title" style="margin-top:14px;">State Variables</div>
+            <div class="doc-code">let s2iImageB64 = null;     // Base64 sketch image
+let s2iImageType = 'image/jpeg';
+let s2iAnalyzing = false;   // Lock to prevent concurrent calls
+let s2iResponseId = null;   // OpenAI response ID for multi-turn chaining</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════ TOOL 3: CAD TO RENDER ════════════════ -->
+      <div class="doc-tool" id="doc-c2r">
+        <div class="doc-toggle" onclick="toggleDoc('doc-c2r')">
+          <div class="doc-toggle-left">
+            <div class="doc-toggle-ico">🖥</div>
+            <div>
+              <div class="doc-toggle-name">CAD to Render (C2R)</div>
+              <div class="doc-toggle-sub">Converts CAD wireframe screenshots into photorealistic product photos via OpenAI image editing</div>
+            </div>
+          </div>
+          <div class="doc-toggle-arrow">▶</div>
+        </div>
+        <div class="doc-body">
+          <div class="doc-section">
+            <div class="doc-section-title">Data Flow</div>
+            <div class="doc-flow">
+              <div class="doc-flow-step"><div class="doc-flow-box">Upload CAD</div><div class="doc-flow-lbl">FileReader</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">Base64 Convert</div><div class="doc-flow-lbl">handleC2RUpload</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">Build Instruction</div><div class="doc-flow-lbl">buildC2RInstruction</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box green">POST /api/generate-image</div><div class="doc-flow-lbl">OpenAI Responses</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">Display Render</div><div class="doc-flow-lbl">Show result</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">gradeFidelity()</div><div class="doc-flow-lbl">Auto-grade</div></div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">How It Works</div>
+            <div class="doc-text">C2R takes a CAD software screenshot (from Rhino, MatrixGold, etc.) and transforms it into a client-presentable photorealistic product photo. It uses the same <code>/api/generate-image</code> endpoint and pattern as S2I — <code>action:"edit"</code> forces the model to edit the input image rather than generate from scratch. The prompt is kept deliberately short and direct: "Edit this image. This is a CAD render. Make it photorealistic. Keep the EXACT same design." — long prompts cause the model to over-interpret and redesign the piece. Users pick metal, stone, finish, background, lighting, and angle from dropdowns. Multi-turn corrections chain via <code>previous_response_id</code>.</div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">Key Functions</div>
+            <div class="doc-fn"><span class="doc-fn-name">handleC2RUpload(input)</span> — FileReader → base64 → <code>c2rImageB64</code>. Shows preview.</div>
+            <div class="doc-fn"><span class="doc-fn-name">buildC2RInstruction(corrections)</span> — Builds concise prompt from dropdown values. Metal + finish, stones, scene (background + lighting), notes. Keeps prompt short to avoid model over-interpretation.</div>
+            <div class="doc-fn"><span class="doc-fn-name">renderC2RDirect(correctionText)</span> — Sends CAD image + instruction to <code>/api/generate-image</code>. Same pattern as S2I: <code>action:"edit"</code>, <code>input_fidelity:"high"</code>, multi-turn via <code>c2rResponseId</code>. Triggers fidelity grading on success.</div>
+          </div>
+
+          <button class="doc-detail-toggle" onclick="toggleDocDetail('doc-c2r-detail')">Show Code Details</button>
+          <div class="doc-detail" id="doc-c2r-detail">
+            <div class="doc-section-title">C2R vs S2I Differences</div>
+            <div class="doc-code">// Both use the same /api/generate-image backend
+// Key differences:
+// 1. C2R has extra dropdowns: background, lighting, angle (S2I doesn't)
+// 2. C2R prompt: "This is a CAD render" vs S2I: "This is a hand-drawn jewelry sketch"
+// 3. Otherwise identical: same action:"edit", same response handling</div>
+            <div class="doc-section-title" style="margin-top:14px;">Prompt Construction (buildC2RInstruction)</div>
+            <div class="doc-code">'Edit this image. This is a CAD render of a jewelry piece. '
++ 'Make it look like a photorealistic product photo. '
++ 'Keep the EXACT same design — same shape, same silhouette, '
++ 'same proportions, same angle. '
++ 'Only change the surface materials and environment.\n\n'
++ (corrections ? 'Fix these issues: ' + corrections + '\n\n' : '')
++ 'Materials: Metal: 18k Yellow Gold, polished finish. Stones: Diamond.\n'
++ 'Scene: white studio background, soft lighting.\n'</div>
+            <div class="doc-section-title" style="margin-top:14px;">State Variables</div>
+            <div class="doc-code">let c2rImageB64 = null;     // Base64 CAD screenshot
+let c2rImageType = 'image/jpeg';
+let c2rBusy = false;        // Prevents concurrent renders
+let c2rResponseId = null;   // OpenAI response ID for multi-turn corrections</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════ TOOL 4: MARKETING AGENT ════════════════ -->
+      <div class="doc-tool" id="doc-mkt">
+        <div class="doc-toggle" onclick="toggleDoc('doc-mkt')">
+          <div class="doc-toggle-left">
+            <div class="doc-toggle-ico">📣</div>
+            <div>
+              <div class="doc-toggle-name">Marketing Agent</div>
+              <div class="doc-toggle-sub">Generates Instagram captions, product descriptions, and e-commerce listings from product photos and specs</div>
+            </div>
+          </div>
+          <div class="doc-toggle-arrow">▶</div>
+        </div>
+        <div class="doc-body">
+          <div class="doc-section">
+            <div class="doc-section-title">Data Flow</div>
+            <div class="doc-flow">
+              <div class="doc-flow-step"><div class="doc-flow-box">Product Image + Specs</div><div class="doc-flow-lbl">Upload & form</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">generateMkt()</div><div class="doc-flow-lbl">Build request</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box green">claudeAPI()</div><div class="doc-flow-lbl">Anthropic API</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">Parse Outputs</div><div class="doc-flow-lbl">Regex extract</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">Display 3 Sections</div><div class="doc-flow-lbl">IG / Desc / Listing</div></div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">How It Works</div>
+            <div class="doc-text">The Marketing Agent takes a product image (optional) and product details (name, metal, stone, price, brand voice, extra details) and generates three types of marketing copy in a single Claude call. The AI is instructed to write in the selected brand voice and, if an image is provided, to describe what it sees and let it inform the copy. Output is wrapped in three delimited sections that get parsed via regex and displayed in separate panels.</div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">Key Functions</div>
+            <div class="doc-fn"><span class="doc-fn-name">handleMktUpload(input)</span> — FileReader → base64 → <code>mktImgB64</code>.</div>
+            <div class="doc-fn"><span class="doc-fn-name">generateMkt()</span> — Collects form values, builds product string, sends image (if uploaded) + text to Claude with marketing system prompt. Parses three output sections.</div>
+          </div>
+
+          <button class="doc-detail-toggle" onclick="toggleDocDetail('doc-mkt-detail')">Show Code Details</button>
+          <div class="doc-detail" id="doc-mkt-detail">
+            <div class="doc-section-title">System Prompt</div>
+            <div class="doc-code">Role: "ZipJeweler's Marketing Agent"
+Voice: Selected from dropdown (e.g., "luxurious", "minimalist", "bold")
+
+Required outputs:
+[INSTAGRAM]...[/INSTAGRAM]
+  - 3-5 line Instagram caption + 8-10 hashtags on new line
+
+[DESCRIPTION]...[/DESCRIPTION]
+  - 3-4 sentence product description (materials, craftsmanship, feeling)
+
+[LISTING]...[/LISTING]
+  - Structured e-commerce listing: Title, bullet specs, closing CTA</div>
+            <div class="doc-section-title" style="margin-top:14px;">API Call Shape</div>
+            <div class="doc-code">claudeAPI({
+  model: 'claude-sonnet-4-20250514',
+  max_tokens: 900,
+  system: sys,  // Marketing agent system prompt with brand voice
+  messages: [{
+    role: 'user',
+    content: mktImgB64
+      ? [
+          { type: 'image', source: { type: 'base64', media_type: mktImgType, data: mktImgB64 } },
+          { type: 'text', text: 'Product details: ' + productStr }
+        ]
+      : [{ type: 'text', text: 'Product details: ' + productStr }]
+  }]
+})</div>
+            <div class="doc-section-title" style="margin-top:14px;">Output Parsing</div>
+            <div class="doc-code">const ig   = text.match(/\[INSTAGRAM\]([\s\S]*?)\[\/INSTAGRAM\]/);
+const desc = text.match(/\[DESCRIPTION\]([\s\S]*?)\[\/DESCRIPTION\]/);
+const list = text.match(/\[LISTING\]([\s\S]*?)\[\/LISTING\]/);</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════ TOOL 5: QUICK ESTIMATE ════════════════ -->
+      <div class="doc-tool" id="doc-est">
+        <div class="doc-toggle" onclick="toggleDoc('doc-est')">
+          <div class="doc-toggle-left">
+            <div class="doc-toggle-ico">💲</div>
+            <div>
+              <div class="doc-toggle-name">Quick Estimate — Pricing Engine</div>
+              <div class="doc-toggle-sub">Calculates Good/Better/Best pricing tiers using metal spot prices, stone costs, labor hours, and margin targets</div>
+            </div>
+          </div>
+          <div class="doc-toggle-arrow">▶</div>
+        </div>
+        <div class="doc-body">
+          <div class="doc-section">
+            <div class="doc-section-title">Data Flow</div>
+            <div class="doc-flow">
+              <div class="doc-flow-step"><div class="doc-flow-box">Upload Image</div><div class="doc-flow-lbl">Optional</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box green">scanEstImage()</div><div class="doc-flow-lbl">Claude vision</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">Auto-fill Form</div><div class="doc-flow-lbl">Parse JSON</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">Calculate Costs</div><div class="doc-flow-lbl">Client-side math</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box green">generateEst()</div><div class="doc-flow-lbl">Claude pricing</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">Display Tiers</div><div class="doc-flow-lbl">3-tier cards</div></div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">How It Works</div>
+            <div class="doc-text">Quick Estimate is a two-phase tool. <strong>Phase 1 (optional):</strong> If the user uploads an image, <code>scanEstImage()</code> sends it to Claude vision to auto-detect piece type, metal, weight, stones, labor complexity — returning a JSON object that auto-fills the form. <strong>Phase 2:</strong> The client calculates base costs (metal at spot price × weight + stone wholesale cost + labor × $75/hr + 10% overhead), then sends these numbers to Claude which generates a summary and three pricing tiers (Good = 10-15% below base, Better = base, Best = 15-25% above with premium upgrades).</div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">Key Functions</div>
+            <div class="doc-fn"><span class="doc-fn-name">handleEstUpload(input)</span> — FileReader → base64 → <code>estImageB64</code>. Auto-triggers <code>scanEstImage()</code> if API access available.</div>
+            <div class="doc-fn"><span class="doc-fn-name">scanEstImage()</span> — Sends image to Claude with detailed jeweler/appraiser system prompt. Returns JSON: <code>{piece_type, metal, metal_weight_g, stone_desc, stone_cost, labor_hours, notes}</code>. Auto-fills form fields.</div>
+            <div class="doc-fn"><span class="doc-fn-name">metalSpot(metal)</span> — Returns approximate USD/gram for metal: 18k=$58, 14k=$45, Platinum=$33, Silver=$0.80.</div>
+            <div class="doc-fn"><span class="doc-fn-name">generateEst()</span> — Calculates base costs client-side, sends to Claude for tiered pricing. Parses <code>[SUMMARY]</code> and <code>[TIERS]</code> blocks.</div>
+          </div>
+
+          <button class="doc-detail-toggle" onclick="toggleDocDetail('doc-est-detail')">Show Code Details</button>
+          <div class="doc-detail" id="doc-est-detail">
+            <div class="doc-section-title">Cost Calculation (Client-Side)</div>
+            <div class="doc-code">const spotPerG   = metalSpot(metal);           // e.g., 58 for 18k gold
+const metalCost  = weight * spotPerG;            // grams × $/gram
+const laborCost  = labor * 75;                   // hours × $75/hr
+const overhead   = (metalCost + stoneCost + laborCost) * 0.10;  // 10%
+const baseCost   = metalCost + stoneCost + laborCost + overhead;
+const retailBase = baseCost / (1 - marginPct);   // e.g., 60% margin → ÷ 0.4
+
+// Spot prices (approx):
+const SPOT = { gold18k: 58, gold14k: 45, platinum: 33, silver: 0.8 };</div>
+            <div class="doc-section-title" style="margin-top:14px;">Image Scan System Prompt (Summary)</div>
+            <div class="doc-code">Role: "Experienced jewelry bench jeweler and appraiser"
+Task: Estimate MANUFACTURING COST (not retail)
+
+Analyzes: piece type, metal (color → karat), weight (band width/thickness),
+  stones (count, size, type, wholesale cost), labor hours, notes
+
+Returns JSON: {
+  piece_type: "Engagement Ring",
+  metal: "18k Yellow Gold",
+  metal_weight_g: 4.5,
+  stone_desc: "1 round diamond ~0.40ct center, 14 pavé ~0.20ct total",
+  stone_cost: 650,
+  labor_hours: 3.5,
+  notes: "Classic solitaire with pavé band"
+}</div>
+            <div class="doc-section-title" style="margin-top:14px;">Output Parsing</div>
+            <div class="doc-code">// generateEst() parses two sections:
+const sumMatch  = text.match(/\[SUMMARY\]([\s\S]*?)\[\/SUMMARY\]/);
+const tierMatch = text.match(/\[TIERS\]([\s\S]*?)\[\/TIERS\]/);
+// [TIERS] contains JSON array:
+// [{tier:"Good", price:NNN, label:"Standard", details:"..."}, ...]</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════ TOOL 6: PHOTO 3D ════════════════ -->
+      <div class="doc-tool" id="doc-p3d">
+        <div class="doc-toggle" onclick="toggleDoc('doc-p3d')">
+          <div class="doc-toggle-left">
+            <div class="doc-toggle-ico">📐</div>
+            <div>
+              <div class="doc-toggle-name">Photo 3D (P3D) — 3D Prototype Planner</div>
+              <div class="doc-toggle-sub">Generates CAD build specifications from jewelry reference photos (Building)</div>
+            </div>
+          </div>
+          <div class="doc-toggle-arrow">▶</div>
+        </div>
+        <div class="doc-body">
+          <div class="doc-section">
+            <div class="doc-section-title">Data Flow</div>
+            <div class="doc-flow">
+              <div class="doc-flow-step"><div class="doc-flow-box">Upload Photo</div><div class="doc-flow-lbl">Reference image</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">Set Specs</div><div class="doc-flow-lbl">Piece, size, seat</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box green">claudeAPI()</div><div class="doc-flow-lbl">Anthropic vision</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box">Parse Specs</div><div class="doc-flow-lbl">Build report</div></div>
+              <div class="doc-flow-arrow">→</div>
+              <div class="doc-flow-step"><div class="doc-flow-box gray">3D File Output</div><div class="doc-flow-lbl">.STL / .3DM</div></div>
+            </div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">How It Works</div>
+            <div class="doc-text">P3D analyzes a reference photo of jewelry and generates detailed CAD build specifications that a jeweler or CAD designer could use to recreate the piece in 3D software. The user uploads a reference photo and specifies piece type, ring size, stone seat requirements, and output format (.STL, .3DM, .OBJ). Claude vision analyzes the image and produces structured geometry descriptions, measurement estimates, and build instructions. <strong>Status: Building</strong> — the 3D file generation pipeline (Rhino.Compute integration) is planned but not yet implemented.</div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">Key Functions</div>
+            <div class="doc-fn"><span class="doc-fn-name">handleP3DUpload(input)</span> — FileReader → base64 → <code>p3dImgB64</code>.</div>
+            <div class="doc-fn"><span class="doc-fn-name">generateP3D()</span> — Sends image + specs to Claude with CAD-oriented system prompt. Produces structured geometry specifications and build instructions.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════ TOOL 7: DASHBOARD ASSISTANT ════════════════ -->
+      <div class="doc-tool" id="doc-dash">
+        <div class="doc-toggle" onclick="toggleDoc('doc-dash')">
+          <div class="doc-toggle-left">
+            <div class="doc-toggle-ico">🤖</div>
+            <div>
+              <div class="doc-toggle-name">Dashboard Assistant</div>
+              <div class="doc-toggle-sub">Natural language interface for studio management — editing folders, uploading files, creating documents (Building)</div>
+            </div>
+          </div>
+          <div class="doc-toggle-arrow">▶</div>
+        </div>
+        <div class="doc-body">
+          <div class="doc-section">
+            <div class="doc-section-title">Planned Architecture</div>
+            <div class="doc-text"><strong>Status: Building.</strong> The Dashboard Assistant will provide a natural language interface for managing the ZipJeweler studio — creating and organizing project folders, uploading and tagging files, generating documents, and performing batch operations. It will connect to the main ZipJeweler platform's API to execute actions on behalf of the user through conversational commands.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════ SHARED: FIDELITY GRADING ════════════════ -->
+      <div class="doc-tool" id="doc-fidelity">
+        <div class="doc-toggle" onclick="toggleDoc('doc-fidelity')">
+          <div class="doc-toggle-left">
+            <div class="doc-toggle-ico">✓</div>
+            <div>
+              <div class="doc-toggle-name">Fidelity Grading (Shared)</div>
+              <div class="doc-toggle-sub">Automated render quality scoring used by S2I and C2R to compare source vs. output</div>
+            </div>
+          </div>
+          <div class="doc-toggle-arrow">▶</div>
+        </div>
+        <div class="doc-body">
+          <div class="doc-section">
+            <div class="doc-section-title">How It Works</div>
+            <div class="doc-text">After S2I or C2R produces a render, <code>gradeFidelity()</code> automatically sends both the original source image and the rendered output to Claude for a side-by-side comparison. Claude scores 6 dimensions (0.0–1.0 each) and returns a pass/fail grade with actionable correction instructions. If the score is below 0.75 or any single dimension is below 0.5, the grade fails and a "Retry with corrections" button appears, pre-filled with Claude's suggested fixes.</div>
+          </div>
+
+          <button class="doc-detail-toggle" onclick="toggleDocDetail('doc-fidelity-detail')">Show Code Details</button>
+          <div class="doc-detail" id="doc-fidelity-detail">
+            <div class="doc-section-title">Scoring Dimensions</div>
+            <div class="doc-code">scores: {
+  silhouette_match:       0.0-1.0,  // Exact outline preserved?
+  proportion_match:       0.0-1.0,  // Width ratios, thickness, taper?
+  stone_layout_match:     0.0-1.0,  // Count, placement, spacing, size?
+  setting_match:          0.0-1.0,  // Setting type preserved?
+  extra_element_penalty:  0.0-1.0,  // 0 = no hallucinations (lower is better)
+  material_accuracy:      0.0-1.0   // Metal color/finish match?
+}
+pass: true if score_total >= 0.75 AND no single score < 0.5
+  (except extra_element_penalty which should be < 0.15)</div>
+            <div class="doc-section-title" style="margin-top:14px;">Output Format</div>
+            <div class="doc-code">// Parsed via: text.match(/\[GRADE\]([\s\S]*?)\[\/GRADE\]/)
+{
+  "score_total": 0.82,
+  "scores": { ... },
+  "pass": true,
+  "failure_modes": ["stone_scale_error"],
+  "correction_instructions": ["Reduce center stone diameter by ~20%"]
+}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════ BACKEND ROUTES DETAIL ════════════════ -->
+      <div class="doc-tool" id="doc-backend">
+        <div class="doc-toggle" onclick="toggleDoc('doc-backend')">
+          <div class="doc-toggle-left">
+            <div class="doc-toggle-ico">⚙</div>
+            <div>
+              <div class="doc-toggle-name">Backend API Routes — Full Reference</div>
+              <div class="doc-toggle-sub">Complete request/response schemas for all server-side proxy endpoints</div>
+            </div>
+          </div>
+          <div class="doc-toggle-arrow">▶</div>
+        </div>
+        <div class="doc-body">
+          <div class="doc-section">
+            <div class="doc-section-title">POST /api/chat — Anthropic Proxy</div>
+            <div class="doc-text">File: <code>app/api/chat/route.js</code></div>
+            <div class="doc-code">// Request: any valid Anthropic Messages API body
+// { model, messages, system, max_tokens, ... }
+// Server injects: x-api-key from process.env.ANTHROPIC_API_KEY
+// Response: proxied Anthropic response (status preserved)
+// CORS: Access-Control-Allow-Origin: *</div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">POST /api/generate-image — OpenAI Responses API</div>
+            <div class="doc-text">File: <code>app/api/generate-image/route.js</code> — Used by C2R and S2I</div>
+            <div class="doc-code">// Request body:
+{
+  prompt: string,              // Required, min 5 chars
+  input_image: string,         // Base64 image (first render)
+  previous_response_id: string,// For multi-turn corrections
+  action: 'edit'|'generate'|'auto',  // Default: 'auto'
+  quality: 'high'|'standard',  // Default: 'high'
+  size: 'auto'|'1024x1024'|..., // Default: 'auto'
+  input_fidelity: 'high'|'low'  // Default: 'high'
+}
+
+// Response:
+{
+  url: 'data:image/png;base64,...',  // Generated image
+  mode: 'responses-api-edit',
+  response_id: 'resp_...',          // For chaining corrections
+  action: 'edit',
+  revised_prompt: string|null
+}
+
+// Backend sends to: POST https://api.openai.com/v1/responses
+// Model: gpt-4.1
+// Auth: Bearer $OPENAI_API_KEY</div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">POST /api/generate-render — OpenAI + Higgsfield Fallback</div>
+            <div class="doc-text">File: <code>app/api/generate-render/route.js</code> — Used by Imagine render</div>
+            <div class="doc-code">// Request body (superset of generate-image):
+{
+  prompt: string,
+  input_image: string,         // Primary image
+  input_image_2: string,       // Additional reference (optional)
+  input_image_3: string,
+  input_image_4: string,
+  mask_image: string,          // Mask for targeted editing
+  previous_response_id: string,
+  action: 'edit'|'generate'|'auto',
+  aspect_ratio: '1:1'|'16:9'|'9:16'|'4:3'|'3:4',
+  quality: 'high'|'standard',
+  size: string,                // Override aspect_ratio
+  input_fidelity: 'high'|'low'
+}
+
+// Aspect ratio → size mapping:
+// '1:1' → '1024x1024', '16:9' → '1536x1024', '9:16' → '1024x1536'
+
+// Fallback chain:
+// 1. Try OpenAI Responses API (same as generate-image)
+// 2. If fails → try Higgsfield FLUX img2img
+// 3. If fails → try Higgsfield FLUX text2image
+// Higgsfield: POST to platform.higgsfield.ai, poll up to 55s for result
+// Auth: Key ${HIGGSFIELD_KEY_ID}:${HIGGSFIELD_KEY_SECRET}</div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">GET /api/config — Key Status</div>
+            <div class="doc-text">File: <code>app/api/config/route.js</code></div>
+            <div class="doc-code">// Response:
+{
+  hasAnthropicKey: boolean,
+  hasOpenAI: boolean,
+  hasHiggsfield: boolean
+}
+// Used by autoDetectKeys() on page load to determine
+// whether to auto-launch tools or prompt for manual key entry</div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title">Environment Variables Required</div>
+            <div class="doc-code">ANTHROPIC_API_KEY     — Anthropic Messages API key (Claude)
+OPENAI_API_KEY        — OpenAI API key (gpt-4.1 Responses API)
+HIGGSFIELD_KEY_ID     — Higgsfield FLUX key ID (fallback)
+HIGGSFIELD_KEY_SECRET — Higgsfield FLUX key secret (fallback)</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <!-- PRESENTATION MODE TOGGLE -->
 
 <!-- FAB -->
@@ -2507,7 +3245,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
 ══════════════════════════════════════════════════════ */
 const PAGES = {
   overview:'s-overview', tools:'s-tools',
-  production:'s-production', business:'s-business', roadmap:'s-roadmap'
+  production:'s-production', business:'s-business', roadmap:'s-roadmap', docs:'s-docs'
 };
 
 // ── ZipJeweler Render Proxy ───────────────────────────────
@@ -2547,6 +3285,18 @@ function go(id) {
   document.querySelectorAll('.nt').forEach(t => { if(t.getAttribute('onclick')?.includes("'"+id+"'")) t.classList.add('on'); });
   const mb = document.getElementById('mbt-'+id); if(mb) mb.classList.add('on');
   window.scrollTo(0,0);
+}
+
+/* ══════════════════════════════════════════════════════
+   DOCS TAB — Toggle Functions
+══════════════════════════════════════════════════════ */
+function toggleDoc(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+function toggleDocDetail(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
 }
 
 /* ══════════════════════════════════════════════════════
