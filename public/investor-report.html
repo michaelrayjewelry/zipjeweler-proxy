@@ -2591,12 +2591,12 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
 
                     <!-- Upload zone -->
                     <div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:8px;">Point Cloud File</div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:8px;">Point Cloud / Image</div>
                       <label for="pcv-file" id="pcv-drop" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1.5px dashed rgba(255,255,255,.1);border-radius:10px;padding:20px 16px;cursor:pointer;transition:border-color .2s;min-height:100px;" onmouseover="this.style.borderColor='rgba(184,150,12,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)'">
                         <div id="pcv-upload-ph" style="text-align:center;">
                           <div style="font-size:24px;margin-bottom:6px;opacity:.4;">☁️</div>
-                          <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#4A4845;line-height:1.6;">Drop a .PLY file here<br><span style="color:#B8960C;font-weight:500;">or click to browse</span></div>
-                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#2E2C28;margin-top:4px;">PLY point cloud format</div>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#4A4845;line-height:1.6;">Drop a .PLY or image here<br><span style="color:#B8960C;font-weight:500;">or click to browse</span></div>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#2E2C28;margin-top:4px;">PLY point cloud &middot; PNG &middot; JPG</div>
                         </div>
                         <div id="pcv-file-info" style="display:none;text-align:center;">
                           <div style="font-size:20px;margin-bottom:4px;">✅</div>
@@ -2604,7 +2604,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                           <div id="pcv-file-stats" style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;margin-top:2px;"></div>
                         </div>
                       </label>
-                      <input id="pcv-file" type="file" accept=".ply" style="display:none;" onchange="handlePCVUpload(this)" />
+                      <input id="pcv-file" type="file" accept=".ply,.png,.jpg,.jpeg" style="display:none;" onchange="handlePCVUpload(this)" />
                     </div>
 
                     <!-- Demo presets -->
@@ -2670,7 +2670,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                   <div id="pcv-loading" style="display:none;position:absolute;inset:0;background:rgba(15,15,13,.85);align-items:center;justify-content:center;">
                     <div style="text-align:center;">
                       <div style="font-size:32px;margin-bottom:8px;animation:spin 1.5s linear infinite;">☁️</div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#5A5650;">Loading point cloud…</div>
+                      <div id="pcv-loading-text" style="font-family:'DM Sans',sans-serif;font-size:11px;color:#5A5650;">Loading point cloud…</div>
                     </div>
                   </div>
                   <!-- Empty state -->
@@ -2678,7 +2678,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                     <div style="text-align:center;max-width:280px;">
                       <div style="font-size:48px;opacity:.3;margin-bottom:12px;">☁️</div>
                       <div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:#5A5650;font-weight:600;margin-bottom:6px;">No Point Cloud Loaded</div>
-                      <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#3A3835;line-height:1.6;">Upload a .PLY file or try a demo preset to view an interactive 3D point cloud.</div>
+                      <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#3A3835;line-height:1.6;">Upload a .PLY file, image (PNG/JPG), or try a demo preset to view an interactive 3D point cloud.</div>
                     </div>
                   </div>
                 </div>
@@ -5044,6 +5044,7 @@ let pcvOpen = false, pcvScene = null, pcvCamera = null, pcvRenderer = null;
 let pcvControls = null, pcvPoints = null, pcvAnimId = null, pcvAxes = null;
 let pcvGlow = true, pcvThreeLoaded = false, pcvTHREE = null;
 let pcvPointCount = 0, pcvFrames = 0, pcvLastFps = 0, pcvFpsTime = 0;
+let pcvImageB64 = null, pcvImageType = 'image/jpeg';
 
 function togglePCV() {
   pcvOpen = !pcvOpen;
@@ -5061,6 +5062,7 @@ function resetPCV() {
   if (pcvPoints && pcvScene) { pcvScene.remove(pcvPoints); pcvPoints = null; }
   if (pcvAxes && pcvScene) { pcvScene.remove(pcvAxes); pcvAxes = null; }
   pcvPointCount = 0;
+  pcvImageB64 = null;
   document.getElementById('pcv-hud-pts').textContent = '0 points';
   document.getElementById('pcv-file').value = '';
   document.getElementById('pcv-upload-ph').style.display = 'block';
@@ -5455,18 +5457,272 @@ function handlePCVUpload(input) {
   document.getElementById('pcv-file-stats').textContent = 'Loading…';
   document.getElementById('pcv-analysis').style.display = 'none';
 
+  const isImage = /\.(png|jpe?g)$/i.test(file.name) || /^image\/(png|jpe?g)$/i.test(file.type);
+
+  if (isImage) {
+    handlePCVImageUpload(file);
+  } else {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = parsePLY(e.target.result);
+        document.getElementById('pcv-file-stats').textContent = data.count.toLocaleString() + ' points · ' + (file.size / 1024).toFixed(0) + ' KB';
+        setPCVPoints(data.positions, data.colors, data.count);
+      } catch(err) {
+        document.getElementById('pcv-file-stats').textContent = 'Error: ' + err.message;
+        document.getElementById('pcv-file-stats').style.color = '#C9534B';
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+}
+
+/* ── Image → Point Cloud conversion ── */
+
+function handlePCVImageUpload(file) {
+  pcvImageType = file.type || 'image/jpeg';
+  const loadingEl = document.getElementById('pcv-loading');
+  const loadingText = document.getElementById('pcv-loading-text');
+  loadingEl.style.display = 'flex';
+  loadingText.textContent = 'Reading image…';
+  document.getElementById('pcv-empty').style.display = 'none';
+
   const reader = new FileReader();
   reader.onload = e => {
-    try {
-      const data = parsePLY(e.target.result);
-      document.getElementById('pcv-file-stats').textContent = data.count.toLocaleString() + ' points · ' + (file.size / 1024).toFixed(0) + ' KB';
-      setPCVPoints(data.positions, data.colors, data.count);
-    } catch(err) {
-      document.getElementById('pcv-file-stats').textContent = 'Error: ' + err.message;
+    const dataUrl = e.target.result;
+    pcvImageB64 = dataUrl.split(',')[1];
+
+    const img = new Image();
+    img.onload = () => {
+      loadingText.textContent = 'Analyzing image with AI…';
+      convertImageToPointCloud(img, file);
+    };
+    img.onerror = () => {
+      loadingEl.style.display = 'none';
+      document.getElementById('pcv-file-stats').textContent = 'Error: could not load image';
       document.getElementById('pcv-file-stats').style.color = '#C9534B';
-    }
+    };
+    img.src = dataUrl;
   };
-  reader.readAsArrayBuffer(file);
+  reader.readAsDataURL(file);
+}
+
+async function convertImageToPointCloud(img, file) {
+  const loadingEl = document.getElementById('pcv-loading');
+  const loadingText = document.getElementById('pcv-loading-text');
+
+  // Draw image to offscreen canvas
+  const maxDim = 512;
+  let w = img.width, h = img.height;
+  if (w > maxDim || h > maxDim) {
+    const scale = maxDim / Math.max(w, h);
+    w = Math.round(w * scale);
+    h = Math.round(h * scale);
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, w, h);
+  const imageData = ctx.getImageData(0, 0, w, h);
+  const pixels = imageData.data;
+
+  // Try AI depth analysis first, fall back to luminance-based
+  let depthMap = null;
+  try {
+    if (anthropicKey || useServerKeys) {
+      loadingText.textContent = 'AI analyzing depth & structure…';
+      depthMap = await aiDepthAnalysis(w, h, pixels);
+    }
+  } catch(e) { /* fall back to luminance */ }
+
+  loadingText.textContent = 'Generating point cloud…';
+  await new Promise(r => setTimeout(r, 50)); // allow UI update
+
+  // Determine sampling density — target ~60-80k points
+  const totalPixels = w * h;
+  const targetPoints = Math.min(80000, totalPixels);
+  const sampleRate = targetPoints / totalPixels;
+
+  // Separate foreground from background using alpha + luminance threshold
+  const positions = [];
+  const colors = [];
+  let pointCount = 0;
+
+  // Normalize coordinates to roughly [-2, 2] range centered at origin
+  const scaleX = 4.0 / w;
+  const scaleY = 4.0 / h;
+  const depthScale = 1.2;
+  const aspect = w / h;
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      // Stochastic sampling
+      if (Math.random() > sampleRate) continue;
+
+      const idx = (y * w + x) * 4;
+      const r = pixels[idx] / 255;
+      const g = pixels[idx + 1] / 255;
+      const b = pixels[idx + 2] / 255;
+      const a = pixels[idx + 3] / 255;
+
+      // Skip fully transparent or near-white background pixels
+      if (a < 0.1) continue;
+      const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+      // Skip very bright, low-saturation pixels (likely white background)
+      const maxC = Math.max(r, g, b), minC = Math.min(r, g, b);
+      const sat = maxC > 0 ? (maxC - minC) / maxC : 0;
+      if (lum > 0.92 && sat < 0.08) continue;
+
+      // 3D position: X from pixel x, Y from pixel y (inverted), Z from depth
+      const px = (x - w / 2) * scaleX * aspect;
+      const py = -(y - h / 2) * scaleY;
+      let pz;
+
+      if (depthMap) {
+        pz = depthMap[y * w + x] * depthScale;
+      } else {
+        // Luminance-based depth: brighter areas protrude more (good for jewelry)
+        // Edge detection adds displacement for surface detail
+        const edgeStrength = getEdgeStrength(pixels, x, y, w, h);
+        pz = (lum * 0.8 + edgeStrength * 0.4) * depthScale;
+
+        // Add subtle noise for organic feel
+        pz += (Math.random() - 0.5) * 0.04;
+      }
+
+      positions.push(px, py, pz);
+
+      // Slight color boost for the point cloud
+      const boost = 1.05;
+      colors.push(
+        Math.min(1.0, r * boost),
+        Math.min(1.0, g * boost),
+        Math.min(1.0, b * boost)
+      );
+      pointCount++;
+    }
+  }
+
+  loadingEl.style.display = 'none';
+
+  if (pointCount === 0) {
+    document.getElementById('pcv-file-stats').textContent = 'No visible points found in image';
+    document.getElementById('pcv-file-stats').style.color = '#C9534B';
+    return;
+  }
+
+  const posF32 = new Float32Array(positions);
+  const colF32 = new Float32Array(colors);
+  document.getElementById('pcv-file-stats').textContent = pointCount.toLocaleString() + ' points · from image · ' + w + '×' + h + 'px';
+  document.getElementById('pcv-file-stats').style.color = '';
+  setPCVPoints(posF32, colF32, pointCount);
+}
+
+function getEdgeStrength(pixels, x, y, w, h) {
+  if (x <= 0 || x >= w - 1 || y <= 0 || y >= h - 1) return 0;
+  // Sobel-like edge detection using luminance
+  const lum = (px, py) => {
+    const i = (py * w + px) * 4;
+    return 0.299 * pixels[i] / 255 + 0.587 * pixels[i+1] / 255 + 0.114 * pixels[i+2] / 255;
+  };
+  const gx = -lum(x-1,y-1) - 2*lum(x-1,y) - lum(x-1,y+1) + lum(x+1,y-1) + 2*lum(x+1,y) + lum(x+1,y+1);
+  const gy = -lum(x-1,y-1) - 2*lum(x,y-1) - lum(x+1,y-1) + lum(x-1,y+1) + 2*lum(x,y+1) + lum(x+1,y+1);
+  return Math.min(1.0, Math.sqrt(gx * gx + gy * gy));
+}
+
+async function aiDepthAnalysis(w, h, pixels) {
+  // Ask Claude to analyze the image and return a simplified depth description
+  // which we convert into a depth map
+  const res = await claudeAPI({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 800,
+    system: `You are a 3D depth estimation assistant for jewelry images. Analyze the jewelry image and describe the depth structure so it can be converted to a 3D point cloud.
+
+Return ONLY this JSON (no other text):
+[DEPTH]{"shape":"ring|pendant|bracelet|earring|brooch|necklace|watch|other","orientation":"front|side|top|angled","depth_zones":[{"region":"description","depth":0.0}],"center_protrusion":0.0,"edge_falloff":0.0,"has_gemstone":false,"gemstone_protrusion":0.0,"symmetry":"radial|bilateral|asymmetric","surface_detail":"smooth|textured|faceted|mixed"}[/DEPTH]
+
+depth values: 0.0 = flat background, 1.0 = maximum protrusion toward viewer.
+center_protrusion: how much the center of the piece sticks out (0-1).
+edge_falloff: how sharply the edges drop off (0=gradual, 1=sharp).
+gemstone_protrusion: extra depth for gemstone areas (0-1).`,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: pcvImageType, data: pcvImageB64 } },
+        { type: 'text', text: 'Analyze this jewelry image for 3D depth estimation. Return the depth JSON.' }
+      ]
+    }]
+  });
+
+  if (!res.ok) throw new Error('AI depth analysis failed');
+  const data = await res.json();
+  const text = data.content?.[0]?.text || '';
+  const match = text.match(/\[DEPTH\]([\s\S]*?)\[\/DEPTH\]/);
+  if (!match) throw new Error('No depth data');
+
+  const depth = JSON.parse(match[1].trim());
+  return generateDepthMap(w, h, pixels, depth);
+}
+
+function generateDepthMap(w, h, pixels, depthInfo) {
+  const map = new Float32Array(w * h);
+  const cx = w / 2, cy = h / 2;
+  const maxR = Math.sqrt(cx * cx + cy * cy);
+
+  const centerPro = depthInfo.center_protrusion || 0.5;
+  const edgeFall = depthInfo.edge_falloff || 0.3;
+  const gemPro = depthInfo.gemstone_protrusion || 0;
+  const isRadial = depthInfo.symmetry === 'radial';
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const idx = (y * w + x) * 4;
+      const r = pixels[idx] / 255;
+      const g = pixels[idx + 1] / 255;
+      const b = pixels[idx + 2] / 255;
+      const a = pixels[idx + 3] / 255;
+      const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+
+      // Distance from center (normalized 0-1)
+      const dx = (x - cx) / cx;
+      const dy = (y - cy) / cy;
+      const distFromCenter = isRadial
+        ? Math.sqrt(dx * dx + dy * dy)
+        : Math.abs(dx) * 0.6 + Math.abs(dy) * 0.4;
+      const normalizedDist = Math.min(1.0, distFromCenter);
+
+      // Base depth: center is highest, falls off toward edges
+      let d = centerPro * (1.0 - Math.pow(normalizedDist, 1.0 + edgeFall * 2));
+
+      // Luminance contribution: brighter areas protrude
+      d += lum * 0.3;
+
+      // Saturation-weighted: saturated colors (gems, colored metals) get extra depth
+      const maxC = Math.max(r, g, b), minC = Math.min(r, g, b);
+      const sat = maxC > 0 ? (maxC - minC) / maxC : 0;
+      if (sat > 0.3 && gemPro > 0) {
+        d += gemPro * sat * 0.5;
+      }
+
+      // Surface detail from local contrast (Sobel edge)
+      if (x > 0 && x < w - 1 && y > 0 && y < h - 1) {
+        const lumAt = (px, py) => {
+          const i = (py * w + px) * 4;
+          return 0.299 * pixels[i] / 255 + 0.587 * pixels[i+1] / 255 + 0.114 * pixels[i+2] / 255;
+        };
+        const gx = -lumAt(x-1,y-1) - 2*lumAt(x-1,y) - lumAt(x-1,y+1) + lumAt(x+1,y-1) + 2*lumAt(x+1,y) + lumAt(x+1,y+1);
+        const gy = -lumAt(x-1,y-1) - 2*lumAt(x,y-1) - lumAt(x+1,y-1) + lumAt(x-1,y+1) + 2*lumAt(x,y+1) + lumAt(x+1,y+1);
+        d += Math.min(0.15, Math.sqrt(gx * gx + gy * gy) * 0.2);
+      }
+
+      // Transparency falloff
+      d *= a;
+
+      map[y * w + x] = Math.max(0, Math.min(1.0, d));
+    }
+  }
+
+  return map;
 }
 
 /* ── Display controls ── */
@@ -5546,20 +5802,31 @@ async function analyzePCV() {
   }
 
   try {
+    const statsText = 'Analyze this point cloud scan:\n\nPoint count: ' + stats.points.toLocaleString()
+      + '\nBounding box: ' + stats.bounds.x + ' × ' + stats.bounds.y + ' × ' + stats.bounds.z + ' units'
+      + '\nCenter: (' + stats.center.x + ', ' + stats.center.y + ', ' + stats.center.z + ')'
+      + (pcvImageB64 ? '\nSource: converted from uploaded image (depth estimated from luminance + AI analysis)' : '')
+      + '\n\nProvide a brief quality/production-readiness assessment for this jewelry scan.';
+
+    const userContent = pcvImageB64
+      ? [
+          { type: 'image', source: { type: 'base64', media_type: pcvImageType, data: pcvImageB64 } },
+          { type: 'text', text: statsText + '\n\nThe original source image is attached. Include observations about the jewelry piece visible in the image and how well the point cloud captures its features.' }
+        ]
+      : statsText;
+
     const resp = await claudeAPI({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 500,
-      system: 'You are ZipJeweler\'s 3D scan analysis assistant. Analyze point cloud metadata and provide a brief quality assessment for jewelry production. Keep it concise — 3-4 short bullet points. Use jewelry-specific terminology (prong, shank, pavilion, girdle, etc). Assess scan density, dimensional ratios, and production readiness.',
+      system: 'You are ZipJeweler\'s 3D scan analysis assistant. Analyze point cloud metadata and provide a brief quality assessment for jewelry production. Keep it concise — 3-4 short bullet points. Use jewelry-specific terminology (prong, shank, pavilion, girdle, etc). Assess scan density, dimensional ratios, and production readiness. If the user includes a source image, also comment on the piece design and how well the point cloud represents it.',
       messages: [{
         role: 'user',
-        content: 'Analyze this point cloud scan:\n\nPoint count: ' + stats.points.toLocaleString()
-          + '\nBounding box: ' + stats.bounds.x + ' × ' + stats.bounds.y + ' × ' + stats.bounds.z + ' units'
-          + '\nCenter: (' + stats.center.x + ', ' + stats.center.y + ', ' + stats.center.z + ')'
-          + '\n\nProvide a brief quality/production-readiness assessment for this jewelry scan.'
+        content: userContent
       }]
     });
 
-    const content = resp.content ? resp.content[0].text : (resp.choices ? resp.choices[0].message.content : '');
+    const data = await resp.json();
+    const content = data.content?.[0]?.text || '';
     txt.innerHTML = content.replace(/\n/g, '<br>').replace(/•/g, '<span style="color:#B8960C;">•</span>').replace(/\*\*(.+?)\*\*/g, '<strong style="color:#E8E4DD;">$1</strong>');
   } catch(e) {
     txt.innerHTML = '<span style="color:#C9534B;">Analysis unavailable — connect an API key via the Imagine tool first.</span>';
