@@ -21,78 +21,75 @@ export async function POST(request) {
     'Access-Control-Allow-Headers': 'Content-Type',
   };
 
-  try {
-    let body;
-    try { body = await request.json(); } catch { body = {}; }
+  let body;
+  try { body = await request.json(); } catch { body = {}; }
 
-    const {
-      prompt,
-      input_image,              // base64 image (sketch or reference)
-      input_image_2,            // additional reference images
-      input_image_3,
-      input_image_4,
-      mask_image,               // mask for targeted editing
-      previous_response_id,     // for multi-turn corrections
-      action = 'auto',          // "edit" = force edit, "generate" = new image, "auto" = model decides
-      aspect_ratio = '1:1',
-      quality = 'high',
-      size,                     // if provided, use directly; otherwise derive from aspect_ratio
-      input_fidelity = 'high',
-    } = body;
+  const {
+    prompt,
+    input_image,              // base64 image (sketch or reference)
+    input_image_2,            // additional reference images
+    input_image_3,
+    input_image_4,
+    mask_image,               // mask for targeted editing
+    previous_response_id,     // for multi-turn corrections
+    action = 'auto',          // "edit" = force edit, "generate" = new image, "auto" = model decides
+    aspect_ratio = '1:1',
+    quality = 'high',
+    size,                     // if provided, use directly; otherwise derive from aspect_ratio
+    input_fidelity = 'high',
+  } = body;
 
-    if (!prompt || prompt.trim().length < 5) {
-      return Response.json({ error: 'prompt is required' }, { status: 400, headers: corsHeaders });
-    }
+  if (!prompt || prompt.trim().length < 5) {
+    return Response.json({ error: 'prompt is required' }, { status: 400, headers: corsHeaders });
+  }
 
-    const hasInputImage = input_image && input_image.length > 100;
+  const hasInputImage = input_image && input_image.length > 100;
 
-    // Try OpenAI Responses API first, then Higgsfield fallback
-    const openaiKey = process.env.OPENAI_API_KEY;
-    if (openaiKey) {
-      try {
-        const result = await responsesGenerate({
-          openaiKey,
-          prompt: prompt.trim(),
-          hasInputImage,
-          input_image,
-          input_image_2,
-          input_image_3,
-          input_image_4,
-          mask_image,
-          previous_response_id,
-          action,
-          aspect_ratio,
-          quality,
-          size,
-          input_fidelity,
-        });
-        return Response.json(result, { headers: corsHeaders });
-      } catch (e) {
-        console.error('Responses API error:', e.message);
-        // Fall through to Higgsfield
-      }
-    }
-
-    // Higgsfield fallback
-    const keyId     = process.env.HIGGSFIELD_KEY_ID;
-    const keySecret = process.env.HIGGSFIELD_KEY_SECRET;
-    if (!keyId || !keySecret) {
-      return Response.json({ error: 'No image generation API keys configured. Set OPENAI_API_KEY or HIGGSFIELD_KEY_ID + HIGGSFIELD_KEY_SECRET.' }, { status: 500, headers: corsHeaders });
-    }
-
+  // Try OpenAI Responses API first, then Higgsfield fallback
+  const openaiKey = process.env.OPENAI_API_KEY;
+  let openaiError = null;
+  if (openaiKey) {
     try {
-      const result = await higgsGenerate({ keyId, keySecret, prompt: prompt.trim(), hasInputImage, input_image, aspect_ratio });
+      const result = await responsesGenerate({
+        openaiKey,
+        prompt: prompt.trim(),
+        hasInputImage,
+        input_image,
+        input_image_2,
+        input_image_3,
+        input_image_4,
+        mask_image,
+        previous_response_id,
+        action,
+        aspect_ratio,
+        quality,
+        size,
+        input_fidelity,
+      });
       return Response.json(result, { headers: corsHeaders });
     } catch (e) {
-      return Response.json({ error: e.message }, { status: 500, headers: corsHeaders });
+      console.error('Responses API error:', e.message);
+      openaiError = e.message;
+      // Fall through to Higgsfield
     }
+  }
 
-  } catch (topLevelError) {
-    console.error('generate-render top-level error:', topLevelError);
-    return Response.json(
-      { error: topLevelError.message || 'Internal server error' },
-      { status: 500, headers: corsHeaders }
-    );
+  // Higgsfield fallback
+  const keyId     = process.env.HIGGSFIELD_KEY_ID;
+  const keySecret = process.env.HIGGSFIELD_KEY_SECRET;
+  if (!keyId || !keySecret) {
+    // Surface the actual OpenAI error if it was attempted
+    const detail = openaiError
+      ? 'OpenAI error: ' + openaiError
+      : 'No image generation API keys configured. Set OPENAI_API_KEY or HIGGSFIELD_KEY_ID + HIGGSFIELD_KEY_SECRET.';
+    return Response.json({ error: detail }, { status: 500, headers: corsHeaders });
+  }
+
+  try {
+    const result = await higgsGenerate({ keyId, keySecret, prompt: prompt.trim(), hasInputImage, input_image, aspect_ratio });
+    return Response.json(result, { headers: corsHeaders });
+  } catch (e) {
+    return Response.json({ error: e.message }, { status: 500, headers: corsHeaders });
   }
 }
 
@@ -119,14 +116,20 @@ async function responsesGenerate({ openaiKey, prompt, hasInputImage, input_image
     resolvedSize = sizeMap[aspect_ratio] || 'auto';
   }
 
+  // Helper: wrap raw base64 as a data URL, auto-detecting JPEG vs PNG
+  function toDataUrl(b64str) {
+    if (b64str.startsWith('data:')) return b64str;
+    // JPEG starts with /9j in base64, PNG starts with iVBOR
+    const mime = b64str.startsWith('/9j') ? 'image/jpeg' : 'image/png';
+    return `data:${mime};base64,${b64str}`;
+  }
+
   // Build input content
   let input;
 
   if (previous_response_id && mask_image) {
     // Multi-turn with mask: send mask image + descriptive prompt
-    const maskDataUrl = mask_image.startsWith('data:')
-      ? mask_image
-      : `data:image/png;base64,${mask_image}`;
+    const maskDataUrl = toDataUrl(mask_image);
     const maskPrompt = prompt + '\n\nThe attached image is an editing mask. White regions indicate areas to modify. Black regions must be preserved exactly as they are in the previous image.';
     input = [{
       role: 'user',
@@ -140,10 +143,7 @@ async function responsesGenerate({ openaiKey, prompt, hasInputImage, input_image
     const content = [];
     function addRefImage(b64str) {
       if (!b64str || b64str.length < 100) return;
-      const dataUrl = b64str.startsWith('data:')
-        ? b64str
-        : `data:image/png;base64,${b64str}`;
-      content.push({ type: 'input_image', image_url: dataUrl });
+      content.push({ type: 'input_image', image_url: toDataUrl(b64str) });
     }
     if (input_image_2) addRefImage(input_image_2);
     if (input_image_3) addRefImage(input_image_3);
@@ -160,10 +160,7 @@ async function responsesGenerate({ openaiKey, prompt, hasInputImage, input_image
     // Helper to add an image to content
     function addImage(b64str) {
       if (!b64str || b64str.length < 100) return;
-      const dataUrl = b64str.startsWith('data:')
-        ? b64str
-        : `data:image/png;base64,${b64str}`;
-      content.push({ type: 'input_image', image_url: dataUrl });
+      content.push({ type: 'input_image', image_url: toDataUrl(b64str) });
     }
 
     addImage(input_image);
