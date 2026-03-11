@@ -6624,7 +6624,133 @@ function removeBlendZone(idx) {
   }
 }
 
-/* ── AI-powered blend generation ── */
+/* ── AI-powered blend generation (v2 — full-image context + edit API) ── */
+
+// Build an annotated version of a source image with mask overlay + labels
+function buildAnnotatedImage(slotIdx) {
+  const slot = blendSlots[slotIdx];
+  if (!slot) return null;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = slot.w;
+  canvas.height = slot.h;
+  const ctx = canvas.getContext('2d');
+
+  // Draw original image
+  ctx.drawImage(slot.img, 0, 0, slot.w, slot.h);
+
+  // Overlay saved zones for this slot with distinct colors and labels
+  const slotZones = blendZones.filter(z => z.slotIdx === slotIdx);
+  slotZones.forEach((z, i) => {
+    // Draw mask overlay
+    const maskImg = new Image();
+    maskImg.src = z.maskDataUrl;
+    ctx.globalAlpha = 0.5;
+    ctx.drawImage(maskImg, 0, 0);
+    ctx.globalAlpha = 1.0;
+
+    // Find mask centroid for label placement
+    const maskCtx2 = document.createElement('canvas');
+    maskCtx2.width = slot.w; maskCtx2.height = slot.h;
+    const mctx = maskCtx2.getContext('2d');
+    mctx.drawImage(maskImg, 0, 0);
+    const mdata = mctx.getImageData(0, 0, slot.w, slot.h).data;
+    let sumX = 0, sumY = 0, count = 0;
+    for (let y = 0; y < slot.h; y++) {
+      for (let x = 0; x < slot.w; x++) {
+        if (mdata[(y * slot.w + x) * 4 + 3] > 20) { sumX += x; sumY += y; count++; }
+      }
+    }
+    if (count > 0) {
+      const cx = sumX / count, cy = sumY / count;
+      // Draw label at centroid
+      ctx.font = 'bold 12px DM Sans, sans-serif';
+      const text = z.labelDisplay;
+      const tw = ctx.measureText(text).width;
+      ctx.fillStyle = 'rgba(0,0,0,.75)';
+      ctx.fillRect(cx - tw/2 - 6, cy - 9, tw + 12, 20);
+      ctx.fillStyle = '#fff';
+      ctx.fillText(text, cx - tw/2, cy + 4);
+    }
+  });
+
+  return canvas.toDataURL('image/png').split(',')[1];
+}
+
+// Analyze a zone using the FULL source image + mask overlay (not just crop)
+async function analyzeBlendZoneInContext(zone) {
+  const slot = blendSlots[zone.slotIdx];
+  if (!slot) return 'Unable to analyze — image not loaded';
+
+  // Build image with just this zone's mask highlighted
+  const canvas = document.createElement('canvas');
+  canvas.width = slot.w; canvas.height = slot.h;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(slot.img, 0, 0, slot.w, slot.h);
+
+  // Draw this zone's mask
+  const maskImg = new Image();
+  maskImg.src = zone.maskDataUrl;
+  ctx.globalAlpha = 0.45;
+  ctx.drawImage(maskImg, 0, 0);
+  ctx.globalAlpha = 1.0;
+
+  // Draw border around masked area
+  const mTemp = document.createElement('canvas');
+  mTemp.width = slot.w; mTemp.height = slot.h;
+  const mCtx = mTemp.getContext('2d');
+  mCtx.drawImage(maskImg, 0, 0);
+  const mData = mCtx.getImageData(0, 0, slot.w, slot.h).data;
+
+  // Simple border: stroke where mask alpha transitions
+  ctx.strokeStyle = '#FFD700';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let y = 1; y < slot.h - 1; y++) {
+    for (let x = 1; x < slot.w - 1; x++) {
+      const a = mData[(y * slot.w + x) * 4 + 3];
+      if (a > 20) {
+        const aUp = mData[((y-1) * slot.w + x) * 4 + 3];
+        const aDown = mData[((y+1) * slot.w + x) * 4 + 3];
+        const aLeft = mData[(y * slot.w + (x-1)) * 4 + 3];
+        const aRight = mData[(y * slot.w + (x+1)) * 4 + 3];
+        if (aUp < 20 || aDown < 20 || aLeft < 20 || aRight < 20) {
+          ctx.rect(x, y, 1, 1);
+        }
+      }
+    }
+  }
+  ctx.stroke();
+
+  const annotatedB64 = canvas.toDataURL('image/png').split(',')[1];
+
+  const res = await claudeAPI({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 400,
+    system: `You are a master jewelry design analyst. You will see a jewelry image with a highlighted zone (colored overlay with gold border).
+
+Describe the design element in the highlighted zone IN CONTEXT of the full piece. Include:
+- What part of the jewelry this is (head, shank, gallery, prong, bail, etc.)
+- Exact visual details: shape, curvature, proportions, symmetry
+- Style references: art deco, vintage, cathedral, trellis, knife-edge, split-shank, etc.
+- Construction details: number of prongs, stone count/arrangement, metalwork pattern
+- Surface characteristics: polish, texture, milgrain, filigree, pave, channel-set
+- How this element relates to the rest of the piece (proportional relationship)
+
+Be extremely specific and visual. This description will be used to recreate this exact element in a NEW hybrid design. 3-4 dense sentences. No labels or preamble.`,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: 'image/png', data: annotatedB64 } },
+        { type: 'text', text: 'The highlighted zone (colored overlay with gold border) is labeled "' + zone.labelDisplay + '" (feature: ' + zone.label + '). Describe this specific element in vivid detail, in context of the whole piece.' }
+      ]
+    }]
+  });
+
+  if (!res.ok) throw new Error('Zone analysis failed (HTTP ' + res.status + ')');
+  const data = await res.json();
+  return data.content?.[0]?.text || 'Unable to analyze zone';
+}
 
 async function generateBlend() {
   if (blendBusy) return;
@@ -6643,20 +6769,17 @@ async function generateBlend() {
   document.getElementById('blend-idle').style.display = 'none';
   document.getElementById('blend-result').style.display = 'none';
   document.getElementById('blend-spinner').style.display = 'flex';
-  document.getElementById('blend-spinner-text').textContent = 'Analyzing marked zones…';
   document.getElementById('blend-gen-btn').style.opacity = '.5';
 
   try {
-    // Step 1: Analyze each zone with Claude vision
-    document.getElementById('blend-spinner-text').textContent = 'AI analyzing ' + blendZones.length + ' zones…';
-
+    // ── Step 1: Analyze each zone in full-image context ──
     const zoneDescriptions = [];
     for (let i = 0; i < blendZones.length; i++) {
       const z = blendZones[i];
       document.getElementById('blend-spinner-text').textContent =
-        'Analyzing zone ' + (i + 1) + '/' + blendZones.length + ': ' + z.labelDisplay + '…';
+        'Analyzing zone ' + (i + 1) + '/' + blendZones.length + ': ' + z.labelDisplay + ' (Image ' + (z.slotIdx+1) + ')…';
 
-      const desc = await analyzeBlendZone(z);
+      const desc = await analyzeBlendZoneInContext(z);
       z.featureDesc = desc;
       zoneDescriptions.push({
         label: z.labelDisplay,
@@ -6666,28 +6789,48 @@ async function generateBlend() {
       });
     }
 
-    // Step 1.5: Update spec with AI-analyzed zone descriptions
-    document.getElementById('blend-spinner-text').textContent = 'Updating project spec…';
+    // ── Step 2: Update spec with analyzed descriptions ──
+    document.getElementById('blend-spinner-text').textContent = 'Building project spec…';
     autoPopulateSpecFromZones();
 
-    // Step 2: Generate blended design description
-    document.getElementById('blend-spinner-text').textContent = 'Creating blended design concept…';
+    // ── Step 3: Build hybrid design prompt via Claude ──
+    document.getElementById('blend-spinner-text').textContent = 'Designing hybrid concept…';
 
-    const blendPrompt = buildBlendPrompt(zoneDescriptions);
+    // Determine base image (most zones = primary reference)
+    const slotCounts = [0,0,0,0];
+    blendZones.forEach(z => slotCounts[z.slotIdx]++);
+    const baseSlotIdx = slotCounts.indexOf(Math.max(...slotCounts.filter((_, i) => blendSlots[i])));
+    const baseSlot = blendSlots[baseSlotIdx];
 
-    // Step 3: Generate the render
+    // Build annotated reference images for Claude to see
+    const annotatedImages = [];
+    const usedSlots = [...new Set(blendZones.map(z => z.slotIdx))];
+    for (const si of usedSlots) {
+      const annotB64 = buildAnnotatedImage(si);
+      if (annotB64) {
+        annotatedImages.push({ slotIdx: si, b64: annotB64, isBase: si === baseSlotIdx });
+      }
+    }
+
+    // Ask Claude to build the hybrid design prompt — show it ALL annotated images
+    const hybridResult = await buildHybridPrompt(annotatedImages, zoneDescriptions, baseSlotIdx);
+
+    // ── Step 4: Generate via edit API with base image ──
     document.getElementById('blend-spinner-text').textContent = 'Generating blended render…';
 
-    const renderResult = await generateBlendRender(blendPrompt, zoneDescriptions);
+    const renderResult = await executeBlendRender(baseSlot, hybridResult, zoneDescriptions);
 
-    // Show result
+    // ── Show result ──
     document.getElementById('blend-spinner').style.display = 'none';
     document.getElementById('blend-result').style.display = 'flex';
 
     if (renderResult.imageUrl) {
       document.getElementById('blend-render-img').src = renderResult.imageUrl;
+      document.getElementById('blend-render-wrap').style.display = 'block';
+    } else {
+      document.getElementById('blend-render-wrap').style.display = 'none';
     }
-    document.getElementById('blend-description').innerHTML = renderResult.description || '';
+    document.getElementById('blend-description').innerHTML = renderResult.descriptionHtml;
 
   } catch(e) {
     document.getElementById('blend-spinner').style.display = 'none';
@@ -6699,89 +6842,81 @@ async function generateBlend() {
   document.getElementById('blend-gen-btn').style.opacity = '1';
 }
 
-async function analyzeBlendZone(zone) {
-  const res = await claudeAPI({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 300,
-    system: `You are a jewelry design analyst. You will see a jewelry image with a highlighted/masked region. Describe ONLY the design element in the highlighted area in precise jewelry terminology.
+// Claude sees all annotated images and builds a structured edit prompt
+async function buildHybridPrompt(annotatedImages, zoneDescs, baseSlotIdx) {
+  const userContent = [];
 
-Focus on: shape, proportions, style (art deco, vintage, modern, etc.), structural details, number of prongs, stone arrangement pattern, metalwork texture, curvature, thickness.
-
-Be specific and visual — your description will be used to recreate this exact element in a new design.
-Output 2-3 sentences of dense visual description. No labels or preamble.`,
-    messages: [{
-      role: 'user',
-      content: [
-        { type: 'image', source: { type: 'base64', media_type: 'image/png', data: zone.cropB64 } },
-        { type: 'text', text: 'This is a masked region from a jewelry image. The highlighted zone is labeled as "' + zone.labelDisplay + '" (feature type: ' + zone.label + '). Describe this specific design element in detail.' }
-      ]
-    }]
+  // Send each annotated image
+  annotatedImages.forEach(ai => {
+    userContent.push({
+      type: 'image',
+      source: { type: 'base64', media_type: 'image/png', data: ai.b64 }
+    });
+    const label = ai.isBase ? 'Image ' + (ai.slotIdx+1) + ' (BASE — this will be edited)' : 'Image ' + (ai.slotIdx+1) + ' (reference)';
+    userContent.push({ type: 'text', text: label });
   });
 
-  if (!res.ok) throw new Error('Zone analysis failed (HTTP ' + res.status + ')');
-  const data = await res.json();
-  return data.content?.[0]?.text || 'Unable to analyze zone';
-}
+  // Zone descriptions
+  let zoneText = '\n\nZONE DESCRIPTIONS (from the colored overlays above):\n\n';
+  zoneDescs.forEach((z, i) => {
+    zoneText += (i+1) + '. ' + z.label.toUpperCase() + ' from Image ' + z.imageNum + ':\n' + z.description + '\n\n';
+  });
 
-function buildBlendPrompt(zoneDescs) {
-  let prompt = '';
-
-  // Include project spec as context
+  // Spec context
   const specEntries = Object.entries(blendSpecValues).filter(([k, v]) => v);
   if (specEntries.length > 0) {
-    prompt += 'PROJECT SPEC:\n';
+    zoneText += 'PROJECT SPEC:\n';
     specEntries.forEach(([k, v]) => {
       const field = BLEND_SPEC_FIELDS.find(f => f.k === k);
-      prompt += '  ' + (field ? field.l : k) + ': ' + v + '\n';
+      zoneText += '  ' + (field ? field.l : k) + ': ' + v + '\n';
     });
-    prompt += '\n';
   }
 
-  prompt += 'DESIGN ELEMENTS TO COMBINE:\n\n';
-  zoneDescs.forEach((z, i) => {
-    prompt += (i + 1) + '. ' + z.label.toUpperCase() + ' (from Image ' + z.imageNum + '): ' + z.description + '\n\n';
-  });
-  prompt += 'Create a single cohesive jewelry piece that fuses all these elements. ';
-  prompt += 'The spec fields above define the base piece — the zone descriptions specify exactly which design elements to incorporate from each reference. ';
-  prompt += 'Maintain the exact style, proportions, and character of each referenced element while ensuring they flow together naturally.';
-  return prompt;
-}
+  zoneText += '\nImage ' + (baseSlotIdx+1) + ' is the BASE that will be edited. Other images are references whose marked elements should be incorporated.\n';
+  zoneText += 'Build the edit prompt and design brief now.';
+  userContent.push({ type: 'text', text: zoneText });
 
-async function generateBlendRender(blendPrompt, zoneDescs) {
-  // Build a description using Claude
-  const descRes = await claudeAPI({
+  const res = await claudeAPI({
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 900,
-    system: `You are ZipJeweler's design fusion engine. Given a project spec and descriptions of design elements from multiple jewelry references, produce three things:
+    max_tokens: 1200,
+    system: `You are ZipJeweler's hybrid jewelry designer. You will see multiple annotated jewelry images with colored zones highlighting design elements the user likes. One image is marked as the BASE (it will be edited). Others are REFERENCES.
 
-1. A rich FLUX image generation prompt (2-4 sentences) that describes the blended jewelry piece in vivid visual detail. Lead with the most distinctive feature. Include metal color, finish, stone specifics, and photography direction.
+Your job: write a precise image-editing prompt that starts from the BASE image and modifies specific areas to incorporate elements from the reference images.
 
-2. A brief client-facing description of the blended design concept (2-3 sentences).
+CRITICAL RULES:
+1. The edit prompt must be specific about WHAT to change and WHAT to keep
+2. Reference the BASE image's existing structure — "keep the overall ring shape but replace the head/setting with..."
+3. Each incorporated element must be described in vivid visual detail from the zone analysis
+4. Include metal color, finish, and lighting instructions
+5. The prompt should produce a photorealistic jewelry product photo
+6. If zones come from the same image as the base, describe how to enhance/preserve those specific areas
 
-3. A spec update filling any missing project spec fields you can infer from the design. Only include fields you can confidently determine.
+Output this exact format:
+[EDIT_PROMPT]
+Your detailed edit prompt here — this goes directly to the image generation model.
+Write it as a direct instruction: "Edit this jewelry image. Keep [X]. Replace/modify [Y] to have [Z details from reference]..."
+2-5 sentences, dense with visual specifics.
+[/EDIT_PROMPT]
 
-Output format:
-[PROMPT]Your FLUX image prompt here[/PROMPT]
-[DESCRIPTION]Your design concept description here[/DESCRIPTION]
+[DESCRIPTION]
+2-3 sentence client-facing description of the blended design concept.
+[/DESCRIPTION]
+
 [SPEC_UPDATE]{"key":"value"}[/SPEC_UPDATE]
-
-Valid spec keys: pieceType, metalType, designStyle, headStyle, shankStyle, prongStyle, haloDetail, galleryDetail, centerStone, accentStones, settingStyle, surfaceFinish, engravingDetail, designDescription`,
+Fill any remaining spec fields. Valid keys: pieceType, metalType, designStyle, headStyle, shankStyle, prongStyle, haloDetail, galleryDetail, centerStone, accentStones, settingStyle, surfaceFinish, engravingDetail, designDescription`,
     messages: [{
       role: 'user',
-      content: blendPrompt
+      content: userContent
     }]
   });
 
-  if (!descRes.ok) throw new Error('Blend concept generation failed');
-  const descData = await descRes.json();
-  const descText = descData.content?.[0]?.text || '';
+  if (!res.ok) throw new Error('Hybrid prompt generation failed');
+  const data = await res.json();
+  const text = data.content?.[0]?.text || '';
 
-  const promptMatch = descText.match(/\[PROMPT\]([\s\S]*?)\[\/PROMPT\]/);
-  const descMatch = descText.match(/\[DESCRIPTION\]([\s\S]*?)\[\/DESCRIPTION\]/);
-  const specMatch = descText.match(/\[SPEC_UPDATE\]([\s\S]*?)\[\/SPEC_UPDATE\]/);
-
-  const fluxPrompt = promptMatch ? promptMatch[1].trim() : blendPrompt;
-  const description = descMatch ? descMatch[1].trim() : '';
+  const editMatch = text.match(/\[EDIT_PROMPT\]([\s\S]*?)\[\/EDIT_PROMPT\]/);
+  const descMatch = text.match(/\[DESCRIPTION\]([\s\S]*?)\[\/DESCRIPTION\]/);
+  const specMatch = text.match(/\[SPEC_UPDATE\]([\s\S]*?)\[\/SPEC_UPDATE\]/);
 
   // Apply spec updates
   if (specMatch) {
@@ -6790,32 +6925,80 @@ Valid spec keys: pieceType, metalType, designStyle, headStyle, shankStyle, prong
       Object.entries(specUpdates).forEach(([k, v]) => {
         if (v) updateBlendSpecField(k, v);
       });
-    } catch(e) { /* ignore parse errors */ }
+    } catch(e) { /* ignore */ }
   }
 
-  // Try render via /api/generate-render
+  return {
+    editPrompt: editMatch ? editMatch[1].trim() : null,
+    description: descMatch ? descMatch[1].trim() : '',
+    fullText: text
+  };
+}
+
+// Execute the blend render — tries edit API with base image, falls back to generate
+async function executeBlendRender(baseSlot, hybridResult, zoneDescs) {
   let imageUrl = null;
-  const PROXY_URL = '/api/generate-render';
+  let responseId = null;
+  let mode = null;
+
+  const editPrompt = hybridResult.editPrompt;
+  if (!editPrompt) throw new Error('Could not generate edit prompt from zone analysis');
+
+  // Try 1: Edit API with base image (best quality — preserves base structure)
+  const responsesUrl = '/api/generate-image';
   try {
-    const renderRes = await fetch(PROXY_URL, {
+    document.getElementById('blend-spinner-text').textContent = 'Editing base image with blended features…';
+
+    const payload = {
+      prompt: editPrompt,
+      action: 'edit',
+      quality: 'high',
+      input_fidelity: 'high',
+      size: 'auto',
+      input_image: baseSlot.b64,
+    };
+
+    const res = await fetch(responsesUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: fluxPrompt, aspect_ratio: '1:1' })
+      body: JSON.stringify(payload)
     });
-    const renderData = await renderRes.json();
-    if (renderRes.ok && renderData.url) {
-      imageUrl = renderData.url;
+    const data = await res.json();
+    if (res.ok && data.url) {
+      imageUrl = data.url;
+      responseId = data.response_id;
+      mode = 'edit';
     }
-  } catch(e) { /* render proxy not available */ }
+  } catch(e) { /* edit API not available */ }
 
-  // Format description
-  let htmlDesc = '<div style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#C9534B;font-weight:700;margin-bottom:6px;">Design Concept</div>';
-  htmlDesc += '<div style="font-family:\'DM Sans\',sans-serif;font-size:11px;color:#C8C4BE;line-height:1.7;margin-bottom:10px;">' + description + '</div>';
+  // Try 2: FLUX generation as fallback (text-only, no base image editing)
+  if (!imageUrl) {
+    try {
+      document.getElementById('blend-spinner-text').textContent = 'Generating blended design…';
+      const res = await fetch('/api/generate-render', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: editPrompt, aspect_ratio: '1:1' })
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        imageUrl = data.url;
+        mode = 'generate';
+      }
+    } catch(e) { /* render proxy not available */ }
+  }
 
-  // Finalized spec summary
+  // Build output HTML
+  let htmlDesc = '';
+
+  // Design concept
+  htmlDesc += '<div style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#C9534B;font-weight:700;margin-bottom:6px;">Design Concept</div>';
+  htmlDesc += '<div style="font-family:\'DM Sans\',sans-serif;font-size:11px;color:#C8C4BE;line-height:1.7;margin-bottom:10px;">' + hybridResult.description + '</div>';
+
+  // Spec summary
   const filledSpec = BLEND_SPEC_FIELDS.filter(f => blendSpecValues[f.k]);
   if (filledSpec.length > 0) {
-    htmlDesc += '<div style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;margin-bottom:6px;margin-top:4px;">Project Spec Summary</div>';
+    htmlDesc += '<div style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;margin-bottom:6px;margin-top:4px;">Project Spec</div>';
     htmlDesc += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;margin-bottom:10px;">';
     filledSpec.forEach(f => {
       htmlDesc += '<div style="display:flex;gap:4px;padding:2px 0;">'
@@ -6826,21 +7009,21 @@ Valid spec keys: pieceType, metalType, designStyle, headStyle, shankStyle, prong
     htmlDesc += '</div>';
   }
 
-  htmlDesc += '<div style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:6px;">Elements Used</div>';
-  htmlDesc += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
+  // Elements used
+  htmlDesc += '<div style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:6px;">Elements Blended</div>';
+  htmlDesc += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">';
   zoneDescs.forEach(z => {
     htmlDesc += '<span style="font-family:\'DM Sans\',sans-serif;font-size:9px;padding:3px 8px;background:rgba(201,83,75,.08);border:1px solid rgba(201,83,75,.15);border-radius:10px;color:#C9534B;">' + z.label + ' (Img ' + z.imageNum + ')</span>';
   });
   htmlDesc += '</div>';
 
-  if (!imageUrl) {
-    htmlDesc += '<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;">'
-      + '<div style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:4px;">Render Prompt</div>'
-      + '<div style="font-family:\'DM Sans\',sans-serif;font-size:10px;color:#5A5650;line-height:1.6;font-style:italic;">' + fluxPrompt + '</div>'
-      + '</div>';
-  }
+  // Edit prompt (always show for transparency)
+  htmlDesc += '<div style="padding:8px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;">'
+    + '<div style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:4px;">Edit Prompt' + (mode ? ' (' + mode + ' mode)' : '') + '</div>'
+    + '<div style="font-family:\'DM Sans\',sans-serif;font-size:10px;color:#5A5650;line-height:1.6;font-style:italic;">' + editPrompt + '</div>'
+    + '</div>';
 
-  return { imageUrl, description: htmlDesc };
+  return { imageUrl, descriptionHtml: htmlDesc, responseId, mode };
 }
 
 </script>
