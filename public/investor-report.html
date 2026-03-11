@@ -439,6 +439,10 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
   #bc-shell > div:last-child{display:none;}
 }
 @media(max-width:720px){
+  #td-shell{grid-template-columns:1fr !important;}
+  #td-shell > div:last-child{display:none;}
+}
+@media(max-width:720px){
   #imagine-shell{grid-template-columns:1fr !important;}
   #imagine-brief-col{display:none !important;}
   .ic-header{grid-template-columns:1fr !important;}
@@ -2496,6 +2500,179 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                         <div id="mod-result-error" style="display:none;text-align:center;padding:16px;font-family:'DM Sans',sans-serif;font-size:10px;color:#C9534B;line-height:1.6;"></div>
                       </div>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TECHNICAL DRAWING — FULL WIDTH WITH LIVE PREVIEW -->
+        <div class="tc" id="td-card" style="border-top:3px solid var(--coral);grid-column:1/-1;padding:28px 24px;">
+
+          <!-- Info header -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:start;margin-bottom:20px;">
+            <div>
+              <div class="tc-top" style="margin-bottom:12px;"><div class="tc-icon">📐</div><div class="tc-num">Tool 10</div></div>
+              <div class="tc-name" style="font-size:20px;margin-bottom:8px;">Create Technical Drawing</div>
+              <div class="tc-desc">Upload a 3/4 view of any jewelry piece and generate a precise three-view technical drawing — Top, Front, and Perspective — on a single page. Then apply a stylized patent-drawing collector card filter to transform the technical sheet into a framed, presentation-ready art piece.</div>
+            </div>
+            <div class="tc-feats" style="margin-bottom:0;padding-top:48px;">
+              <div class="tf">Upload one 3/4 image → generates Top, Front, and Perspective views</div>
+              <div class="tf">All three views are 1:1 ratio, equidistant, and centered on a clean technical sheet</div>
+              <div class="tf">Two-step pipeline: technical drawing first, then patent-style collector card filter</div>
+              <div class="tf">Each step is a separate edit for maximum design accuracy</div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="tc-footer" style="margin-bottom:20px;">
+            <div class="tc-layer">AI Studio</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <button id="td-toggle" onclick="toggleTd()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 18px;background:var(--coral);color:#fff;border:none;border-radius:20px;font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                <span id="td-toggle-icon" style="font-size:12px;">&#9654;</span>
+                <span id="td-toggle-txt">Try Technical Drawing</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Preview Panel -->
+          <div id="td-preview" style="display:none;border-radius:14px;overflow:hidden;border:1px solid rgba(0,0,0,.15);box-shadow:0 12px 50px rgba(0,0,0,.22);">
+
+            <!-- Chrome bar -->
+            <div style="background:#141410;padding:11px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06);">
+              <div style="display:flex;gap:6px;flex-shrink:0;">
+                <div style="width:11px;height:11px;border-radius:50%;background:#FF5F57;"></div>
+                <div style="width:11px;height:11px;border-radius:50%;background:#FFBD2E;"></div>
+                <div style="width:11px;height:11px;border-radius:50%;background:#28C840;"></div>
+              </div>
+              <div style="flex:1;text-align:center;">
+                <span style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07);border-radius:6px;padding:3px 14px;">
+                  <span style="width:8px;height:8px;border-radius:50%;background:#C9534B;display:inline-block;opacity:.7;"></span>
+                  <span style="font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.5px;">zipjeweler.com/technical-drawing</span>
+                </span>
+              </div>
+              <button onclick="resetTd()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:5px;color:rgba(255,255,255,.35);cursor:pointer;font-size:12px;padding:3px 8px;font-family:'DM Sans',sans-serif;" onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">&#8635; Reset</button>
+            </div>
+
+            <!-- App Shell: upload+controls | output -->
+            <div id="td-shell" style="display:grid;grid-template-columns:1fr 1fr;background:#0F0F0D;min-height:560px;">
+
+              <!-- LEFT: Upload + Controls -->
+              <div style="display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.05);overflow:hidden;">
+
+                <!-- Header -->
+                <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:12px;flex-shrink:0;">
+                  <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(201,83,75,.2),rgba(201,83,75,.07));border:1.5px solid rgba(201,83,75,.35);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">📐</div>
+                  <div>
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;color:#E8E4DD;">Technical Drawing</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#47453F;margin-top:1px;">3/4 View → Three-View Sheet → Patent Card</div>
+                  </div>
+                </div>
+
+                <div style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;">
+
+                  <!-- Upload zone -->
+                  <div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:8px;">Source Image <span style="color:#5A5652;font-weight:400;text-transform:none;letter-spacing:0;">(3/4 view of piece)</span></div>
+                    <label for="td-file" id="td-drop" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1.5px dashed rgba(255,255,255,.1);border-radius:10px;padding:20px 16px;cursor:pointer;transition:border-color .2s;min-height:130px;position:relative;" onmouseover="this.style.borderColor='rgba(201,83,75,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)'">
+                      <div id="td-upload-ph" style="text-align:center;">
+                        <div style="font-size:28px;margin-bottom:6px;opacity:.4;">💎</div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:12px;color:#4A4845;line-height:1.6;">Drop a 3/4 view render or photo<br><span style="color:#C9534B;font-weight:500;">or click to browse</span></div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:#2E2C28;margin-top:5px;">Best results from a clear 3/4 angle product shot</div>
+                      </div>
+                      <img id="td-preview-img" style="display:none;max-width:100%;max-height:180px;border-radius:6px;object-fit:contain;" />
+                    </label>
+                    <input id="td-file" type="file" accept="image/*" style="display:none;" onchange="handleTdUpload(this)" />
+                  </div>
+
+                  <!-- Pipeline steps -->
+                  <div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;margin-bottom:10px;">Generation Pipeline</div>
+                    <div style="display:flex;flex-direction:column;gap:6px;">
+
+                      <!-- Step 1 -->
+                      <div id="td-step1-card" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;">
+                        <div style="width:24px;height:24px;border-radius:50%;background:rgba(201,83,75,.12);border:1px solid rgba(201,83,75,.25);display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;color:#C9534B;flex-shrink:0;">1</div>
+                        <div style="flex:1;">
+                          <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#C8C4BE;font-weight:600;">Technical Three-View Drawing</div>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;margin-top:2px;">Top, Front, and Perspective views on one page</div>
+                        </div>
+                        <div id="td-step1-badge" style="padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#5A5652;">READY</div>
+                      </div>
+
+                      <!-- Step 2 -->
+                      <div style="display:flex;align-items:center;justify-content:center;padding:2px 0;">
+                        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;">&#8595; chains as edit</div>
+                      </div>
+
+                      <div id="td-step2-card" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;">
+                        <div style="width:24px;height:24px;border-radius:50%;background:rgba(112,80,168,.12);border:1px solid rgba(112,80,168,.25);display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;color:#9070C0;flex-shrink:0;">2</div>
+                        <div style="flex:1;">
+                          <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#C8C4BE;font-weight:600;">Patent-Style Collector Card</div>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;margin-top:2px;">Vintage patent drawing aesthetic with frame &amp; numbering</div>
+                        </div>
+                        <div id="td-step2-badge" style="padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#5A5652;">WAITING</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Generate button -->
+                  <button id="td-gen-btn" onclick="generateTd()" style="padding:12px 0;background:#C9534B;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;box-shadow:0 2px 12px rgba(201,83,75,.25);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                    Generate Technical Drawing
+                  </button>
+
+                </div>
+              </div>
+
+              <!-- RIGHT: Output -->
+              <div style="display:flex;flex-direction:column;background:#0C0C0A;overflow:hidden;">
+
+                <!-- Header -->
+                <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;">
+                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;">Output</div>
+                </div>
+
+                <!-- Content area -->
+                <div style="flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px;">
+
+                  <!-- Idle state -->
+                  <div id="td-idle" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:200px;text-align:center;">
+                    <div style="font-size:32px;opacity:.15;">📐</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#2A2825;line-height:1.7;">Upload a 3/4 view of your piece<br>then click <strong style="color:#3A3835;font-weight:600;">Generate Technical Drawing</strong>.<br><br><span style="color:#3A3835;">Step 1 creates the three-view sheet.<br>Step 2 applies the patent card filter.</span></div>
+                  </div>
+
+                  <!-- Spinner -->
+                  <div id="td-spinner" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:200px;">
+                    <div style="width:32px;height:32px;border:2px solid rgba(201,83,75,.15);border-top-color:#C9534B;border-radius:50%;animation:ispin .8s linear infinite;"></div>
+                    <div id="td-spinner-text" style="font-family:'DM Sans',sans-serif;font-size:10px;color:#3A3835;letter-spacing:.5px;">Generating technical drawing…</div>
+                  </div>
+
+                  <!-- Results -->
+                  <div id="td-results" style="display:none;flex-direction:column;gap:16px;">
+
+                    <!-- Step 1: Technical Drawing -->
+                    <div>
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                        <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;">Step 1 — Technical Three-View</div>
+                      </div>
+                      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+                        <img id="td-result-step1" style="display:none;width:100%;object-fit:contain;" alt="Technical drawing" />
+                      </div>
+                    </div>
+
+                    <!-- Step 2: Patent Card -->
+                    <div>
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                        <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#9070C0;font-weight:700;">Step 2 — Patent Collector Card</div>
+                      </div>
+                      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+                        <img id="td-result-step2" style="display:none;width:100%;object-fit:contain;" alt="Patent collector card" />
+                      </div>
+                    </div>
+
+                    <!-- Error -->
+                    <div id="td-error" style="display:none;text-align:center;padding:12px;font-family:'DM Sans',sans-serif;font-size:10px;color:#E74C3C;line-height:1.6;background:rgba(231,76,60,.06);border-radius:8px;border:1px solid rgba(231,76,60,.18);"></div>
                   </div>
                 </div>
               </div>
@@ -5224,6 +5401,201 @@ function p3dShowResults(data) {
     }
     texturesSec.style.display = hasTextures ? 'block' : 'none';
   }
+}
+
+
+/* ══════════════════════════════════════════════════════
+   TOOL 10 — CREATE TECHNICAL DRAWING
+══════════════════════════════════════════════════════ */
+let tdOpen = false, tdBusy = false;
+let tdImageB64 = null, tdImageType = 'image/jpeg';
+let tdResponseId = null;  // chains step 1 → step 2
+
+function toggleTd() {
+  tdOpen = !tdOpen;
+  const p = document.getElementById('td-preview');
+  p.style.display = tdOpen ? 'block' : 'none';
+  document.getElementById('td-toggle-icon').textContent = tdOpen ? '\u25BE' : '\u25B6';
+  document.getElementById('td-toggle-txt').textContent  = tdOpen ? 'Close Preview' : 'Try Technical Drawing';
+  if (tdOpen) setTimeout(() => p.scrollIntoView({behavior:'smooth', block:'nearest'}), 80);
+}
+
+function resetTd() {
+  tdImageB64 = null; tdResponseId = null; tdBusy = false;
+  document.getElementById('td-file').value = '';
+  document.getElementById('td-upload-ph').style.display = 'block';
+  document.getElementById('td-preview-img').style.display = 'none';
+  document.getElementById('td-idle').style.display = 'flex';
+  document.getElementById('td-spinner').style.display = 'none';
+  document.getElementById('td-results').style.display = 'none';
+  document.getElementById('td-result-step1').style.display = 'none';
+  document.getElementById('td-result-step2').style.display = 'none';
+  document.getElementById('td-error').style.display = 'none';
+  document.getElementById('td-gen-btn').style.opacity = '1';
+  tdUpdateBadge(1, 'READY', 'neutral');
+  tdUpdateBadge(2, 'WAITING', 'neutral');
+}
+
+function handleTdUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  tdImageType = file.type || 'image/jpeg';
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    tdImageB64 = dataUrl.split(',')[1];
+    const img = document.getElementById('td-preview-img');
+    img.src = dataUrl;
+    img.style.display = 'block';
+    document.getElementById('td-upload-ph').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function tdUpdateBadge(step, text, color) {
+  const badge = document.getElementById('td-step' + step + '-badge');
+  if (!badge) return;
+  badge.textContent = text;
+  if (color === 'running') {
+    badge.style.cssText = 'padding:2px 8px;border-radius:8px;background:rgba(201,83,75,.12);border:1px solid rgba(201,83,75,.25);font-family:\'DM Sans\',sans-serif;font-size:8px;font-weight:600;color:#C9534B;';
+  } else if (color === 'done') {
+    badge.style.cssText = 'padding:2px 8px;border-radius:8px;background:rgba(45,139,85,.1);border:1px solid rgba(45,139,85,.2);font-family:\'DM Sans\',sans-serif;font-size:8px;font-weight:600;color:#2D8B55;';
+  } else if (color === 'error') {
+    badge.style.cssText = 'padding:2px 8px;border-radius:8px;background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.2);font-family:\'DM Sans\',sans-serif;font-size:8px;font-weight:600;color:#E74C3C;';
+  } else {
+    badge.style.cssText = 'padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-family:\'DM Sans\',sans-serif;font-size:8px;font-weight:600;color:#5A5652;';
+  }
+}
+
+async function generateTd() {
+  if (tdBusy) return;
+  if (!tdImageB64) { alert('Please upload a 3/4 view image first.'); return; }
+
+  tdBusy = true;
+  tdResponseId = null;
+  document.getElementById('td-idle').style.display = 'none';
+  document.getElementById('td-results').style.display = 'none';
+  document.getElementById('td-error').style.display = 'none';
+  document.getElementById('td-spinner').style.display = 'flex';
+  document.getElementById('td-gen-btn').style.opacity = '.5';
+
+  const apiUrl = (PROXY_URL || '').replace('/api/generate-render', '/api/generate-image');
+
+  /* ── STEP 1: Generate Technical Three-View Drawing ── */
+  tdUpdateBadge(1, 'RUNNING', 'running');
+  tdUpdateBadge(2, 'WAITING', 'neutral');
+  document.getElementById('td-spinner-text').textContent = 'Step 1: Generating three-view technical drawing…';
+
+  const step1Prompt =
+    'Edit this image. This is a 3/4 perspective photograph or render of a piece of jewelry. ' +
+    'Create a precise technical drawing page showing this EXACT piece from three standard orthographic views. ' +
+    'The page layout must be:\n\n' +
+    '• THREE separate 1:1 square views arranged in a single row, evenly spaced and horizontally centered on the page.\n' +
+    '• LEFT view: TOP-DOWN view — looking straight down onto the piece from above.\n' +
+    '• CENTER view: FRONT view — looking straight at the piece from the front, eye-level.\n' +
+    '• RIGHT view: PERSPECTIVE 3/4 view — matching the original uploaded angle.\n\n' +
+    'Each view must show the EXACT same jewelry design — identical shape, proportions, stone placement, metalwork, and details. ' +
+    'Do NOT change the design in any way. ' +
+    'Style: Clean technical illustration on a white/off-white background. Fine line weight, precise contours, ' +
+    'subtle shading to show form and depth. Label each view underneath: "TOP", "FRONT", "PERSPECTIVE". ' +
+    'Add a thin border around the entire page. Professional technical drafting quality.';
+
+  try {
+    const res1 = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: step1Prompt,
+        action: 'edit',
+        quality: 'high',
+        input_fidelity: 'high',
+        size: '1536x1024',
+        input_image: tdImageB64,
+      }),
+    });
+    const data1 = await res1.json();
+    if (!res1.ok || !data1.url) throw new Error(data1.error || 'Step 1 failed — no image returned');
+
+    // Show step 1 result
+    document.getElementById('td-result-step1').src = data1.url;
+    document.getElementById('td-result-step1').style.display = 'block';
+    document.getElementById('td-results').style.display = 'flex';
+    tdResponseId = data1.response_id || null;
+    tdUpdateBadge(1, 'DONE', 'done');
+
+  } catch (e) {
+    document.getElementById('td-spinner').style.display = 'none';
+    document.getElementById('td-results').style.display = 'flex';
+    document.getElementById('td-error').textContent = 'Step 1 error: ' + e.message;
+    document.getElementById('td-error').style.display = 'block';
+    tdUpdateBadge(1, 'FAILED', 'error');
+    tdBusy = false;
+    document.getElementById('td-gen-btn').style.opacity = '1';
+    return;
+  }
+
+  /* ── STEP 2: Apply Patent-Style Collector Card Filter ── */
+  tdUpdateBadge(2, 'RUNNING', 'running');
+  document.getElementById('td-spinner-text').textContent = 'Step 2: Applying patent collector card filter…';
+
+  const step2Prompt =
+    'Edit this technical drawing. Transform it into a vintage patent-drawing style collector card while keeping the three jewelry views EXACTLY as they are. ' +
+    'Do NOT modify, redraw, or alter the jewelry design in any way — only apply a visual style filter over the existing technical sheet.\n\n' +
+    'Apply these stylistic changes:\n' +
+    '• Convert the rendering style to a classic patent illustration aesthetic — fine crosshatching, stipple shading, inked line art quality.\n' +
+    '• Age the paper: warm cream/sepia-toned parchment background with subtle texture and slight edge wear.\n' +
+    '• Add a thin decorative border/frame around the entire page — classic patent document style with double-rule lines.\n' +
+    '• Add a patent-style header at the top: "DESIGN PATENT" in classic serif lettering, with a faux patent number (e.g., "Des. 847,291") and a date.\n' +
+    '• Add an inventor line at the bottom: "Inventor: [designer name]" in italics, and a faux signature flourish.\n' +
+    '• Add figure labels: "Fig. 1", "Fig. 2", "Fig. 3" below each of the three views, replacing any existing labels.\n' +
+    '• Add small reference number callouts (like patent annotations: 10, 12, 14, etc.) pointing to key parts of the jewelry.\n' +
+    '• The overall feel should be a collectible art print — something worthy of framing. Museum-quality patent illustration aesthetic.\n\n' +
+    'CRITICAL: The three jewelry views must remain EXACTLY as drawn. Only the style, background, borders, and labels change.';
+
+  try {
+    const payload2 = {
+      prompt: step2Prompt,
+      action: 'edit',
+      quality: 'high',
+      input_fidelity: 'high',
+      size: '1536x1024',
+    };
+
+    // Chain from step 1 via response_id if available, otherwise send step 1 image
+    if (tdResponseId) {
+      payload2.previous_response_id = tdResponseId;
+    } else {
+      // Fallback: extract step 1 result as base64 and send directly
+      const step1Img = document.getElementById('td-result-step1');
+      if (step1Img.src && step1Img.src.startsWith('data:')) {
+        payload2.input_image = step1Img.src.split(',')[1];
+      } else {
+        throw new Error('Cannot chain step 2 — no response ID or image data from step 1');
+      }
+    }
+
+    const res2 = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload2),
+    });
+    const data2 = await res2.json();
+    if (!res2.ok || !data2.url) throw new Error(data2.error || 'Step 2 failed — no image returned');
+
+    // Show step 2 result
+    document.getElementById('td-result-step2').src = data2.url;
+    document.getElementById('td-result-step2').style.display = 'block';
+    tdUpdateBadge(2, 'DONE', 'done');
+
+  } catch (e) {
+    document.getElementById('td-error').textContent = 'Step 2 error: ' + e.message;
+    document.getElementById('td-error').style.display = 'block';
+    tdUpdateBadge(2, 'FAILED', 'error');
+  }
+
+  document.getElementById('td-spinner').style.display = 'none';
+  tdBusy = false;
+  document.getElementById('td-gen-btn').style.opacity = '1';
 }
 
 
