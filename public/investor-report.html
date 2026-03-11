@@ -2516,13 +2516,13 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
             <div>
               <div class="tc-top" style="margin-bottom:12px;"><div class="tc-icon">📐</div><div class="tc-num">Tool 10</div></div>
               <div class="tc-name" style="font-size:20px;margin-bottom:8px;">Create Technical Drawing</div>
-              <div class="tc-desc">Upload a 3/4 view of any jewelry piece and generate a precise three-view technical drawing — Top, Front, and Perspective — on a single page. Then apply a stylized patent-drawing collector card filter to transform the technical sheet into a framed, presentation-ready art piece.</div>
+              <div class="tc-desc">Upload a 3/4 view of any jewelry piece and generate a precise three-view technical drawing — Top, Front, and Perspective — on a single page. Then transform the 3-view sheet into a stylized Design Patent collector card with project specs rendered as engineering title-block drafting cells.</div>
             </div>
             <div class="tc-feats" style="margin-bottom:0;padding-top:48px;">
               <div class="tf">Upload one 3/4 image → generates Top, Front, and Perspective views</div>
-              <div class="tf">All three views are 1:1 ratio, equidistant, and centered on a clean technical sheet</div>
-              <div class="tf">Two-step pipeline: technical drawing first, then patent-style collector card filter</div>
-              <div class="tf">Each step is a separate edit for maximum design accuracy</div>
+              <div class="tf">Geometry-preserving prompts with explicit invariant constraints for view accuracy</div>
+              <div class="tf">Patent card includes project specs as engineering title-block drafting cells</div>
+              <div class="tf">Each step is a separate chained edit for maximum design fidelity</div>
             </div>
           </div>
 
@@ -2610,8 +2610,8 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                       <div id="td-step2-card" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;">
                         <div style="width:24px;height:24px;border-radius:50%;background:rgba(112,80,168,.12);border:1px solid rgba(112,80,168,.25);display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;color:#9070C0;flex-shrink:0;">2</div>
                         <div style="flex:1;">
-                          <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#C8C4BE;font-weight:600;">Patent-Style Collector Card</div>
-                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;margin-top:2px;">Vintage patent drawing aesthetic with frame &amp; numbering</div>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#C8C4BE;font-weight:600;">Design Patent Collector Card</div>
+                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;margin-top:2px;">Patent aesthetic + project specs as drafting cells</div>
                         </div>
                         <div id="td-step2-badge" style="padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#5A5652;">WAITING</div>
                       </div>
@@ -2665,7 +2665,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                     <!-- Step 2: Patent Card -->
                     <div>
                       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                        <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#9070C0;font-weight:700;">Step 2 — Patent Collector Card</div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#9070C0;font-weight:700;">Step 2 — Design Patent Card</div>
                       </div>
                       <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
                         <img id="td-result-step2" style="display:none;width:100%;object-fit:contain;" alt="Patent collector card" />
@@ -5468,6 +5468,29 @@ function tdUpdateBadge(step, text, color) {
   }
 }
 
+/* ── Build specs string from project folder for patent card ── */
+function tdGetProjectSpecs() {
+  if (typeof zipProjectData === 'undefined') return null;
+  const specs = [];
+  const d = zipProjectData.design || {};
+  const s = zipProjectData.stones || {};
+  const sp = zipProjectData.specs || {};
+  const o = zipProjectData.overview || {};
+  if (d['Metal Type']) specs.push('METAL: ' + d['Metal Type']);
+  if (d['Metal Weight']) specs.push('WEIGHT: ' + d['Metal Weight']);
+  if (d['Setting Style']) specs.push('SETTING: ' + d['Setting Style']);
+  if (s['Center Stone']) specs.push('CENTER: ' + s['Center Stone'] + (s['Shape'] ? ' ' + s['Shape'] : '') + (s['Carat Weight'] ? ' ' + s['Carat Weight'] : ''));
+  if (s['Dimensions']) specs.push('STONE DIM: ' + s['Dimensions']);
+  if (s['Color'] && s['Clarity']) specs.push('GRADE: ' + s['Color'] + '/' + s['Clarity']);
+  if (sp['Ring Size']) specs.push('SIZE: ' + sp['Ring Size']);
+  if (sp['Overall Width']) specs.push('DIMS: ' + sp['Overall Width']);
+  if (sp['Shank Width']) specs.push('SHANK: ' + sp['Shank Width'] + (sp['Shank Height'] ? ' × ' + sp['Shank Height'] : ''));
+  if (d['Finish']) specs.push('FINISH: ' + d['Finish']);
+  if (o['Piece Type']) specs.push('TYPE: ' + o['Piece Type']);
+  if (o['Collection']) specs.push('COLLECTION: ' + o['Collection']);
+  return specs.length > 0 ? specs : null;
+}
+
 async function generateTd() {
   if (tdBusy) return;
   if (!tdImageB64) { alert('Please upload a 3/4 view image first.'); return; }
@@ -5487,19 +5510,44 @@ async function generateTd() {
   tdUpdateBadge(2, 'WAITING', 'neutral');
   document.getElementById('td-spinner-text').textContent = 'Step 1: Generating three-view technical drawing…';
 
+  // Improved prompt: explicit geometric preservation, engineering vocabulary,
+  // view-specific camera instructions, and strict invariant constraints
   const step1Prompt =
-    'Edit this image. This is a 3/4 perspective photograph or render of a piece of jewelry. ' +
-    'Create a precise technical drawing page showing this EXACT piece from three standard orthographic views. ' +
-    'The page layout must be:\n\n' +
-    '• THREE separate 1:1 square views arranged in a single row, evenly spaced and horizontally centered on the page.\n' +
-    '• LEFT view: TOP-DOWN view — looking straight down onto the piece from above.\n' +
-    '• CENTER view: FRONT view — looking straight at the piece from the front, eye-level.\n' +
-    '• RIGHT view: PERSPECTIVE 3/4 view — matching the original uploaded angle.\n\n' +
-    'Each view must show the EXACT same jewelry design — identical shape, proportions, stone placement, metalwork, and details. ' +
-    'Do NOT change the design in any way. ' +
-    'Style: Clean technical illustration on a white/off-white background. Fine line weight, precise contours, ' +
-    'subtle shading to show form and depth. Label each view underneath: "TOP", "FRONT", "PERSPECTIVE". ' +
-    'Add a thin border around the entire page. Professional technical drafting quality.';
+    'You are a technical illustrator creating an engineering drawing sheet. ' +
+    'The attached image is a 3/4 perspective photograph of a piece of jewelry. ' +
+    'Study every detail: the exact silhouette, proportions, number and placement of stones, ' +
+    'prong positions, metalwork patterns, band width, and all decorative elements.\n\n' +
+    'TASK: Edit this into a technical drawing page with THREE orthographic views of this EXACT piece, ' +
+    'arranged in a single horizontal row on a clean white sheet.\n\n' +
+    'VIEW SPECIFICATIONS:\n' +
+    '┌─────────────────────────────────────────────────────┐\n' +
+    '│  LEFT: TOP VIEW (Plan)     │  CENTER: FRONT VIEW (Elevation)  │  RIGHT: 3/4 PERSPECTIVE  │\n' +
+    '└─────────────────────────────────────────────────────┘\n\n' +
+    'LEFT — TOP VIEW (Plan View):\n' +
+    '  • Camera positioned directly above, looking straight down (bird\'s-eye, 0° elevation)\n' +
+    '  • Shows the full outline of the piece from above: the band as a complete oval/circle, ' +
+    'the head/setting from above showing stone arrangement and prong layout\n' +
+    '  • All horizontal proportions must match the original photo exactly\n\n' +
+    'CENTER — FRONT VIEW (Front Elevation):\n' +
+    '  • Camera positioned at exact eye level, looking straight at the front face (0° azimuth, 0° elevation)\n' +
+    '  • Shows the front profile: band height, setting height, stone prominence, gallery details\n' +
+    '  • Vertical proportions (height-to-width ratio) must precisely match the original\n\n' +
+    'RIGHT — 3/4 PERSPECTIVE VIEW:\n' +
+    '  • Same angle as the original uploaded photo\n' +
+    '  • This view should look like a direct trace/illustration of the input image\n' +
+    '  • Preserve EVERY detail: exact stone count, prong positions, metal texture, decorative elements\n\n' +
+    'GEOMETRY INVARIANTS (preserve across ALL three views):\n' +
+    '  • Identical piece — same number of stones, same prong count, same band thickness\n' +
+    '  • Proportions must be physically consistent (a wide band in perspective = wide band in front view)\n' +
+    '  • Do NOT add, remove, or modify ANY design element. Zero artistic interpretation.\n' +
+    '  • Do NOT simplify or stylize the design. Preserve full geometric complexity.\n\n' +
+    'DRAWING STYLE:\n' +
+    '  • Clean technical illustration: precise contour lines (0.3pt weight), minimal shading\n' +
+    '  • Light gray construction lines and subtle tonal shading to indicate form and depth\n' +
+    '  • White/off-white background, thin outer border around the entire sheet\n' +
+    '  • Label each view: "TOP", "FRONT", "PERSPECTIVE" in small caps beneath each\n' +
+    '  • Each view fits in an equal-width column, vertically centered, with even spacing\n' +
+    '  • Professional engineering drafting quality — as if produced by a CAD system';
 
   try {
     const res1 = await fetch(apiUrl, {
@@ -5535,23 +5583,54 @@ async function generateTd() {
     return;
   }
 
-  /* ── STEP 2: Apply Patent-Style Collector Card Filter ── */
+  /* ── STEP 2: Patent Design Card — stylize 3-view + add spec cells ── */
   tdUpdateBadge(2, 'RUNNING', 'running');
-  document.getElementById('td-spinner-text').textContent = 'Step 2: Applying patent collector card filter…';
+  document.getElementById('td-spinner-text').textContent = 'Step 2: Creating patent design card…';
+
+  // Pull specs from the project folder if available
+  const projectSpecs = tdGetProjectSpecs();
+  let specsBlock = '';
+  if (projectSpecs && projectSpecs.length > 0) {
+    specsBlock = '\n\nSPECIFICATION CELLS — draw these as a row of drafting data cells across the bottom of the card, ' +
+      'inside the border, styled like a technical drawing title block / revision table:\n';
+    // Group into rows of 4 for layout
+    for (let i = 0; i < projectSpecs.length; i++) {
+      specsBlock += '  | ' + projectSpecs[i];
+      if ((i + 1) % 4 === 0 || i === projectSpecs.length - 1) specsBlock += ' |\n';
+    }
+    specsBlock += 'Each cell: thin ruled border, label in 6pt caps above, value in 8pt below. ' +
+      'Arranged in a grid at the bottom of the card, like an engineering title block.';
+  } else {
+    specsBlock = '\n\nAt the bottom, add a drafting title block row with placeholder spec cells: ' +
+      '| METAL: 18k Gold | STONE: Diamond | SIZE: 6.5 | WEIGHT: 8.5g | SETTING: Pavé Halo | FINISH: High Polish |\n' +
+      'Each cell: thin ruled border, label in small caps above, value below.';
+  }
 
   const step2Prompt =
-    'Edit this technical drawing. Transform it into a vintage patent-drawing style collector card while keeping the three jewelry views EXACTLY as they are. ' +
-    'Do NOT modify, redraw, or alter the jewelry design in any way — only apply a visual style filter over the existing technical sheet.\n\n' +
-    'Apply these stylistic changes:\n' +
-    '• Convert the rendering style to a classic patent illustration aesthetic — fine crosshatching, stipple shading, inked line art quality.\n' +
-    '• Age the paper: warm cream/sepia-toned parchment background with subtle texture and slight edge wear.\n' +
-    '• Add a thin decorative border/frame around the entire page — classic patent document style with double-rule lines.\n' +
-    '• Add a patent-style header at the top: "DESIGN PATENT" in classic serif lettering, with a faux patent number (e.g., "Des. 847,291") and a date.\n' +
-    '• Add an inventor line at the bottom: "Inventor: [designer name]" in italics, and a faux signature flourish.\n' +
-    '• Add figure labels: "Fig. 1", "Fig. 2", "Fig. 3" below each of the three views, replacing any existing labels.\n' +
-    '• Add small reference number callouts (like patent annotations: 10, 12, 14, etc.) pointing to key parts of the jewelry.\n' +
-    '• The overall feel should be a collectible art print — something worthy of framing. Museum-quality patent illustration aesthetic.\n\n' +
-    'CRITICAL: The three jewelry views must remain EXACTLY as drawn. Only the style, background, borders, and labels change.';
+    'Edit this technical drawing to create a Design Patent Collector Card. ' +
+    'The three jewelry views (Top, Front, Perspective) must remain EXACTLY as drawn — ' +
+    'preserve their geometry, proportions, and every detail with zero changes. ' +
+    'Do NOT redraw, simplify, or modify the jewelry in any way.\n\n' +
+    'ONLY THESE STYLISTIC CHANGES:\n\n' +
+    '1. STYLE FILTER: Convert the rendering to classic patent-illustration aesthetic:\n' +
+    '   • Fine crosshatching and stipple shading on the jewelry surfaces\n' +
+    '   • Inked line art quality with consistent line weights\n' +
+    '   • Warm cream/sepia parchment background with subtle aged texture\n\n' +
+    '2. BORDER & FRAME: Double-rule patent document border around the entire page.\n\n' +
+    '3. HEADER (top of card):\n' +
+    '   • "DESIGN PATENT" in classic serif capitals, centered\n' +
+    '   • Faux patent number: "Des. 847,291" and date below\n\n' +
+    '4. FIGURE LABELS: Replace view labels with "Fig. 1", "Fig. 2", "Fig. 3" below each view.\n\n' +
+    '5. ANNOTATIONS: Small patent-style reference numbers (10, 12, 14, 16, etc.) ' +
+    'with leader lines pointing to key features of the jewelry in each view.\n' +
+    specsBlock + '\n\n' +
+    'LAYOUT: The three views occupy the main area. The spec cells / title block sit at the very bottom ' +
+    'inside the border frame. Keep it clean, readable, and presentation-ready.\n\n' +
+    'CRITICAL INVARIANTS — restate for drift prevention:\n' +
+    '  • Do NOT alter the jewelry geometry in any view\n' +
+    '  • Do NOT change stone count, prong positions, or proportions\n' +
+    '  • Do NOT add new views or remove existing ones\n' +
+    '  • Only the style, background, labels, annotations, border, and spec cells change';
 
   try {
     const payload2 = {
