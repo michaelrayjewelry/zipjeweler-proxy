@@ -2790,6 +2790,9 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
             <div class="tf">Imagine fills all 22 fields automatically from a single conversation</div>
           </div>
           <div class="tc-footer"><div class="tc-layer">Production Hub</div><span class="pill pill-live">● Live</span></div>
+          <div style="margin-top:14px;text-align:center;">
+            <button onclick="openProjectFolderPreview()" style="font-family:var(--sans);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:600;color:var(--white);background:var(--green);border:none;border-radius:6px;padding:9px 22px;cursor:pointer;transition:all .18s;box-shadow:0 2px 8px rgba(45,139,85,.25);" onmouseover="this.style.background='#238A48';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 14px rgba(45,139,85,.35)'" onmouseout="this.style.background='var(--green)';this.style.transform='none';this.style.boxShadow='0 2px 8px rgba(45,139,85,.25)'">Preview Project Folder</button>
+          </div>
         </div>
 
         <!-- PRODUCTS -->
@@ -7898,6 +7901,240 @@ async function retryRender(tool) {
 function openDashboardPreview(){ document.getElementById('dash-preview-overlay').style.display='flex'; document.body.style.overflow='hidden'; }
 function closeDashboardPreview(){ document.getElementById('dash-preview-overlay').style.display='none'; document.body.style.overflow=''; }
 
+/* ═══════════════════════════════════════════════════════════════
+   PROJECT FOLDER PREVIEW OVERLAY
+   Full project folder with live Zip assistant chat.
+   ═══════════════════════════════════════════════════════════════ */
+let pf2Messages = [];
+let pf2Busy = false;
+
+function openProjectFolderPreview() {
+  document.getElementById('pf-preview-overlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  if (!pf2Messages.length) initPf2Chat();
+  pf2RenderPanel('overview');
+}
+function closeProjectFolderPreview() {
+  document.getElementById('pf-preview-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function initPf2Chat() {
+  pf2Messages = [];
+  const msgs = document.getElementById('pf2-msgs');
+  msgs.innerHTML = '';
+  addPf2Bubble('assistant', 'Hi! I\'m <strong>Zip</strong>, your AI dashboard assistant. I have full access to the <strong>Celestine Oval Ring</strong> project folder.\n\nI can read and update any field — just tell me what you need. Try:\n• "Change the metal to 14k rose gold"\n• "What\'s the current budget?"\n• "Move to Ready for Production"');
+  pf2ShowSuggestions();
+}
+
+function addPf2Bubble(role, html) {
+  const msgs = document.getElementById('pf2-msgs');
+  const wrap = document.createElement('div');
+  const isUser = role === 'user';
+  wrap.style.cssText = 'display:flex;gap:8px;' + (isUser ? 'flex-direction:row-reverse;' : '');
+
+  const avatar = document.createElement('div');
+  avatar.style.cssText = 'width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;' +
+    (isUser ? 'background:rgba(201,83,75,.15);border:1px solid rgba(201,83,75,.25);' : 'background:linear-gradient(135deg,rgba(201,83,75,.2),rgba(207,181,132,.12));border:1px solid rgba(201,83,75,.3);');
+  avatar.textContent = isUser ? '👤' : '⚡';
+
+  const bubble = document.createElement('div');
+  bubble.style.cssText = 'max-width:85%;padding:10px 14px;border-radius:12px;font-family:\'DM Sans\',sans-serif;font-size:11.5px;line-height:1.65;word-break:break-word;' +
+    (isUser ? 'background:rgba(201,83,75,.12);border:1px solid rgba(201,83,75,.2);color:#E0D8D0;' : 'background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:#C8C4BE;');
+  bubble.innerHTML = html.replace(/\n/g, '<br>');
+
+  wrap.appendChild(avatar);
+  wrap.appendChild(bubble);
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+  pf2Messages.push({role, content: html.replace(/<[^>]*>/g, '')});
+}
+
+function pf2ShowSuggestions() {
+  const el = document.getElementById('pf2-suggestions');
+  const suggestions = ['Change metal to rose gold', 'What\'s the margin?', 'Move to Ready for Prod', 'Add production note'];
+  el.innerHTML = suggestions.map(s =>
+    '<button onclick="pf2UseSuggestion(this)" style="padding:5px 12px;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.18);border-radius:14px;color:#CFB584;font-family:\'DM Sans\',sans-serif;font-size:9px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;" onmouseover="this.style.background=\'rgba(207,181,132,.16)\'" onmouseout="this.style.background=\'rgba(207,181,132,.08)\'">' + s + '</button>'
+  ).join('');
+}
+
+function pf2UseSuggestion(btn) {
+  document.getElementById('pf2-input').value = btn.textContent;
+  sendPf2();
+}
+
+/* ── Render project folder tabs in the overlay ── */
+function pf2RenderPanel(tab) {
+  document.querySelectorAll('.pf2-tab').forEach(t => {
+    const isActive = t.dataset.tab === tab;
+    t.style.color = isActive ? '#CFB584' : '#5A5652';
+    t.style.borderBottomColor = isActive ? '#CFB584' : 'transparent';
+  });
+  const content = document.getElementById('pf2-pf-content');
+  const data = zipProjectData[tab];
+  if (!data) { content.innerHTML = '<div style="text-align:center;padding:40px;color:#3A3835;font-family:\'DM Sans\',sans-serif;font-size:11px;">No data for this tab.</div>'; return; }
+
+  /* Content tab */
+  if (tab === 'content') {
+    const uid = () => 'pf2c-' + Math.random().toString(36).slice(2, 8);
+    let html = '';
+    const imgSections = [
+      { key: 'uploads', title: 'Uploads', icon: '📤', accent: 'rgba(207,181,132,.7)' },
+      { key: 'renders', title: 'Renders', icon: '🎨', accent: 'rgba(201,83,75,.7)' },
+      { key: 'marketing', title: 'Marketing Assets', icon: '📣', accent: 'rgba(112,80,168,.7)' },
+    ];
+    for (const sec of imgSections) {
+      const items = data[sec.key] || [];
+      const id = uid();
+      html += '<div style="border-bottom:1px solid rgba(255,255,255,.04);">';
+      html += '<div onclick="var b=document.getElementById(\'' + id + '\');var a=this.querySelector(\'.zc-arrow\');if(b.style.display===\'none\'){b.style.display=\'block\';a.textContent=\'\\u25BE\'}else{b.style.display=\'none\';a.textContent=\'\\u25B8\'}" style="padding:8px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;" onmouseover="this.style.background=\'rgba(255,255,255,.02)\'" onmouseout="this.style.background=\'none\'">';
+      html += '<span class="zc-arrow" style="font-size:9px;color:#5A5652;width:10px;">&#9656;</span>';
+      html += '<span style="font-size:11px;">' + sec.icon + '</span>';
+      html += '<span style="font-family:\'DM Sans\',sans-serif;font-size:10px;color:#C8C4BE;font-weight:600;flex:1;">' + sec.title + '</span>';
+      html += '<span style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:' + sec.accent + ';font-weight:600;min-width:18px;text-align:center;padding:1px 6px;border-radius:8px;background:rgba(255,255,255,.04);">' + items.length + '</span>';
+      html += '</div>';
+      html += '<div id="' + id + '" style="display:none;padding:0 10px 8px 28px;">';
+      if (!items.length) {
+        html += '<div style="padding:6px 0;color:#3A3835;font-family:\'DM Sans\',sans-serif;font-size:9px;font-style:italic;">No ' + sec.title.toLowerCase() + ' yet</div>';
+      } else {
+        html += '<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;">';
+        for (const item of items) {
+          const hasImage = item.url && item.url.length > 10;
+          html += '<div style="flex-shrink:0;width:56px;">';
+          if (hasImage) html += '<img src="' + item.url + '" style="width:56px;height:56px;object-fit:cover;border-radius:5px;border:1px solid rgba(255,255,255,.08);display:block;">';
+          else html += '<div style="width:56px;height:56px;border-radius:5px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;"><span style="font-size:16px;opacity:.25;">🖼</span></div>';
+          html += '<div style="font-family:\'DM Sans\',sans-serif;font-size:7px;color:#5A5652;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;">' + (item.label || item.placeholder || '') + '</div>';
+          html += '</div>';
+        }
+        html += '</div>';
+      }
+      html += '</div></div>';
+    }
+    content.innerHTML = html;
+    return;
+  }
+
+  /* Files tab */
+  if (tab === 'files') {
+    let html = '';
+    for (const [key, val] of Object.entries(data)) {
+      html += '<div style="padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:8px;">' +
+        '<div style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#3A3835;font-weight:600;min-width:90px;flex-shrink:0;">' + key + '</div>' +
+        '<div style="font-family:\'DM Sans\',sans-serif;font-size:11px;color:#B8B4AE;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + val + '</div>' +
+        '<button style="flex-shrink:0;padding:3px 10px;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.15);border-radius:6px;color:#CFB584;font-family:\'DM Sans\',sans-serif;font-size:8px;font-weight:600;cursor:pointer;letter-spacing:.4px;">↓ Download</button>' +
+        '</div>';
+    }
+    content.innerHTML = html;
+    return;
+  }
+
+  /* Default key-value */
+  let html = '';
+  for (const [key, val] of Object.entries(data)) {
+    const isLong = val.length > 60;
+    const isBadge = key === 'Priority' || key === 'Payment Status' || key === 'Center Source';
+    let valHtml = '';
+    if (isBadge && val === 'HIGH') valHtml = '<span style="padding:2px 8px;border-radius:8px;background:rgba(201,83,75,.12);border:1px solid rgba(201,83,75,.2);color:#C9534B;font-size:9px;font-weight:700;letter-spacing:1px;">' + val + '</span>';
+    else if (isBadge && (val === 'Deposit Received' || val === 'Client Supplied')) valHtml = '<span style="padding:2px 8px;border-radius:8px;background:rgba(45,139,85,.1);border:1px solid rgba(45,139,85,.2);color:#2D8B55;font-size:9px;font-weight:700;">' + val + '</span>';
+    else if (key === 'Client Price' || key === 'Carat Weight') valHtml = '<span style="color:#CFB584;font-weight:600;">' + val + '</span>';
+    else if (key === 'Margin') valHtml = '<span style="color:#2D8B55;font-weight:600;">' + val + '</span>';
+    else valHtml = val;
+    if (isLong) {
+      html += '<div id="pf2-field-' + key.replace(/\s+/g,'-').toLowerCase() + '" style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;gap:4px;">' +
+        '<div style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#3A3835;font-weight:600;">' + key + '</div>' +
+        '<div style="font-family:\'DM Sans\',sans-serif;font-size:11px;color:#B8B4AE;line-height:1.6;">' + valHtml + '</div></div>';
+    } else {
+      html += '<div id="pf2-field-' + key.replace(/\s+/g,'-').toLowerCase() + '" style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:baseline;gap:8px;">' +
+        '<div style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#3A3835;font-weight:600;min-width:110px;flex-shrink:0;">' + key + '</div>' +
+        '<div style="font-family:\'DM Sans\',sans-serif;font-size:11.5px;color:#B8B4AE;font-weight:500;">' + valHtml + '</div></div>';
+    }
+  }
+  content.innerHTML = html;
+}
+
+function pf2Go(tab) {
+  pf2RenderPanel(tab);
+  document.getElementById('pf2-pf-scroll').scrollTop = 0;
+}
+
+function pf2HighlightField(key) {
+  const id = 'pf2-field-' + key.replace(/\s+/g,'-').toLowerCase();
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.transition = 'background .3s';
+  el.style.background = 'rgba(207,181,132,.12)';
+  el.style.borderLeft = '3px solid #CFB584';
+  setTimeout(() => { el.style.background = ''; el.style.borderLeft = ''; }, 3000);
+}
+
+/* ── Send message to Zip in overlay ── */
+async function sendPf2() {
+  const input = document.getElementById('pf2-input');
+  const text = input.value.trim();
+  if (!text || pf2Busy) return;
+
+  input.value = '';
+  addPf2Bubble('user', text);
+  document.getElementById('pf2-suggestions').innerHTML = '';
+  pf2Busy = true;
+
+  document.getElementById('pf2-typing').style.display = 'block';
+  document.getElementById('pf2-msgs').scrollTop = document.getElementById('pf2-msgs').scrollHeight;
+
+  const apiMessages = pf2Messages.map(m => ({ role: m.role, content: m.content }));
+
+  try {
+    const res = await fetch(CHAT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        system: zipBuildSystemPrompt(),
+        messages: apiMessages,
+      }),
+    });
+    const data = await res.json();
+    document.getElementById('pf2-typing').style.display = 'none';
+    if (!res.ok || !data.content) throw new Error(data.error?.message || data.error || 'No response');
+
+    let reply = data.content[0]?.text || '';
+
+    // Process $$UPDATE{...}$$ commands
+    const updateRe = /\$\$UPDATE(\{[^}]+\})\$\$/g;
+    let match;
+    while ((match = updateRe.exec(reply)) !== null) {
+      try {
+        const cmd = JSON.parse(match[1]);
+        if (cmd.tab && cmd.field && cmd.value !== undefined && zipProjectData[cmd.tab]) {
+          zipProjectData[cmd.tab][cmd.field] = cmd.value;
+          const activeTab = document.querySelector('.pf2-tab[style*="CFB584"]');
+          if (activeTab && activeTab.dataset.tab === cmd.tab) pf2RenderPanel(cmd.tab);
+          setTimeout(() => pf2HighlightField(cmd.field), 100);
+        }
+      } catch(e) {}
+    }
+
+    // Process $$TAB{...}$$ commands
+    const tabRe = /\$\$TAB(\{[^}]+\})\$\$/g;
+    while ((match = tabRe.exec(reply)) !== null) {
+      try {
+        const cmd = JSON.parse(match[1]);
+        if (cmd.tab && zipProjectData[cmd.tab]) pf2Go(cmd.tab);
+      } catch(e) {}
+    }
+
+    // Strip command tokens from display
+    const clean = reply.replace(/\$\$(UPDATE|TAB|SUGGEST)\{[^}]*\}\$\$/g, '').trim();
+    if (clean) addPf2Bubble('assistant', clean);
+    pf2ShowSuggestions();
+  } catch(e) {
+    document.getElementById('pf2-typing').style.display = 'none';
+    addPf2Bubble('assistant', 'Sorry, I couldn\'t process that right now. Please try again.');
+  }
+  pf2Busy = false;
+}
+
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════
@@ -8158,6 +8395,197 @@ function closeDashboardPreview(){ document.getElementById('dash-preview-overlay'
           <!-- Mock preview badge -->
           <div style="text-align:center;margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,.04);">
             <span style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#2A2825;font-weight:600;">Mock Preview · Visual Concept Only</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PROJECT FOLDER PREVIEW OVERLAY
+     Full project folder with live Zip assistant — reads/writes zipProjectData.
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="pf-preview-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(10,12,8,.88);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:24px;animation:rise .25s ease;" onclick="if(event.target===this)closeProjectFolderPreview()">
+
+  <!-- Window chrome -->
+  <div style="width:100%;max-width:1220px;max-height:92vh;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.1);box-shadow:0 24px 80px rgba(0,0,0,.45);display:flex;flex-direction:column;">
+
+    <!-- Title bar -->
+    <div style="background:#1A1C17;padding:11px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;">
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <div onclick="closeProjectFolderPreview()" style="width:11px;height:11px;border-radius:50%;background:#FF5F57;cursor:pointer;" title="Close preview"></div>
+        <div style="width:11px;height:11px;border-radius:50%;background:#FFBD2E;"></div>
+        <div style="width:11px;height:11px;border-radius:50%;background:#28C840;"></div>
+      </div>
+      <div style="flex:1;text-align:center;">
+        <span style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:3px 14px;">
+          <span style="width:7px;height:7px;border-radius:50%;background:#2D8B55;display:inline-block;opacity:.8;"></span>
+          <span style="font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.5px;">zipjeweler.com / projects / celestine-oval-ring</span>
+        </span>
+      </div>
+      <div style="width:64px;text-align:right;">
+        <span onclick="closeProjectFolderPreview()" style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.25);cursor:pointer;padding:4px 8px;border:1px solid rgba(255,255,255,.08);border-radius:4px;" onmouseover="this.style.color='rgba(255,255,255,.5)'" onmouseout="this.style.color='rgba(255,255,255,.25)'">ESC</span>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div style="background:#0E100C;overflow-y:auto;flex:1;">
+      <div style="display:grid;grid-template-columns:200px 1fr;min-height:600px;">
+
+        <!-- ── SIDEBAR ── -->
+        <div style="background:#141810;border-right:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;">
+
+          <!-- Logo -->
+          <div style="padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,.05);">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;color:#CFB584;letter-spacing:1px;">ZipJeweler</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:8px;color:#3A3835;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px;">Production Platform</div>
+          </div>
+
+          <!-- Sidebar nav -->
+          <nav style="flex:1;padding:10px 0;overflow-y:auto;">
+            <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#2A2825;font-weight:700;padding:4px 18px 8px;">Hub</div>
+
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:default;opacity:.5;">
+              <span style="font-size:13px;">🗃</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">Dashboard</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;background:rgba(207,181,132,.08);border-left:2px solid #CFB584;cursor:default;">
+              <span style="font-size:13px;">📁</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#D8D4CE;">Project Folders</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:default;opacity:.5;">
+              <span style="font-size:13px;">⬡</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">Products</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:default;opacity:.5;">
+              <span style="font-size:13px;">🗂</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">File Hub</span>
+            </div>
+
+            <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#2A2825;font-weight:700;padding:16px 18px 8px;">AI Tools</div>
+
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:default;opacity:.5;">
+              <span style="font-size:13px;">💬</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">Imagine</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:default;opacity:.5;">
+              <span style="font-size:13px;">🖼</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">Sketch-to-Image</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:default;opacity:.5;">
+              <span style="font-size:13px;">🔄</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">CAD-to-Render</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:default;opacity:.5;">
+              <span style="font-size:13px;">📐</span><span style="font-family:'DM Sans',sans-serif;font-size:11px;color:#6B6860;">Spec Assistant</span>
+            </div>
+          </nav>
+
+          <!-- Sidebar footer -->
+          <div style="padding:12px 18px;border-top:1px solid rgba(255,255,255,.05);">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#CFB584,#A08650);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-family:'DM Sans',sans-serif;font-weight:600;">MR</div>
+              <div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#D8D4CE;font-weight:500;">Michael Ray</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:8px;color:#47453F;">Studio Owner</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── MAIN CONTENT: Project Folder + Zip Chat ── -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;overflow:hidden;">
+
+          <!-- LEFT: Project Folder -->
+          <div style="display:flex;flex-direction:column;background:#0C0C0A;border-right:1px solid rgba(255,255,255,.05);overflow:hidden;">
+
+            <!-- Product card header -->
+            <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;gap:12px;align-items:center;flex-shrink:0;background:rgba(255,255,255,.015);">
+              <div style="width:52px;height:52px;border-radius:8px;background:#1A1A1A;border:1px solid rgba(255,255,255,.06);overflow:hidden;flex-shrink:0;">
+                <img src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=128&h=128&fit=crop&q=80" alt="Ring" style="width:100%;height:100%;object-fit:cover;" />
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;color:#E8E4DD;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Celestine Oval Ring</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:#5A5652;margin-top:2px;">Sarah &amp; James Chen · Bridal</div>
+                <div style="display:flex;gap:6px;margin-top:4px;">
+                  <span style="padding:1px 7px;border-radius:6px;background:rgba(207,181,132,.1);border:1px solid rgba(207,181,132,.18);font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#CFB584;">18k White Gold</span>
+                  <span style="padding:1px 7px;border-radius:6px;background:rgba(112,80,168,.1);border:1px solid rgba(112,80,168,.18);font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#9070C0;">2.1ct Oval</span>
+                </div>
+              </div>
+              <div style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(207,181,132,.1);border:1px solid rgba(207,181,132,.22);border-radius:10px;flex-shrink:0;">
+                <div style="width:6px;height:6px;border-radius:50%;background:#CFB584;"></div>
+                <span style="font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;color:#CFB584;">In Review</span>
+              </div>
+            </div>
+
+            <!-- Tab nav -->
+            <div style="display:flex;border-bottom:1px solid rgba(255,255,255,.05);padding:0 12px;flex-shrink:0;overflow-x:auto;">
+              <button onclick="pf2Go('overview')" class="pf2-tab" data-tab="overview" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#CFB584;background:none;border:none;border-bottom:2px solid #CFB584;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Overview</button>
+              <button onclick="pf2Go('design')" class="pf2-tab" data-tab="design" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Design</button>
+              <button onclick="pf2Go('content')" class="pf2-tab" data-tab="content" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Content</button>
+              <button onclick="pf2Go('stones')" class="pf2-tab" data-tab="stones" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Stones</button>
+              <button onclick="pf2Go('specs')" class="pf2-tab" data-tab="specs" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Specs</button>
+              <button onclick="pf2Go('order')" class="pf2-tab" data-tab="order" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Order</button>
+              <button onclick="pf2Go('files')" class="pf2-tab" data-tab="files" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Files</button>
+            </div>
+
+            <!-- Scrollable content -->
+            <div id="pf2-pf-scroll" style="flex:1;overflow-y:auto;padding:14px 16px;">
+              <div id="pf2-pf-content"></div>
+            </div>
+
+            <!-- Production stage tracker -->
+            <div style="border-top:1px solid rgba(255,255,255,.05);padding:10px 16px;background:rgba(255,255,255,.015);flex-shrink:0;">
+              <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:8px;">Production Stage</div>
+              <div style="display:flex;gap:4px;">
+                <div style="flex:1;height:4px;border-radius:2px;background:#2D8B55;"></div>
+                <div style="flex:1;height:4px;border-radius:2px;background:#2D8B55;"></div>
+                <div style="flex:1;height:4px;border-radius:2px;background:#CFB584;"></div>
+                <div style="flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.06);"></div>
+                <div style="flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.06);"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:4px;">
+                <span style="font-family:'DM Sans',sans-serif;font-size:7px;color:#2D8B55;">Design</span>
+                <span style="font-family:'DM Sans',sans-serif;font-size:7px;color:#2D8B55;">CAD</span>
+                <span style="font-family:'DM Sans',sans-serif;font-size:7px;color:#CFB584;font-weight:600;">Setting</span>
+                <span style="font-family:'DM Sans',sans-serif;font-size:7px;color:#3A3835;">QC</span>
+                <span style="font-family:'DM Sans',sans-serif;font-size:7px;color:#3A3835;">Delivery</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Zip Chat (LIVE) -->
+          <div style="display:flex;flex-direction:column;overflow:hidden;background:#0F0F0D;">
+
+            <!-- Chat header -->
+            <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:12px;flex-shrink:0;">
+              <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(201,83,75,.25),rgba(207,181,132,.15));border:1.5px solid rgba(201,83,75,.35);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">⚡</div>
+              <div style="flex:1;">
+                <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;color:#E8E4DD;">Zip <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;font-weight:400;margin-left:4px;">AI Dashboard Assistant</span></div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:#47453F;margin-top:1px;">Celestine Oval Ring — Sarah &amp; James Chen</div>
+              </div>
+              <div style="width:8px;height:8px;border-radius:50%;background:#28C840;box-shadow:0 0 6px rgba(40,200,64,.4);flex-shrink:0;"></div>
+            </div>
+
+            <!-- Messages -->
+            <div id="pf2-msgs" style="flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px;">
+            </div>
+
+            <!-- Typing indicator -->
+            <div id="pf2-typing" style="display:none;padding:0 20px 10px;flex-shrink:0;">
+              <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,255,255,.03);border-radius:12px;">
+                <div style="display:flex;gap:3px;">
+                  <div style="width:5px;height:5px;border-radius:50%;background:#C9534B;animation:ibounce 1.2s ease infinite;"></div>
+                  <div style="width:5px;height:5px;border-radius:50%;background:#C9534B;animation:ibounce 1.2s ease .15s infinite;"></div>
+                  <div style="width:5px;height:5px;border-radius:50%;background:#C9534B;animation:ibounce 1.2s ease .3s infinite;"></div>
+                </div>
+                <span style="font-family:'DM Sans',sans-serif;font-size:9px;color:#47453F;">Zip is thinking…</span>
+              </div>
+            </div>
+
+            <!-- Suggestion chips -->
+            <div id="pf2-suggestions" style="padding:4px 16px 0;display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;"></div>
+
+            <!-- Input bar -->
+            <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.05);background:#0C0C0A;display:flex;align-items:flex-end;gap:10px;flex-shrink:0;">
+              <textarea id="pf2-input" rows="1" placeholder="Ask Zip anything about this project…" style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#E8E4DD;font-family:'DM Sans',sans-serif;font-size:12px;padding:10px 14px;resize:none;outline:none;line-height:1.5;max-height:80px;" onfocus="this.style.borderColor='rgba(201,83,75,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.08)'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPf2();}"></textarea>
+              <button onclick="sendPf2()" style="width:40px;height:40px;border-radius:50%;background:#C9534B;border:none;color:#fff;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;box-shadow:0 2px 10px rgba(201,83,75,.3);" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">&#10148;</button>
+            </div>
           </div>
 
         </div>
