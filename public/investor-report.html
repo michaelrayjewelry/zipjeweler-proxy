@@ -432,7 +432,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
 }
 @media(max-width:720px){
   #zip-shell{grid-template-columns:1fr !important;}
-  #zip-shell > div:last-child{display:none;}
+  #zip-shell > div:first-child{display:none;}
 }
 @media(max-width:720px){
   #imagine-shell{grid-template-columns:1fr !important;}
@@ -2061,11 +2061,56 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
               <button onclick="resetZip()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:5px;color:rgba(255,255,255,.35);cursor:pointer;font-size:12px;padding:3px 8px;font-family:'DM Sans',sans-serif;" onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.35)'">&#8635; Reset</button>
             </div>
 
-            <!-- App Shell: chat | project folder -->
+            <!-- App Shell: project folder | chat -->
             <div id="zip-shell" style="display:grid;grid-template-columns:1fr 1fr;background:#0F0F0D;height:600px;">
 
-              <!-- LEFT: Zip Chat -->
-              <div style="display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.05);overflow:hidden;">
+              <!-- LEFT: Live Project Folder -->
+              <div style="display:flex;flex-direction:column;background:#0C0C0A;border-right:1px solid rgba(255,255,255,.05);overflow:hidden;">
+
+                <!-- Product card -->
+                <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;gap:12px;align-items:center;flex-shrink:0;background:rgba(255,255,255,.015);">
+                  <div id="zip-product-thumb" style="width:64px;height:64px;border-radius:8px;background:#1A1A1A;border:1px solid rgba(255,255,255,.06);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+                    <img src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=128&h=128&fit=crop&q=80" alt="Ring" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=font-size:28px;opacity:.4>💍</span>';" />
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;color:#E8E4DD;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Celestine Oval Ring</div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:#5A5652;margin-top:2px;">Sarah &amp; James Chen · Bridal</div>
+                    <div style="display:flex;gap:6px;margin-top:4px;">
+                      <span style="padding:1px 7px;border-radius:6px;background:rgba(207,181,132,.1);border:1px solid rgba(207,181,132,.18);font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#CFB584;">18k White Gold</span>
+                      <span style="padding:1px 7px;border-radius:6px;background:rgba(112,80,168,.1);border:1px solid rgba(112,80,168,.18);font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#9070C0;">2.1ct Oval</span>
+                    </div>
+                  </div>
+                  <div id="zip-pf-status" style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(207,181,132,.1);border:1px solid rgba(207,181,132,.22);border-radius:10px;flex-shrink:0;">
+                    <div style="width:6px;height:6px;border-radius:50%;background:#CFB584;"></div>
+                    <span style="font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;color:#CFB584;">In Review</span>
+                  </div>
+                </div>
+
+                <!-- Tab nav -->
+                <div style="display:flex;border-bottom:1px solid rgba(255,255,255,.05);padding:0 12px;flex-shrink:0;overflow-x:auto;" id="zip-pf-tabs">
+                  <button onclick="zipPfGo('overview')" class="zip-pf-tab zip-pf-tab-active" data-tab="overview" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#CFB584;background:none;border:none;border-bottom:2px solid #CFB584;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Overview</button>
+                  <button onclick="zipPfGo('design')" class="zip-pf-tab" data-tab="design" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Design</button>
+                  <button onclick="zipPfGo('stones')" class="zip-pf-tab" data-tab="stones" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Stones</button>
+                  <button onclick="zipPfGo('specs')" class="zip-pf-tab" data-tab="specs" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Specs</button>
+                  <button onclick="zipPfGo('order')" class="zip-pf-tab" data-tab="order" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Order</button>
+                  <button onclick="zipPfGo('files')" class="zip-pf-tab" data-tab="files" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Files</button>
+                </div>
+
+                <!-- Scrollable content -->
+                <div id="zip-pf-scroll" style="flex:1;overflow-y:auto;padding:14px 16px;">
+                  <!-- Panels rendered by JS from zipProjectData -->
+                  <div id="zip-pf-content"></div>
+                </div>
+
+                <!-- Change log -->
+                <div id="zip-changelog" style="display:none;border-top:1px solid rgba(255,255,255,.05);padding:8px 16px;background:rgba(45,139,85,.04);max-height:90px;overflow-y:auto;">
+                  <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#2D8B55;font-weight:700;margin-bottom:4px;">Recent Changes by Zip</div>
+                  <div id="zip-changelog-items" style="display:flex;flex-direction:column;gap:2px;"></div>
+                </div>
+              </div>
+
+              <!-- RIGHT: Zip Chat -->
+              <div style="display:flex;flex-direction:column;overflow:hidden;">
 
                 <!-- Chat header -->
                 <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:12px;flex-shrink:0;">
@@ -2100,41 +2145,6 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                 <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.05);background:#0C0C0A;display:flex;align-items:flex-end;gap:10px;flex-shrink:0;">
                   <textarea id="zip-input" rows="1" placeholder="Ask Zip anything about this project…" style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#E8E4DD;font-family:'DM Sans',sans-serif;font-size:12px;padding:10px 14px;resize:none;outline:none;line-height:1.5;max-height:80px;" onfocus="this.style.borderColor='rgba(201,83,75,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.08)'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendZip();}"></textarea>
                   <button onclick="sendZip()" id="zip-send" style="width:40px;height:40px;border-radius:50%;background:#C9534B;border:none;color:#fff;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;box-shadow:0 2px 10px rgba(201,83,75,.3);" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">&#10148;</button>
-                </div>
-              </div>
-
-              <!-- RIGHT: Live Project Folder -->
-              <div style="display:flex;flex-direction:column;background:#0C0C0A;overflow:hidden;">
-
-                <!-- Project folder header -->
-                <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:12px;flex-shrink:0;">
-                  <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:600;flex:1;">Live Project Folder</div>
-                  <div id="zip-pf-status" style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(207,181,132,.1);border:1px solid rgba(207,181,132,.22);border-radius:10px;">
-                    <div style="width:6px;height:6px;border-radius:50%;background:#CFB584;"></div>
-                    <span style="font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;color:#CFB584;">In Review</span>
-                  </div>
-                </div>
-
-                <!-- Tab nav -->
-                <div style="display:flex;border-bottom:1px solid rgba(255,255,255,.05);padding:0 12px;flex-shrink:0;overflow-x:auto;" id="zip-pf-tabs">
-                  <button onclick="zipPfGo('overview')" class="zip-pf-tab zip-pf-tab-active" data-tab="overview" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#CFB584;background:none;border:none;border-bottom:2px solid #CFB584;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Overview</button>
-                  <button onclick="zipPfGo('design')" class="zip-pf-tab" data-tab="design" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Design</button>
-                  <button onclick="zipPfGo('stones')" class="zip-pf-tab" data-tab="stones" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Stones</button>
-                  <button onclick="zipPfGo('specs')" class="zip-pf-tab" data-tab="specs" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Specs</button>
-                  <button onclick="zipPfGo('order')" class="zip-pf-tab" data-tab="order" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Order</button>
-                  <button onclick="zipPfGo('files')" class="zip-pf-tab" data-tab="files" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Files</button>
-                </div>
-
-                <!-- Scrollable content -->
-                <div id="zip-pf-scroll" style="flex:1;overflow-y:auto;padding:14px 16px;">
-                  <!-- Panels rendered by JS from zipProjectData -->
-                  <div id="zip-pf-content"></div>
-                </div>
-
-                <!-- Change log -->
-                <div id="zip-changelog" style="display:none;border-top:1px solid rgba(255,255,255,.05);padding:8px 16px;background:rgba(45,139,85,.04);max-height:90px;overflow-y:auto;">
-                  <div style="font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#2D8B55;font-weight:700;margin-bottom:4px;">Recent Changes by Zip</div>
-                  <div id="zip-changelog-items" style="display:flex;flex-direction:column;gap:2px;"></div>
                 </div>
               </div>
             </div>
