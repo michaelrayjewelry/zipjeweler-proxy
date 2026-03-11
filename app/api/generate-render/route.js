@@ -3,9 +3,6 @@
 // For S2I: sketch-to-image generation/editing with multi-turn correction support
 // Now uses the same Responses API + gpt-4.1 approach as C2R's generate-image route
 
-// Extend serverless function timeout for image generation (OpenAI can take 30-60s)
-export const maxDuration = 60;
-
 export async function OPTIONS() {
   return new Response(null, {
     status: 200,
@@ -24,69 +21,78 @@ export async function POST(request) {
     'Access-Control-Allow-Headers': 'Content-Type',
   };
 
-  let body;
-  try { body = await request.json(); } catch { body = {}; }
+  try {
+    let body;
+    try { body = await request.json(); } catch { body = {}; }
 
-  const {
-    prompt,
-    input_image,              // base64 image (sketch or reference)
-    input_image_2,            // additional reference images
-    input_image_3,
-    input_image_4,
-    mask_image,               // mask for targeted editing
-    previous_response_id,     // for multi-turn corrections
-    action = 'auto',          // "edit" = force edit, "generate" = new image, "auto" = model decides
-    aspect_ratio = '1:1',
-    quality = 'high',
-    size,                     // if provided, use directly; otherwise derive from aspect_ratio
-    input_fidelity = 'high',
-  } = body;
+    const {
+      prompt,
+      input_image,              // base64 image (sketch or reference)
+      input_image_2,            // additional reference images
+      input_image_3,
+      input_image_4,
+      mask_image,               // mask for targeted editing
+      previous_response_id,     // for multi-turn corrections
+      action = 'auto',          // "edit" = force edit, "generate" = new image, "auto" = model decides
+      aspect_ratio = '1:1',
+      quality = 'high',
+      size,                     // if provided, use directly; otherwise derive from aspect_ratio
+      input_fidelity = 'high',
+    } = body;
 
-  if (!prompt || prompt.trim().length < 5) {
-    return Response.json({ error: 'prompt is required' }, { status: 400, headers: corsHeaders });
-  }
+    if (!prompt || prompt.trim().length < 5) {
+      return Response.json({ error: 'prompt is required' }, { status: 400, headers: corsHeaders });
+    }
 
-  const hasInputImage = input_image && input_image.length > 100;
+    const hasInputImage = input_image && input_image.length > 100;
 
-  // Try OpenAI Responses API first, then Higgsfield fallback
-  const openaiKey = process.env.OPENAI_API_KEY;
-  if (openaiKey) {
+    // Try OpenAI Responses API first, then Higgsfield fallback
+    const openaiKey = process.env.OPENAI_API_KEY;
+    if (openaiKey) {
+      try {
+        const result = await responsesGenerate({
+          openaiKey,
+          prompt: prompt.trim(),
+          hasInputImage,
+          input_image,
+          input_image_2,
+          input_image_3,
+          input_image_4,
+          mask_image,
+          previous_response_id,
+          action,
+          aspect_ratio,
+          quality,
+          size,
+          input_fidelity,
+        });
+        return Response.json(result, { headers: corsHeaders });
+      } catch (e) {
+        console.error('Responses API error:', e.message);
+        // Fall through to Higgsfield
+      }
+    }
+
+    // Higgsfield fallback
+    const keyId     = process.env.HIGGSFIELD_KEY_ID;
+    const keySecret = process.env.HIGGSFIELD_KEY_SECRET;
+    if (!keyId || !keySecret) {
+      return Response.json({ error: 'No image generation API keys configured. Set OPENAI_API_KEY or HIGGSFIELD_KEY_ID + HIGGSFIELD_KEY_SECRET.' }, { status: 500, headers: corsHeaders });
+    }
+
     try {
-      const result = await responsesGenerate({
-        openaiKey,
-        prompt: prompt.trim(),
-        hasInputImage,
-        input_image,
-        input_image_2,
-        input_image_3,
-        input_image_4,
-        mask_image,
-        previous_response_id,
-        action,
-        aspect_ratio,
-        quality,
-        size,
-        input_fidelity,
-      });
+      const result = await higgsGenerate({ keyId, keySecret, prompt: prompt.trim(), hasInputImage, input_image, aspect_ratio });
       return Response.json(result, { headers: corsHeaders });
     } catch (e) {
-      console.error('Responses API error:', e.message);
-      // Fall through to Higgsfield
+      return Response.json({ error: e.message }, { status: 500, headers: corsHeaders });
     }
-  }
 
-  // Higgsfield fallback
-  const keyId     = process.env.HIGGSFIELD_KEY_ID;
-  const keySecret = process.env.HIGGSFIELD_KEY_SECRET;
-  if (!keyId || !keySecret) {
-    return Response.json({ error: 'No image generation API keys configured. Set OPENAI_API_KEY or HIGGSFIELD_KEY_ID + HIGGSFIELD_KEY_SECRET.' }, { status: 500, headers: corsHeaders });
-  }
-
-  try {
-    const result = await higgsGenerate({ keyId, keySecret, prompt: prompt.trim(), hasInputImage, input_image, aspect_ratio });
-    return Response.json(result, { headers: corsHeaders });
-  } catch (e) {
-    return Response.json({ error: e.message }, { status: 500, headers: corsHeaders });
+  } catch (topLevelError) {
+    console.error('generate-render top-level error:', topLevelError);
+    return Response.json(
+      { error: topLevelError.message || 'Internal server error' },
+      { status: 500, headers: corsHeaders }
+    );
   }
 }
 

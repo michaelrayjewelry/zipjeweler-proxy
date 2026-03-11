@@ -4193,6 +4193,37 @@ function sendImagine() {
 /* ══════════════════════════════════════════════════════
    SKETCH TO IMAGE
 ══════════════════════════════════════════════════════ */
+/* ── Compress/resize an image to stay under a max base64 byte size ── */
+function compressImageB64(dataUrl, maxB64Len, callback) {
+  // maxB64Len = max length of the base64 string (not raw bytes)
+  // Default ~900KB of base64 — keeps JSON payload well under platform limits
+  maxB64Len = maxB64Len || 900000;
+  const img = new Image();
+  img.onload = () => {
+    let w = img.naturalWidth, h = img.naturalHeight;
+    // Scale down if very large (max 1024px on longest edge for API payloads)
+    const maxDim = 1024;
+    if (w > maxDim || h > maxDim) {
+      const scale = maxDim / Math.max(w, h);
+      w = Math.round(w * scale);
+      h = Math.round(h * scale);
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    // Try JPEG at decreasing quality until base64 length is under limit
+    let quality = 0.82;
+    let result = canvas.toDataURL('image/jpeg', quality);
+    while (result.split(',')[1].length > maxB64Len && quality > 0.25) {
+      quality -= 0.1;
+      result = canvas.toDataURL('image/jpeg', quality);
+    }
+    callback(result);
+  };
+  img.src = dataUrl;
+}
+
 let s2iOpen = false;
 let s2iImageB64 = null;
 let s2iImageType = 'image/jpeg';
@@ -4238,41 +4269,44 @@ function resetS2I() {
 function handleS2IUpload(input) {
   const file = input.files[0];
   if (!file) return;
-  s2iImageType = file.type || 'image/jpeg';
+  s2iImageType = 'image/jpeg'; // always compress to JPEG
   const reader = new FileReader();
   reader.onload = e => {
-    const dataUrl = e.target.result;
-    s2iImageB64 = dataUrl.split(',')[1];
-    const img = document.getElementById('s2i-preview-img');
-    img.src = dataUrl;
-    img.style.display = 'block';
-    document.getElementById('s2i-upload-ph').style.display = 'none';
-    // Show zone annotation section (optional inpainting)
-    try {
-      const zoneSection = document.getElementById('s2i-zone-section');
-      if (zoneSection) {
-        zoneSection.style.display = 'block';
-        zoneSection.style.visibility = 'visible';
-        zoneSection.style.opacity = '1';
+    const rawDataUrl = e.target.result;
+    // Compress to stay under Netlify payload limits (~1.5MB per image)
+    compressImageB64(rawDataUrl, 900000, compressedDataUrl => {
+      s2iImageB64 = compressedDataUrl.split(',')[1];
+      const img = document.getElementById('s2i-preview-img');
+      img.src = compressedDataUrl;
+      img.style.display = 'block';
+      document.getElementById('s2i-upload-ph').style.display = 'none';
+      // Show zone annotation section (optional inpainting)
+      try {
+        const zoneSection = document.getElementById('s2i-zone-section');
+        if (zoneSection) {
+          zoneSection.style.display = 'block';
+          zoneSection.style.visibility = 'visible';
+          zoneSection.style.opacity = '1';
+        }
+        // Reset any existing zones
+        s2iZones = [];
+        s2iZonePainterOpen = false;
+        s2iZoneHistory = [];
+        s2iZoneTempMask = null;
+        const wrap = document.getElementById('s2i-zone-wrap');
+        if (wrap) wrap.style.display = 'none';
+        const toolbar = document.getElementById('s2i-zone-toolbar');
+        if (toolbar) toolbar.style.display = 'none';
+        const noteBar = document.getElementById('s2i-zone-note-bar');
+        if (noteBar) noteBar.style.display = 'none';
+        const zoneList = document.getElementById('s2i-zone-list');
+        if (zoneList) zoneList.innerHTML = '';
+        const toggleBtn = document.getElementById('s2i-zone-toggle-btn');
+        if (toggleBtn) toggleBtn.textContent = '+ Add Zones';
+      } catch (zoneErr) {
+        console.warn('S2I zone init error:', zoneErr);
       }
-      // Reset any existing zones
-      s2iZones = [];
-      s2iZonePainterOpen = false;
-      s2iZoneHistory = [];
-      s2iZoneTempMask = null;
-      const wrap = document.getElementById('s2i-zone-wrap');
-      if (wrap) wrap.style.display = 'none';
-      const toolbar = document.getElementById('s2i-zone-toolbar');
-      if (toolbar) toolbar.style.display = 'none';
-      const noteBar = document.getElementById('s2i-zone-note-bar');
-      if (noteBar) noteBar.style.display = 'none';
-      const zoneList = document.getElementById('s2i-zone-list');
-      if (zoneList) zoneList.innerHTML = '';
-      const toggleBtn = document.getElementById('s2i-zone-toggle-btn');
-      if (toggleBtn) toggleBtn.textContent = '+ Add Zones';
-    } catch (zoneErr) {
-      console.warn('S2I zone init error:', zoneErr);
-    }
+    });
   };
   reader.readAsDataURL(file);
 }
@@ -4382,12 +4416,21 @@ async function renderS2IDirect(correctionText) {
     });
     clearTimeout(timeout);
 
-    // Handle 502/504 gateway errors from serverless function timeout
+    // Handle gateway errors (502/504 = timeout, 500 = crash/body too large)
     if (res.status === 502 || res.status === 504) {
-      throw new Error('Server timed out generating the image. The render may take longer than the server allows. Please try again — sometimes a second attempt succeeds faster.');
+      throw new Error('Server timed out generating the image. Please try again — sometimes a second attempt succeeds faster.');
     }
 
-    const data = await res.json();
+    // Parse response safely — Netlify may return plain text errors (e.g. "Internal Error")
+    let data;
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      const text = await res.text();
+      if (!res.ok) throw new Error(text || 'Server error (HTTP ' + res.status + ')');
+      try { data = JSON.parse(text); } catch { throw new Error('Unexpected server response: ' + text.slice(0, 120)); }
+    }
 
     document.getElementById('s2i-spinner').style.display = 'none';
     if (!res.ok || !data.url) throw new Error(data.error || 'No image URL returned');
@@ -4663,7 +4706,8 @@ function s2iGetAnnotatedImage() {
     }
   });
 
-  return comp.toDataURL('image/png').split(',')[1];
+  // Compress to JPEG to stay under payload limits (zone overlay is just a visual reference)
+  return comp.toDataURL('image/jpeg', 0.55).split(',')[1];
 }
 
 /* ══════════════════════════════════════════════════════

@@ -5,9 +5,6 @@
 //   S2I: action="auto" — model decides whether to generate or edit based on context
 // Supports iterative corrections via previous_response_id
 
-// Extend serverless function timeout for image generation (OpenAI can take 30-60s)
-export const maxDuration = 60;
-
 export async function OPTIONS() {
   return new Response(null, {
     status: 200,
