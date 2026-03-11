@@ -1963,11 +1963,11 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
 
                 </div>
 
-                <!-- Zones panel + output -->
-                <div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid rgba(255,255,255,.05);">
+                <!-- Zones panel + spec brief + output -->
+                <div style="display:grid;grid-template-columns:280px 1fr 1fr;border-top:1px solid rgba(255,255,255,.05);">
 
                   <!-- LEFT: Saved Zones -->
-                  <div style="border-right:1px solid rgba(255,255,255,.05);padding:14px 18px;max-height:260px;overflow-y:auto;">
+                  <div style="border-right:1px solid rgba(255,255,255,.05);padding:14px 18px;max-height:320px;overflow-y:auto;">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
                       <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#C9534B;font-weight:700;">Saved Zones</div>
                       <button id="blend-save-zone-btn" onclick="saveBlendZone()" style="background:rgba(201,83,75,.12);border:1px solid rgba(201,83,75,.25);border-radius:7px;color:#C9534B;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:5px;" onmouseover="this.style.background='rgba(201,83,75,.2)'" onmouseout="this.style.background='rgba(201,83,75,.12)'">
@@ -2007,8 +2007,55 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                     </div>
                   </div>
 
+                  <!-- CENTER: Project Spec Brief -->
+                  <div style="border-right:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;overflow:hidden;background:#0C0C0A;">
+                    <!-- Spec header + progress -->
+                    <div style="padding:14px 18px 10px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;">
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                        <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#C9534B;font-weight:700;">Project Spec</div>
+                        <div id="blend-spec-score" style="font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;color:#3A3835;letter-spacing:.5px;">0 / 14 fields</div>
+                      </div>
+                      <div style="height:3px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;">
+                        <div id="blend-spec-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#C9534B,#CFB584);border-radius:2px;transition:width .5s ease;"></div>
+                      </div>
+                    </div>
+
+                    <!-- Spec fields -->
+                    <div id="blend-spec-fields" style="flex:1;overflow-y:auto;padding:6px 0;max-height:250px;">
+                      <!-- Populated by buildBlendSpec() -->
+                    </div>
+
+                    <!-- Piece type + metal overrides -->
+                    <div style="padding:10px 18px;border-top:1px solid rgba(255,255,255,.05);flex-shrink:0;">
+                      <div style="display:flex;gap:6px;">
+                        <select id="blend-piece-type" onchange="updateBlendSpecField('pieceType', this.value)" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:#E8E4DD;font-family:'DM Sans',sans-serif;font-size:10px;padding:6px 8px;outline:none;">
+                          <option value="">Piece type…</option>
+                          <option value="ring">Ring</option>
+                          <option value="necklace">Necklace</option>
+                          <option value="pendant">Pendant</option>
+                          <option value="bracelet">Bracelet</option>
+                          <option value="earrings">Earrings</option>
+                          <option value="brooch">Brooch</option>
+                          <option value="bangle">Bangle</option>
+                          <option value="cufflinks">Cufflinks</option>
+                        </select>
+                        <select id="blend-metal-type" onchange="updateBlendSpecField('metalType', this.value)" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:#E8E4DD;font-family:'DM Sans',sans-serif;font-size:10px;padding:6px 8px;outline:none;">
+                          <option value="">Metal…</option>
+                          <option value="14k yellow gold">14k Yellow Gold</option>
+                          <option value="14k white gold">14k White Gold</option>
+                          <option value="14k rose gold">14k Rose Gold</option>
+                          <option value="18k yellow gold">18k Yellow Gold</option>
+                          <option value="18k white gold">18k White Gold</option>
+                          <option value="18k rose gold">18k Rose Gold</option>
+                          <option value="platinum">Platinum</option>
+                          <option value="sterling silver">Sterling Silver</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
                   <!-- RIGHT: Output -->
-                  <div style="padding:14px 18px;display:flex;flex-direction:column;gap:12px;max-height:260px;overflow-y:auto;">
+                  <div style="padding:14px 18px;display:flex;flex-direction:column;gap:12px;max-height:320px;overflow-y:auto;">
                     <div style="display:flex;align-items:center;justify-content:space-between;">
                       <div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#C9534B;font-weight:700;">Blended Result</div>
                       <button id="blend-gen-btn" onclick="generateBlend()" style="background:linear-gradient(135deg,#C9534B,#D4785F);border:none;border-radius:8px;color:#fff;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:8px 16px;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;gap:6px;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
@@ -6080,13 +6127,182 @@ const BLEND_ZONE_COLORS = [
   'rgba(160,75,201,.45)', 'rgba(201,75,150,.45)'
 ];
 
+/* ── Blend Project Spec Brief ── */
+
+const BLEND_SPEC_FIELDS = [
+  { k:'pieceType',        l:'Piece Type',        g:'Overview' },
+  { k:'metalType',        l:'Metal',             g:'Overview' },
+  { k:'designStyle',      l:'Design Style',      g:'Overview' },
+  { k:'headStyle',        l:'Head / Setting',    g:'Construction' },
+  { k:'shankStyle',       l:'Shank / Band',      g:'Construction' },
+  { k:'prongStyle',       l:'Prong Style',       g:'Construction' },
+  { k:'haloDetail',       l:'Halo',              g:'Construction' },
+  { k:'galleryDetail',    l:'Gallery',           g:'Construction' },
+  { k:'centerStone',      l:'Center Stone',      g:'Stones' },
+  { k:'accentStones',     l:'Accent Stones',     g:'Stones' },
+  { k:'settingStyle',     l:'Setting Style',     g:'Stones' },
+  { k:'surfaceFinish',    l:'Finish / Texture',  g:'Detail' },
+  { k:'engravingDetail',  l:'Engraving',         g:'Detail' },
+  { k:'designDescription',l:'Design Concept',    g:'Detail' },
+];
+
+let blendSpecValues = {};
+
+function buildBlendSpec() {
+  const container = document.getElementById('blend-spec-fields');
+  let out = '', lastG = '';
+  BLEND_SPEC_FIELDS.forEach(f => {
+    if (f.g !== lastG) {
+      if (lastG) out += '</div>';
+      out += '<div style="padding:0 18px;"><div style="font-family:\'DM Sans\',sans-serif;font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#2E2C28;font-weight:700;padding:8px 0 3px;border-bottom:1px solid rgba(255,255,255,.04);margin-bottom:2px;">' + f.g + '</div>';
+      lastG = f.g;
+    }
+    out += '<div id="bsrow-' + f.k + '" style="display:flex;align-items:baseline;gap:6px;padding:3px 0;border-radius:3px;transition:background .4s;">'
+      + '<div style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#3A3835;width:90px;flex-shrink:0;">' + f.l + '</div>'
+      + '<div id="bsval-' + f.k + '" style="font-family:\'DM Sans\',sans-serif;font-size:9.5px;color:#2A2825;flex:1;font-style:italic;word-break:break-word;">\u2014</div>'
+      + '</div>';
+  });
+  out += '</div>';
+  container.innerHTML = out;
+}
+
+function updateBlendSpecField(key, value) {
+  if (!value || value === 'null') return;
+  const changed = blendSpecValues[key] !== value;
+  blendSpecValues[key] = value;
+  if (changed) {
+    const val = document.getElementById('bsval-' + key);
+    const row = document.getElementById('bsrow-' + key);
+    if (val) {
+      val.textContent = value;
+      val.style.color = '#CFB584';
+      val.style.fontStyle = 'normal';
+      val.style.fontWeight = '500';
+    }
+    if (row) {
+      row.style.background = 'rgba(207,181,132,.08)';
+      setTimeout(() => { row.style.background = 'transparent'; }, 1200);
+    }
+    updateBlendSpecScore();
+  }
+}
+
+function updateBlendSpecScore() {
+  const filled = BLEND_SPEC_FIELDS.filter(f => blendSpecValues[f.k]).length;
+  const pct = Math.round((filled / BLEND_SPEC_FIELDS.length) * 100);
+  document.getElementById('blend-spec-bar').style.width = pct + '%';
+  const lbl = document.getElementById('blend-spec-score');
+  lbl.textContent = filled + ' / ' + BLEND_SPEC_FIELDS.length + ' fields';
+  lbl.style.color = filled >= 10 ? '#4CAF70' : filled >= 5 ? '#CFB584' : '#3A3835';
+}
+
+function resetBlendSpec() {
+  blendSpecValues = {};
+  buildBlendSpec();
+  updateBlendSpecScore();
+  document.getElementById('blend-piece-type').value = '';
+  document.getElementById('blend-metal-type').value = '';
+}
+
+// Auto-populate spec fields from zone labels
+function autoPopulateSpecFromZones() {
+  // Map zone labels to spec fields
+  const zoneToSpec = {
+    'head':          'headStyle',
+    'shank':         'shankStyle',
+    'prongs':        'prongStyle',
+    'halo':          'haloDetail',
+    'gallery':       'galleryDetail',
+    'stone':         'centerStone',
+    'accent-stones': 'accentStones',
+    'engraving':     'engravingDetail',
+    'texture':       'surfaceFinish',
+  };
+
+  blendZones.forEach(z => {
+    const specKey = zoneToSpec[z.label];
+    if (specKey && z.featureDesc) {
+      updateBlendSpecField(specKey, z.featureDesc);
+    } else if (specKey) {
+      // Just note the source until AI fills it in
+      updateBlendSpecField(specKey, z.labelDisplay + ' (from Image ' + (z.slotIdx + 1) + ')');
+    }
+  });
+}
+
+// AI analysis of uploaded images to pre-fill spec
+async function analyzeBlendImage(slotIdx) {
+  const slot = blendSlots[slotIdx];
+  if (!slot || (!anthropicKey && !useServerKeys)) return;
+
+  try {
+    const res = await claudeAPI({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 400,
+      system: `You analyze jewelry reference images for a design blending tool. Identify the piece type, metal, style, and visible construction details.
+
+Return ONLY this JSON — no other text:
+[SPEC]{"pieceType":"","metalType":"","designStyle":"","headStyle":"","shankStyle":"","prongStyle":"","haloDetail":"","galleryDetail":"","centerStone":"","accentStones":"","settingStyle":"","surfaceFinish":"","engravingDetail":"","designDescription":""}[/SPEC]
+
+Only fill fields you can confidently identify. Leave others as empty strings.
+- pieceType: ring, pendant, necklace, bracelet, earrings, brooch, etc.
+- metalType: 14k yellow gold, 18k white gold, platinum, sterling silver, etc.
+- designStyle: art deco, vintage, modern, minimalist, nature-inspired, etc.
+- headStyle: describe the setting head shape and structure
+- shankStyle: describe the band (split shank, knife edge, comfort fit, tapered, etc.)
+- centerStone: type, shape, estimated size (round brilliant 1ct, oval sapphire, etc.)
+- designDescription: 1-2 sentence overall visual description`,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: slot.type, data: slot.b64 } },
+          { type: 'text', text: 'Analyze this jewelry reference image (Image ' + (slotIdx + 1) + '). Identify all visible design details for the project spec.' }
+        ]
+      }]
+    });
+
+    if (!res.ok) return;
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '';
+    const match = text.match(/\[SPEC\]([\s\S]*?)\[\/SPEC\]/);
+    if (!match) return;
+
+    const spec = JSON.parse(match[1].trim());
+    Object.entries(spec).forEach(([k, v]) => {
+      if (v && !blendSpecValues[k]) {
+        updateBlendSpecField(k, v);
+        // Sync dropdowns if applicable
+        if (k === 'pieceType') setBlendDropdown('blend-piece-type', v);
+        if (k === 'metalType') setBlendDropdown('blend-metal-type', v);
+      }
+    });
+  } catch(e) { /* silent fail */ }
+}
+
+function setBlendDropdown(id, val) {
+  const sel = document.getElementById(id);
+  if (!sel || !val) return;
+  const lower = val.toLowerCase();
+  for (const opt of sel.options) {
+    if (opt.value && (opt.value.toLowerCase() === lower || lower.includes(opt.value.toLowerCase()) || opt.value.toLowerCase().includes(lower))) {
+      sel.value = opt.value;
+      return;
+    }
+  }
+}
+
+let blendSpecBuilt = false;
+
 function toggleBlend() {
   blendOpen = !blendOpen;
   const p = document.getElementById('blend-preview');
   p.style.display = blendOpen ? 'block' : 'none';
   document.getElementById('blend-toggle-icon').textContent = blendOpen ? '\u25BE' : '\u25B6';
   document.getElementById('blend-toggle-txt').textContent  = blendOpen ? 'Close Preview' : 'Try Blend';
-  if (blendOpen) setTimeout(() => p.scrollIntoView({behavior:'smooth', block:'nearest'}), 80);
+  if (blendOpen) {
+    setTimeout(() => p.scrollIntoView({behavior:'smooth', block:'nearest'}), 80);
+    if (!blendSpecBuilt) { buildBlendSpec(); blendSpecBuilt = true; }
+  }
 }
 
 function resetBlend() {
@@ -6119,6 +6335,8 @@ function resetBlend() {
   const eraserBtn = document.getElementById('blend-eraser-btn');
   eraserBtn.style.background = 'rgba(255,255,255,.04)';
   eraserBtn.style.color = '#5A5650';
+
+  resetBlendSpec();
 }
 
 function updateBlendBrush(val) {
@@ -6199,6 +6417,9 @@ function initBlendSlot(slotIdx, img, dataUrl, mimeType) {
   canvas.ontouchstart = e => { e.preventDefault(); startBlendPaint(slotIdx, e.touches[0]); };
   canvas.ontouchmove  = e => { e.preventDefault(); doBlendPaint(slotIdx, e.touches[0]); };
   canvas.ontouchend   = () => stopBlendPaint();
+
+  // Auto-analyze image for spec pre-fill
+  analyzeBlendImage(slotIdx);
 }
 
 /* ── Canvas painting / masking ── */
@@ -6350,6 +6571,18 @@ function confirmSaveZone() {
   document.getElementById('blend-label-row').style.display = 'none';
   updateBlendZoneList();
   updateBlendZoneCounts();
+
+  // Map zone label to spec field and mark it as sourced
+  const zoneSpecMap = {
+    'head':'headStyle', 'shank':'shankStyle', 'prongs':'prongStyle',
+    'halo':'haloDetail', 'gallery':'galleryDetail', 'stone':'centerStone',
+    'accent-stones':'accentStones', 'engraving':'engravingDetail',
+    'texture':'surfaceFinish', 'silhouette':'designDescription'
+  };
+  const specKey = zoneSpecMap[label];
+  if (specKey && !blendSpecValues[specKey]) {
+    updateBlendSpecField(specKey, zone.labelDisplay + ' \u2190 Image ' + (slotIdx + 1));
+  }
 }
 
 function updateBlendZoneCounts() {
@@ -6433,6 +6666,10 @@ async function generateBlend() {
       });
     }
 
+    // Step 1.5: Update spec with AI-analyzed zone descriptions
+    document.getElementById('blend-spinner-text').textContent = 'Updating project spec…';
+    autoPopulateSpecFromZones();
+
     // Step 2: Generate blended design description
     document.getElementById('blend-spinner-text').textContent = 'Creating blended design concept…';
 
@@ -6487,11 +6724,25 @@ Output 2-3 sentences of dense visual description. No labels or preamble.`,
 }
 
 function buildBlendPrompt(zoneDescs) {
-  let prompt = 'Create a single cohesive jewelry piece that combines these specific design elements from multiple reference images:\n\n';
+  let prompt = '';
+
+  // Include project spec as context
+  const specEntries = Object.entries(blendSpecValues).filter(([k, v]) => v);
+  if (specEntries.length > 0) {
+    prompt += 'PROJECT SPEC:\n';
+    specEntries.forEach(([k, v]) => {
+      const field = BLEND_SPEC_FIELDS.find(f => f.k === k);
+      prompt += '  ' + (field ? field.l : k) + ': ' + v + '\n';
+    });
+    prompt += '\n';
+  }
+
+  prompt += 'DESIGN ELEMENTS TO COMBINE:\n\n';
   zoneDescs.forEach((z, i) => {
     prompt += (i + 1) + '. ' + z.label.toUpperCase() + ' (from Image ' + z.imageNum + '): ' + z.description + '\n\n';
   });
-  prompt += 'The final piece should seamlessly integrate all these elements into one harmonious design. ';
+  prompt += 'Create a single cohesive jewelry piece that fuses all these elements. ';
+  prompt += 'The spec fields above define the base piece — the zone descriptions specify exactly which design elements to incorporate from each reference. ';
   prompt += 'Maintain the exact style, proportions, and character of each referenced element while ensuring they flow together naturally.';
   return prompt;
 }
@@ -6500,16 +6751,21 @@ async function generateBlendRender(blendPrompt, zoneDescs) {
   // Build a description using Claude
   const descRes = await claudeAPI({
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 600,
-    system: `You are ZipJeweler's design fusion engine. Given descriptions of design elements from multiple jewelry references, produce two things:
+    max_tokens: 900,
+    system: `You are ZipJeweler's design fusion engine. Given a project spec and descriptions of design elements from multiple jewelry references, produce three things:
 
 1. A rich FLUX image generation prompt (2-4 sentences) that describes the blended jewelry piece in vivid visual detail. Lead with the most distinctive feature. Include metal color, finish, stone specifics, and photography direction.
 
-2. A brief client-facing description of the blended design concept.
+2. A brief client-facing description of the blended design concept (2-3 sentences).
+
+3. A spec update filling any missing project spec fields you can infer from the design. Only include fields you can confidently determine.
 
 Output format:
 [PROMPT]Your FLUX image prompt here[/PROMPT]
-[DESCRIPTION]Your design concept description here[/DESCRIPTION]`,
+[DESCRIPTION]Your design concept description here[/DESCRIPTION]
+[SPEC_UPDATE]{"key":"value"}[/SPEC_UPDATE]
+
+Valid spec keys: pieceType, metalType, designStyle, headStyle, shankStyle, prongStyle, haloDetail, galleryDetail, centerStone, accentStones, settingStyle, surfaceFinish, engravingDetail, designDescription`,
     messages: [{
       role: 'user',
       content: blendPrompt
@@ -6522,9 +6778,20 @@ Output format:
 
   const promptMatch = descText.match(/\[PROMPT\]([\s\S]*?)\[\/PROMPT\]/);
   const descMatch = descText.match(/\[DESCRIPTION\]([\s\S]*?)\[\/DESCRIPTION\]/);
+  const specMatch = descText.match(/\[SPEC_UPDATE\]([\s\S]*?)\[\/SPEC_UPDATE\]/);
 
   const fluxPrompt = promptMatch ? promptMatch[1].trim() : blendPrompt;
   const description = descMatch ? descMatch[1].trim() : '';
+
+  // Apply spec updates
+  if (specMatch) {
+    try {
+      const specUpdates = JSON.parse(specMatch[1].trim());
+      Object.entries(specUpdates).forEach(([k, v]) => {
+        if (v) updateBlendSpecField(k, v);
+      });
+    } catch(e) { /* ignore parse errors */ }
+  }
 
   // Try render via /api/generate-render
   let imageUrl = null;
@@ -6544,6 +6811,21 @@ Output format:
   // Format description
   let htmlDesc = '<div style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#C9534B;font-weight:700;margin-bottom:6px;">Design Concept</div>';
   htmlDesc += '<div style="font-family:\'DM Sans\',sans-serif;font-size:11px;color:#C8C4BE;line-height:1.7;margin-bottom:10px;">' + description + '</div>';
+
+  // Finalized spec summary
+  const filledSpec = BLEND_SPEC_FIELDS.filter(f => blendSpecValues[f.k]);
+  if (filledSpec.length > 0) {
+    htmlDesc += '<div style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#CFB584;font-weight:700;margin-bottom:6px;margin-top:4px;">Project Spec Summary</div>';
+    htmlDesc += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;margin-bottom:10px;">';
+    filledSpec.forEach(f => {
+      htmlDesc += '<div style="display:flex;gap:4px;padding:2px 0;">'
+        + '<span style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;color:#5A5650;min-width:70px;">' + f.l + '</span>'
+        + '<span style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#CFB584;font-weight:500;">' + blendSpecValues[f.k] + '</span>'
+        + '</div>';
+    });
+    htmlDesc += '</div>';
+  }
+
   htmlDesc += '<div style="font-family:\'DM Sans\',sans-serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#3A3835;font-weight:700;margin-bottom:6px;">Elements Used</div>';
   htmlDesc += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
   zoneDescs.forEach(z => {
