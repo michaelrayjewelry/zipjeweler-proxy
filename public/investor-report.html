@@ -2069,9 +2069,17 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
 
                 <!-- Product card -->
                 <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;gap:12px;align-items:center;flex-shrink:0;background:rgba(255,255,255,.015);">
-                  <div id="zip-product-thumb" style="width:64px;height:64px;border-radius:8px;background:#1A1A1A;border:1px solid rgba(255,255,255,.06);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-                    <img src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=128&h=128&fit=crop&q=80" alt="Ring" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=font-size:28px;opacity:.4>💍</span>';" />
-                  </div>
+                  <label for="zip-thumb-file" id="zip-product-thumb" style="width:64px;height:64px;border-radius:8px;background:#1A1A1A;border:1px solid rgba(255,255,255,.06);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(201,83,75,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)'">
+                    <img id="zip-thumb-img" src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=128&h=128&fit=crop&q=80" alt="Ring" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                    <div id="zip-thumb-ph" style="display:none;flex-direction:column;align-items:center;gap:2px;">
+                      <span style="font-size:20px;opacity:.4;">💍</span>
+                      <span style="font-family:'DM Sans',sans-serif;font-size:7px;color:#5A5652;text-align:center;">Click to<br>upload</span>
+                    </div>
+                    <div style="position:absolute;bottom:2px;right:2px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;">
+                      <span style="font-size:9px;color:rgba(255,255,255,.6);">📷</span>
+                    </div>
+                  </label>
+                  <input id="zip-thumb-file" type="file" accept="image/*" style="display:none;" onchange="handleZipThumbUpload(this)" />
                   <div style="flex:1;min-width:0;">
                     <div style="font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;color:#E8E4DD;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Celestine Oval Ring</div>
                     <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:#5A5652;margin-top:2px;">Sarah &amp; James Chen · Bridal</div>
@@ -5167,6 +5175,19 @@ function resetZip() {
   document.getElementById('zip-changelog').style.display = 'none';
   document.getElementById('zip-changelog-items').innerHTML = '';
   initZipChat();
+}
+
+function handleZipThumbUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('zip-thumb-img');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    document.getElementById('zip-thumb-ph').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
 }
 
 function initZipChat() {
