@@ -6205,14 +6205,17 @@ function bcSyncToZip() {
     if (bcResults.cadRender?.url) {
       zipProjectData.content.renders.push({ label: 'CAD Render (Batch)', url: bcResults.cadRender.url, placeholder: 'batch_cad_render.png' });
     }
-    if (bcResults.marketing?.instagram_post) {
+    if (bcResults.marketing?.instagram) {
       zipProjectData.content.marketing.push({ label: 'Instagram Post', url: '', placeholder: 'instagram_copy.txt' });
+      zipProjectData.content.copy.instagram = bcResults.marketing.instagram;
     }
-    if (bcResults.marketing?.product_description) {
+    if (bcResults.marketing?.description) {
       zipProjectData.content.marketing.push({ label: 'Product Description', url: '', placeholder: 'product_desc.txt' });
+      zipProjectData.content.copy.description = bcResults.marketing.description;
     }
     if (bcResults.marketing?.listing) {
       zipProjectData.content.marketing.push({ label: 'Marketplace Listing', url: '', placeholder: 'listing_copy.txt' });
+      zipProjectData.content.copy.listing = bcResults.marketing.listing;
     }
   }
 }
@@ -6323,6 +6326,11 @@ const zipProjectData = {
       { label: 'Front Render', url: '', placeholder: 'render_front_v3.png' },
     ],
     marketing: [],
+    copy: {
+      instagram: '',
+      description: '',
+      listing: '',
+    },
   },
   files: {
     'CAD File': 'Celestine_v3_FINAL.3dm — Rhino 8, 4.2 MB',
@@ -6424,37 +6432,118 @@ function zipRenderPfPanel(tab) {
   const data = zipProjectData[tab];
   if (!data) { content.innerHTML = '<div style="text-align:center;padding:40px;color:#3A3835;font-family:\'DM Sans\',sans-serif;font-size:11px;">No data for this tab.</div>'; return; }
 
-  /* ── Content tab: image grid sorted by category ── */
+  /* ── Content tab: compact overview with expandable sections + marketing copy ── */
   if (tab === 'content') {
+    const uid = () => 'zc-' + Math.random().toString(36).slice(2, 8);
     let html = '';
-    const sections = [
-      { key: 'uploads', title: 'Uploads', icon: '📤' },
-      { key: 'renders', title: 'Renders', icon: '🎨' },
-      { key: 'marketing', title: 'Marketing', icon: '📣' },
+
+    // --- Image sections: Uploads, Renders, Marketing assets ---
+    const imgSections = [
+      { key: 'uploads', title: 'Uploads', icon: '📤', accent: 'rgba(207,181,132,.7)' },
+      { key: 'renders', title: 'Renders', icon: '🎨', accent: 'rgba(201,83,75,.7)' },
+      { key: 'marketing', title: 'Marketing Assets', icon: '📣', accent: 'rgba(112,80,168,.7)' },
     ];
-    for (const sec of sections) {
+    for (const sec of imgSections) {
       const items = data[sec.key] || [];
-      html += '<div style="padding:8px 10px 4px;">' +
-        '<div style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#CFB584;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px;">' + sec.icon + ' ' + sec.title + ' <span style="color:#5A5652;font-weight:500;">(' + items.length + ')</span></div>';
-      if (items.length === 0) {
-        html += '<div style="padding:10px;text-align:center;color:#3A3835;font-family:\'DM Sans\',sans-serif;font-size:10px;border:1px dashed rgba(255,255,255,.06);border-radius:8px;margin-bottom:8px;">No ' + sec.title.toLowerCase() + ' yet</div>';
+      const id = uid();
+      const count = items.length;
+      html += '<div style="border-bottom:1px solid rgba(255,255,255,.04);">';
+      // Expandable header row
+      html += '<div onclick="var b=document.getElementById(\'' + id + '\');var a=this.querySelector(\'.zc-arrow\');if(b.style.display===\'none\'){b.style.display=\'block\';a.textContent=\'\\u25BE\'}else{b.style.display=\'none\';a.textContent=\'\\u25B8\'}" ' +
+        'style="padding:8px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;" ' +
+        'onmouseover="this.style.background=\'rgba(255,255,255,.02)\'" onmouseout="this.style.background=\'none\'">';
+      html += '<span class="zc-arrow" style="font-size:9px;color:#5A5652;width:10px;">&#9656;</span>';
+      html += '<span style="font-size:11px;">' + sec.icon + '</span>';
+      html += '<span style="font-family:\'DM Sans\',sans-serif;font-size:10px;color:#C8C4BE;font-weight:600;flex:1;">' + sec.title + '</span>';
+      html += '<span style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:' + sec.accent + ';font-weight:600;min-width:18px;text-align:center;padding:1px 6px;border-radius:8px;background:rgba(255,255,255,.04);">' + count + '</span>';
+      html += '</div>';
+      // Collapsible body (hidden by default)
+      html += '<div id="' + id + '" style="display:none;padding:0 10px 8px 28px;">';
+      if (count === 0) {
+        html += '<div style="padding:6px 0;color:#3A3835;font-family:\'DM Sans\',sans-serif;font-size:9px;font-style:italic;">No ' + sec.title.toLowerCase() + ' yet</div>';
       } else {
-        html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px;margin-bottom:8px;">';
+        // Compact horizontal thumbnail strip
+        html += '<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;">';
         for (const item of items) {
           const hasImage = item.url && item.url.length > 10;
-          html += '<div style="border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);cursor:pointer;" title="' + (item.label || '') + '">';
+          html += '<div style="flex-shrink:0;width:56px;">';
           if (hasImage) {
-            html += '<img src="' + item.url + '" style="width:100%;aspect-ratio:1;object-fit:cover;display:block;" alt="' + (item.label || '') + '">';
+            html += '<img src="' + item.url + '" style="width:56px;height:56px;object-fit:cover;border-radius:5px;border:1px solid rgba(255,255,255,.08);display:block;" alt="' + (item.label || '') + '">';
           } else {
-            html += '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.03);"><span style="font-size:20px;opacity:.3;">🖼</span></div>';
+            html += '<div style="width:56px;height:56px;border-radius:5px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;"><span style="font-size:16px;opacity:.25;">🖼</span></div>';
           }
-          html += '<div style="padding:4px 6px;font-family:\'DM Sans\',sans-serif;font-size:8px;color:#5A5652;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (item.label || item.placeholder || 'Untitled') + '</div>';
+          html += '<div style="font-family:\'DM Sans\',sans-serif;font-size:7px;color:#5A5652;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;">' + (item.label || item.placeholder || '') + '</div>';
           html += '</div>';
         }
         html += '</div>';
       }
-      html += '</div>';
+      html += '</div></div>';
     }
+
+    // --- Marketing Copy section ---
+    const copy = data.copy || {};
+    const hasCopy = copy.instagram || copy.description || copy.listing;
+    const bcAssets = window.bcBatchAssets || {};
+    // Fall back to bcBatchAssets if content.copy is empty
+    const igText = copy.instagram || bcAssets.marketing?.instagram || '';
+    const descText = copy.description || bcAssets.marketing?.description || '';
+    const listText = copy.listing || bcAssets.marketing?.listing || '';
+    const anyCopy = igText || descText || listText;
+
+    const copyId = uid();
+    html += '<div style="border-bottom:1px solid rgba(255,255,255,.04);">';
+    html += '<div onclick="var b=document.getElementById(\'' + copyId + '\');var a=this.querySelector(\'.zc-arrow\');if(b.style.display===\'none\'){b.style.display=\'block\';a.textContent=\'\\u25BE\'}else{b.style.display=\'none\';a.textContent=\'\\u25B8\'}" ' +
+      'style="padding:8px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;" ' +
+      'onmouseover="this.style.background=\'rgba(255,255,255,.02)\'" onmouseout="this.style.background=\'none\'">';
+    html += '<span class="zc-arrow" style="font-size:9px;color:#5A5652;width:10px;">' + (anyCopy ? '&#9656;' : '&#9656;') + '</span>';
+    html += '<span style="font-size:11px;">✍️</span>';
+    html += '<span style="font-family:\'DM Sans\',sans-serif;font-size:10px;color:#C8C4BE;font-weight:600;flex:1;">Marketing Copy</span>';
+    if (anyCopy) {
+      html += '<span style="font-family:\'DM Sans\',sans-serif;font-size:7.5px;color:#2D8B55;font-weight:600;padding:1px 6px;border-radius:8px;background:rgba(45,139,85,.08);border:1px solid rgba(45,139,85,.15);">GENERATED</span>';
+    } else {
+      html += '<span style="font-family:\'DM Sans\',sans-serif;font-size:7.5px;color:#5A5652;font-weight:500;padding:1px 6px;border-radius:8px;background:rgba(255,255,255,.04);">PENDING</span>';
+    }
+    html += '</div>';
+
+    html += '<div id="' + copyId + '" style="display:none;padding:0 10px 10px 28px;">';
+    if (!anyCopy) {
+      html += '<div style="padding:6px 0;color:#3A3835;font-family:\'DM Sans\',sans-serif;font-size:9px;font-style:italic;">Run Batch Create with Marketing enabled to generate copy.</div>';
+    } else {
+      const copyBlocks = [
+        { label: 'Instagram', text: igText, color: 'rgba(201,83,75,.6)' },
+        { label: 'Product Description', text: descText, color: 'rgba(207,181,132,.6)' },
+        { label: 'Marketplace Listing', text: listText, color: 'rgba(112,80,168,.6)' },
+      ];
+      for (const block of copyBlocks) {
+        if (!block.text) continue;
+        const bId = uid();
+        html += '<div style="margin-bottom:6px;">';
+        html += '<div onclick="var b=document.getElementById(\'' + bId + '\');b.style.display=b.style.display===\'none\'?\'block\':\'none\'" ' +
+          'style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 0;" ' +
+          'onmouseover="this.style.opacity=\'.8\'" onmouseout="this.style.opacity=\'1\'">';
+        html += '<span style="width:6px;height:6px;border-radius:50%;background:' + block.color + ';flex-shrink:0;"></span>';
+        html += '<span style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#B8B4AE;font-weight:600;">' + block.label + '</span>';
+        html += '<span style="font-family:\'DM Sans\',sans-serif;font-size:8px;color:#3A3835;margin-left:auto;">tap to expand</span>';
+        html += '</div>';
+        // Expandable copy text
+        html += '<div id="' + bId + '" style="display:none;padding:6px 10px;margin:2px 0 4px 12px;background:rgba(255,255,255,.02);border-left:2px solid ' + block.color + ';border-radius:0 6px 6px 0;">';
+        html += '<div style="font-family:\'DM Sans\',sans-serif;font-size:10px;color:#9A968F;line-height:1.65;white-space:pre-wrap;word-break:break-word;">' + block.text.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
+        html += '</div></div>';
+      }
+    }
+    html += '</div></div>';
+
+    // --- Summary footer ---
+    const totalImages = (data.uploads?.length || 0) + (data.renders?.length || 0) + (data.marketing?.length || 0);
+    html += '<div style="padding:8px 10px;display:flex;align-items:center;gap:10px;">';
+    html += '<div style="font-family:\'DM Sans\',sans-serif;font-size:8px;color:#3A3835;letter-spacing:.3px;">' + totalImages + ' assets</div>';
+    if (anyCopy) {
+      const copyCount = [igText, descText, listText].filter(Boolean).length;
+      html += '<div style="width:1px;height:10px;background:rgba(255,255,255,.06);"></div>';
+      html += '<div style="font-family:\'DM Sans\',sans-serif;font-size:8px;color:#3A3835;letter-spacing:.3px;">' + copyCount + ' copy blocks</div>';
+    }
+    html += '</div>';
+
     content.innerHTML = html;
     return;
   }
@@ -6591,7 +6680,17 @@ function zipBuildSystemPrompt() {
     ctx += '\n[' + tab.toUpperCase() + ']\n';
     if (tab === 'content') {
       for (const [category, items] of Object.entries(fields)) {
-        ctx += category + ': ' + (items.length ? items.map(i => i.label || i.placeholder).join(', ') : '(empty)') + '\n';
+        if (category === 'copy') {
+          if (items.instagram || items.description || items.listing) {
+            ctx += 'Marketing Copy: ';
+            if (items.instagram) ctx += 'Instagram (generated), ';
+            if (items.description) ctx += 'Product Description (generated), ';
+            if (items.listing) ctx += 'Marketplace Listing (generated)';
+            ctx += '\n';
+          }
+        } else {
+          ctx += category + ': ' + (items.length ? items.map(i => i.label || i.placeholder).join(', ') : '(empty)') + '\n';
+        }
       }
     } else {
       for (const [k, v] of Object.entries(fields)) {
