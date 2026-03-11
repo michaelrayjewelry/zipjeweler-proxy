@@ -29,6 +29,7 @@ export async function POST(request) {
   const {
     prompt,
     input_image,            // base64 image (CAD screenshot or sketch)
+    reference_images,       // optional array of base64 images (orientation guides, etc.)
     mask_image,             // mask for targeted editing (white = change, black = keep)
     previous_response_id,   // for multi-turn corrections
     action = 'auto',        // "edit" = force edit input image, "generate" = new image, "auto" = model decides
@@ -51,6 +52,7 @@ export async function POST(request) {
       openaiKey,
       prompt: prompt.trim(),
       input_image,
+      reference_images,
       mask_image,
       previous_response_id,
       action,
@@ -65,7 +67,7 @@ export async function POST(request) {
   }
 }
 
-async function responsesGenerate({ openaiKey, prompt, input_image, mask_image, previous_response_id, action, quality, size, input_fidelity }) {
+async function responsesGenerate({ openaiKey, prompt, input_image, reference_images, mask_image, previous_response_id, action, quality, size, input_fidelity }) {
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${openaiKey}`,
@@ -87,6 +89,18 @@ async function responsesGenerate({ openaiKey, prompt, input_image, mask_image, p
         { type: 'input_text', text: maskPrompt },
       ]
     }];
+  } else if (previous_response_id && Array.isArray(reference_images) && reference_images.length > 0) {
+    // Multi-turn with reference images: source image in context, attach new references
+    const contentItems = [];
+    for (const refImg of reference_images) {
+      if (!refImg) continue;
+      const refUrl = refImg.startsWith('data:')
+        ? refImg
+        : `data:image/png;base64,${refImg}`;
+      contentItems.push({ type: 'input_image', image_url: refUrl });
+    }
+    contentItems.push({ type: 'input_text', text: prompt });
+    input = [{ role: 'user', content: contentItems }];
   } else if (previous_response_id) {
     // Multi-turn correction: image is already in context from the previous response
     input = prompt;
@@ -96,21 +110,30 @@ async function responsesGenerate({ openaiKey, prompt, input_image, mask_image, p
       ? input_image
       : `data:image/png;base64,${input_image}`;
 
-    input = [
+    const contentItems = [
       {
-        role: 'user',
-        content: [
-          {
-            type: 'input_image',
-            image_url: dataUrl,
-          },
-          {
-            type: 'input_text',
-            text: prompt,
-          },
-        ],
+        type: 'input_image',
+        image_url: dataUrl,
       },
     ];
+
+    // Append any reference images (orientation guides, etc.)
+    if (Array.isArray(reference_images)) {
+      for (const refImg of reference_images) {
+        if (!refImg) continue;
+        const refUrl = refImg.startsWith('data:')
+          ? refImg
+          : `data:image/png;base64,${refImg}`;
+        contentItems.push({ type: 'input_image', image_url: refUrl });
+      }
+    }
+
+    contentItems.push({
+      type: 'input_text',
+      text: prompt,
+    });
+
+    input = [{ role: 'user', content: contentItems }];
   } else {
     // Text-only (no image, no previous turn)
     input = prompt;

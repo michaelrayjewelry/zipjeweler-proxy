@@ -5422,6 +5422,86 @@ let tdOpen = false, tdBusy = false;
 let tdImageB64 = null, tdImageType = 'image/jpeg';
 let tdResponseId = null;  // chains step 1 → step 2
 
+/* ── Reference orientation images for three-view generation ── */
+// Loaded from /ref/ directory if available, otherwise generated via Canvas
+const tdRefImages = { top: null, side: null, front: null };
+
+// Try loading user-provided reference images from /ref/ directory
+(function loadTdRefImages() {
+  const files = { top: '/ref/td-ref-top.png', side: '/ref/td-ref-side.png', front: '/ref/td-ref-front.png' };
+  Object.entries(files).forEach(([view, path]) => {
+    fetch(path, { method: 'HEAD' }).then(r => {
+      if (!r.ok) return;
+      return fetch(path).then(r2 => r2.blob()).then(blob => {
+        const reader = new FileReader();
+        reader.onload = () => { tdRefImages[view] = reader.result.split(',')[1]; };
+        reader.readAsDataURL(blob);
+      });
+    }).catch(() => {});  // silently skip if not found
+  });
+})();
+
+// Canvas-generated fallback orientation guides (simple ring silhouettes)
+function tdGenerateRefGuide(view) {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 256;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#FAFAF8'; ctx.fillRect(0, 0, 256, 256);
+  ctx.strokeStyle = '#444'; ctx.lineWidth = 1.5;
+  ctx.fillStyle = '#888'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+
+  if (view === 'top') {
+    // Top-down: oval band + rectangular stone face centered
+    ctx.beginPath(); ctx.ellipse(128, 138, 80, 88, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(128, 138, 68, 76, 0, 0, Math.PI * 2); ctx.stroke();
+    // Stone face (rectangle, centered at top of band)
+    ctx.strokeRect(98, 60, 60, 44);
+    ctx.strokeRect(104, 66, 48, 32);
+    // Prong lines
+    ctx.beginPath(); ctx.moveTo(98, 60); ctx.lineTo(90, 52); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(158, 60); ctx.lineTo(166, 52); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(98, 104); ctx.lineTo(90, 110); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(158, 104); ctx.lineTo(166, 110); ctx.stroke();
+    ctx.fillText('TOP VIEW — looking straight down', 128, 240);
+  } else if (view === 'side') {
+    // Side profile: thin band with gallery/setting peak
+    ctx.beginPath();
+    ctx.moveTo(118, 210); // bottom of shank
+    ctx.lineTo(118, 100); // up the shank
+    ctx.bezierCurveTo(118, 70, 108, 55, 118, 40); // gallery curve
+    ctx.lineTo(128, 20);  // peak (stone top)
+    ctx.lineTo(138, 40);  // gallery other side
+    ctx.bezierCurveTo(148, 55, 138, 70, 138, 100);
+    ctx.lineTo(138, 210); // down the shank
+    ctx.stroke();
+    // Inner shank lines
+    ctx.beginPath();
+    ctx.moveTo(122, 210); ctx.lineTo(122, 105);
+    ctx.moveTo(134, 210); ctx.lineTo(134, 105);
+    ctx.stroke();
+    ctx.fillText('SIDE VIEW — eye level, 90° from front', 128, 240);
+  } else {
+    // Front elevation: circular band with setting on top
+    ctx.beginPath(); ctx.arc(128, 148, 78, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(128, 148, 66, 0, Math.PI * 2); ctx.stroke();
+    // Setting/stone at top
+    ctx.beginPath();
+    ctx.moveTo(98, 78); ctx.lineTo(88, 50); ctx.lineTo(128, 30); ctx.lineTo(168, 50); ctx.lineTo(158, 78);
+    ctx.stroke();
+    // Inner stone
+    ctx.strokeRect(108, 44, 40, 28);
+    ctx.fillText('FRONT VIEW — eye level, straight on', 128, 240);
+  }
+
+  return c.toDataURL('image/png').split(',')[1];
+}
+
+// Get the best available reference image for a view (user file > canvas fallback)
+function tdGetRefImage(view) {
+  if (tdRefImages[view]) return tdRefImages[view];
+  return tdGenerateRefGuide(view);
+}
+
 function toggleTd() {
   tdOpen = !tdOpen;
   const p = document.getElementById('td-preview');
@@ -5669,12 +5749,18 @@ async function generateTd() {
   document.getElementById('td-spinner-text').textContent = 'Step 1: Generating front view (2/3)…';
 
   try {
+    const frontRefNote = '\n\nORIENTATION REFERENCE: A reference sketch is attached showing the expected front elevation orientation for a ring. ' +
+      'Match this camera angle exactly: viewer looking straight at the front face at eye level. ' +
+      'The full circular band should be visible with the setting/stone at the 12 o\'clock position. ' +
+      'The shank extends down and curves around forming the complete circle. Gallery details and prong structure visible above the band.';
+
     const frontPrompt =
       'Now show the same jewelry piece from a FRONT ELEVATION view. ' +
       'Camera at exact eye level, looking straight at the front face — 0° azimuth, 0° elevation. ' +
       'No perspective distortion — pure orthographic projection. ' +
-      'Show: band height, setting height, stone prominence from the front, gallery details. ' +
+      'Show: the full circular band outline, setting height, stone prominence from the front, gallery details. ' +
       'The vertical proportions (height-to-width ratio) must precisely match the original piece.' +
+      frontRefNote +
       invariants + drawingStyle;
 
     const payload = {
@@ -5689,6 +5775,8 @@ async function generateTd() {
     } else {
       payload.input_image = tdImageB64;
     }
+    // Attach front orientation reference image
+    payload.reference_images = [tdGetRefImage('front')];
 
     const res = await fetch(apiUrl, {
       method: 'POST',
@@ -5708,11 +5796,17 @@ async function generateTd() {
   document.getElementById('td-spinner-text').textContent = 'Step 1: Generating top view (3/3)…';
 
   try {
+    const topRefNote = '\n\nORIENTATION REFERENCE: A reference sketch is attached showing the expected top-down orientation for a ring. ' +
+      'Match this camera angle exactly: viewer looking straight down from above (bird\'s-eye). ' +
+      'The stone face/table should be the dominant feature in the center, with the band visible as an oval or circle around it. ' +
+      'Prongs and setting visible from above. The shank extends toward and away from the viewer.';
+
     const topPrompt =
       'Now show the same jewelry piece from a TOP-DOWN PLAN view. ' +
       'Camera positioned directly above, looking straight down — bird\'s-eye, 90° elevation, pure orthographic projection. ' +
       'Show: the complete outline from above — band as a full oval/circle, head/setting showing stone arrangement, prong layout from above. ' +
       'All horizontal proportions must match the original piece exactly.' +
+      topRefNote +
       invariants + drawingStyle;
 
     const payload = {
@@ -5727,6 +5821,8 @@ async function generateTd() {
     } else {
       payload.input_image = tdImageB64;
     }
+    // Attach top-down orientation reference image
+    payload.reference_images = [tdGetRefImage('top')];
 
     const res = await fetch(apiUrl, {
       method: 'POST',
