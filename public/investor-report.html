@@ -2106,6 +2106,7 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                 <div style="display:flex;border-bottom:1px solid rgba(255,255,255,.05);padding:0 12px;flex-shrink:0;overflow-x:auto;" id="zip-pf-tabs">
                   <button onclick="zipPfGo('overview')" class="zip-pf-tab zip-pf-tab-active" data-tab="overview" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#CFB584;background:none;border:none;border-bottom:2px solid #CFB584;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Overview</button>
                   <button onclick="zipPfGo('design')" class="zip-pf-tab" data-tab="design" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Design</button>
+                  <button onclick="zipPfGo('content')" class="zip-pf-tab" data-tab="content" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Content</button>
                   <button onclick="zipPfGo('stones')" class="zip-pf-tab" data-tab="stones" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Stones</button>
                   <button onclick="zipPfGo('specs')" class="zip-pf-tab" data-tab="specs" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Specs</button>
                   <button onclick="zipPfGo('order')" class="zip-pf-tab" data-tab="order" style="padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;letter-spacing:.5px;font-weight:600;white-space:nowrap;">Order</button>
@@ -5945,6 +5946,25 @@ function bcSyncToZip() {
   if (bcResults.cadRender?.url) window.bcBatchAssets.cadRenderUrl = bcResults.cadRender.url;
   if (bcResults.marketing) window.bcBatchAssets.marketing = bcResults.marketing;
   if (bcResults.estimate) window.bcBatchAssets.estimate = bcResults.estimate;
+
+  // Populate content tab with generated images
+  if (zipProjectData.content) {
+    if (bcResults.render?.url) {
+      zipProjectData.content.renders.push({ label: 'Product Render (Batch)', url: bcResults.render.url, placeholder: 'batch_render_front.png' });
+    }
+    if (bcResults.cadRender?.url) {
+      zipProjectData.content.renders.push({ label: 'CAD Render (Batch)', url: bcResults.cadRender.url, placeholder: 'batch_cad_render.png' });
+    }
+    if (bcResults.marketing?.instagram_post) {
+      zipProjectData.content.marketing.push({ label: 'Instagram Post', url: '', placeholder: 'instagram_copy.txt' });
+    }
+    if (bcResults.marketing?.product_description) {
+      zipProjectData.content.marketing.push({ label: 'Product Description', url: '', placeholder: 'product_desc.txt' });
+    }
+    if (bcResults.marketing?.listing) {
+      zipProjectData.content.marketing.push({ label: 'Marketplace Listing', url: '', placeholder: 'listing_copy.txt' });
+    }
+  }
 }
 
 /* ── Open results in Zip Dashboard ── */
@@ -6043,6 +6063,16 @@ const zipProjectData = {
     'Client Price': '$14,500',
     'Margin': '24.1%',
     'Stage': 'Stone Setting — In Progress',
+  },
+  content: {
+    uploads: [
+      { label: 'Client Reference 1', url: '', placeholder: 'pinterest_ref_1.jpg' },
+      { label: 'Hand Sketch', url: '', placeholder: 'hand_sketch_oval_halo.jpg' },
+    ],
+    renders: [
+      { label: 'Front Render', url: '', placeholder: 'render_front_v3.png' },
+    ],
+    marketing: [],
   },
   files: {
     'CAD File': 'Celestine_v3_FINAL.3dm — Rhino 8, 4.2 MB',
@@ -6144,6 +6174,56 @@ function zipRenderPfPanel(tab) {
   const data = zipProjectData[tab];
   if (!data) { content.innerHTML = '<div style="text-align:center;padding:40px;color:#3A3835;font-family:\'DM Sans\',sans-serif;font-size:11px;">No data for this tab.</div>'; return; }
 
+  /* ── Content tab: image grid sorted by category ── */
+  if (tab === 'content') {
+    let html = '';
+    const sections = [
+      { key: 'uploads', title: 'Uploads', icon: '📤' },
+      { key: 'renders', title: 'Renders', icon: '🎨' },
+      { key: 'marketing', title: 'Marketing', icon: '📣' },
+    ];
+    for (const sec of sections) {
+      const items = data[sec.key] || [];
+      html += '<div style="padding:8px 10px 4px;">' +
+        '<div style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#CFB584;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px;">' + sec.icon + ' ' + sec.title + ' <span style="color:#5A5652;font-weight:500;">(' + items.length + ')</span></div>';
+      if (items.length === 0) {
+        html += '<div style="padding:10px;text-align:center;color:#3A3835;font-family:\'DM Sans\',sans-serif;font-size:10px;border:1px dashed rgba(255,255,255,.06);border-radius:8px;margin-bottom:8px;">No ' + sec.title.toLowerCase() + ' yet</div>';
+      } else {
+        html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px;margin-bottom:8px;">';
+        for (const item of items) {
+          const hasImage = item.url && item.url.length > 10;
+          html += '<div style="border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);cursor:pointer;" title="' + (item.label || '') + '">';
+          if (hasImage) {
+            html += '<img src="' + item.url + '" style="width:100%;aspect-ratio:1;object-fit:cover;display:block;" alt="' + (item.label || '') + '">';
+          } else {
+            html += '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.03);"><span style="font-size:20px;opacity:.3;">🖼</span></div>';
+          }
+          html += '<div style="padding:4px 6px;font-family:\'DM Sans\',sans-serif;font-size:8px;color:#5A5652;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (item.label || item.placeholder || 'Untitled') + '</div>';
+          html += '</div>';
+        }
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+    content.innerHTML = html;
+    return;
+  }
+
+  /* ── Files tab: key-value rows with download buttons ── */
+  if (tab === 'files') {
+    let html = '';
+    for (const [key, val] of Object.entries(data)) {
+      html += '<div id="zip-field-' + key.replace(/\s+/g,'-').toLowerCase() + '" style="padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:8px;">' +
+        '<div style="font-family:\'DM Sans\',sans-serif;font-size:9px;color:#3A3835;font-weight:600;min-width:90px;flex-shrink:0;">' + key + '</div>' +
+        '<div style="font-family:\'DM Sans\',sans-serif;font-size:11px;color:#B8B4AE;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + val + '</div>' +
+        '<button onclick="zipDownloadFile(\'' + key.replace(/'/g,"\\'") + '\')" style="flex-shrink:0;padding:3px 10px;background:rgba(207,181,132,.08);border:1px solid rgba(207,181,132,.15);border-radius:6px;color:#CFB584;font-family:\'DM Sans\',sans-serif;font-size:8px;font-weight:600;cursor:pointer;letter-spacing:.4px;transition:background .15s;" onmouseover="this.style.background=\'rgba(207,181,132,.18)\'" onmouseout="this.style.background=\'rgba(207,181,132,.08)\'">↓ Download</button>' +
+        '</div>';
+    }
+    content.innerHTML = html;
+    return;
+  }
+
+  /* ── Default: key-value rows ── */
   let html = '';
   for (const [key, val] of Object.entries(data)) {
     const isLong = val.length > 60;
@@ -6174,6 +6254,35 @@ function zipRenderPfPanel(tab) {
     }
   }
   content.innerHTML = html;
+}
+
+/* ── File download handler ── */
+function zipDownloadFile(fileKey) {
+  const val = zipProjectData.files[fileKey];
+  if (!val) return;
+  // Extract filename from the value (before the " — " separator)
+  const fname = val.split(' — ')[0].trim();
+  // Check if batch assets have a real URL for this file
+  const assets = window.bcBatchAssets || {};
+  let url = null;
+  if (fileKey === 'Product Render' && assets.renderUrl) url = assets.renderUrl;
+  else if (fileKey === 'CAD Render' && assets.cadRenderUrl) url = assets.cadRenderUrl;
+
+  if (url) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } else {
+    // Demo mode — show a toast-style notification
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;background:#1a1917;border:1px solid rgba(207,181,132,.25);border-radius:10px;color:#CFB584;font-family:\'DM Sans\',sans-serif;font-size:11px;font-weight:600;z-index:10000;box-shadow:0 4px 20px rgba(0,0,0,.4);';
+    toast.textContent = '↓ ' + fname + ' — download ready (demo)';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2500);
+  }
 }
 
 function zipPfGo(tab) {
@@ -6230,8 +6339,14 @@ function zipBuildSystemPrompt() {
   ctx += 'CURRENT PROJECT FOLDER DATA:\n';
   for (const [tab, fields] of Object.entries(zipProjectData)) {
     ctx += '\n[' + tab.toUpperCase() + ']\n';
-    for (const [k, v] of Object.entries(fields)) {
-      ctx += k + ': ' + v + '\n';
+    if (tab === 'content') {
+      for (const [category, items] of Object.entries(fields)) {
+        ctx += category + ': ' + (items.length ? items.map(i => i.label || i.placeholder).join(', ') : '(empty)') + '\n';
+      }
+    } else {
+      for (const [k, v] of Object.entries(fields)) {
+        ctx += k + ': ' + v + '\n';
+      }
     }
   }
   ctx += '\nINSTRUCTIONS:\n';
