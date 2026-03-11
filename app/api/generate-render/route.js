@@ -3,6 +3,8 @@
 // For S2I: sketch-to-image generation/editing with multi-turn correction support
 // Now uses the same Responses API + gpt-4.1 approach as C2R's generate-image route
 
+export const maxDuration = 60; // Allow up to 60s for image generation
+
 export async function OPTIONS() {
   return new Response(null, {
     status: 200,
@@ -194,6 +196,7 @@ async function responsesGenerate({ openaiKey, prompt, hasInputImage, input_image
     quality,
     input_fidelity,
     size: resolvedSize,
+    output_format: 'png',
   };
 
   // action: "edit" forces editing the input image
@@ -221,7 +224,15 @@ async function responsesGenerate({ openaiKey, prompt, hasInputImage, input_image
     body: JSON.stringify(requestBody),
   });
 
-  const data = await res.json();
+  let data;
+  const contentType = res.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    data = await res.json();
+  } else {
+    const text = await res.text();
+    try { data = JSON.parse(text); } catch { throw new Error(`Responses API returned non-JSON (HTTP ${res.status}): ${text.slice(0, 200)}`); }
+  }
+
   if (!res.ok) {
     throw new Error(data?.error?.message || `Responses API error: HTTP ${res.status}`);
   }
@@ -229,8 +240,9 @@ async function responsesGenerate({ openaiKey, prompt, hasInputImage, input_image
   // Extract the generated image from the response output
   const imageOutput = (data.output || []).find(o => o.type === 'image_generation_call');
   if (!imageOutput || !imageOutput.result) {
-    console.error('No image in response. Output types:', (data.output || []).map(o => o.type));
-    throw new Error('No image generated in response');
+    const outputTypes = (data.output || []).map(o => o.type);
+    console.error('No image in response. Output types:', outputTypes, 'Full output keys:', JSON.stringify(data.output || []).slice(0, 500));
+    throw new Error('No image generated in response. Output types: ' + outputTypes.join(', '));
   }
 
   return {

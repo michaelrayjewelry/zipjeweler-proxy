@@ -5,6 +5,8 @@
 //   S2I: action="auto" — model decides whether to generate or edit based on context
 // Supports iterative corrections via previous_response_id
 
+export const maxDuration = 60; // Allow up to 60s for image generation
+
 export async function OPTIONS() {
   return new Response(null, {
     status: 200,
@@ -134,6 +136,7 @@ async function responsesGenerate({ openaiKey, prompt, input_image, reference_ima
     quality,
     input_fidelity,
     size,
+    output_format: 'png',
   };
 
   // action: "edit" forces the model to edit the input image
@@ -161,7 +164,15 @@ async function responsesGenerate({ openaiKey, prompt, input_image, reference_ima
     body: JSON.stringify(requestBody),
   });
 
-  const data = await res.json();
+  let data;
+  const contentType = res.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    data = await res.json();
+  } else {
+    const text = await res.text();
+    try { data = JSON.parse(text); } catch { throw new Error(`Responses API returned non-JSON (HTTP ${res.status}): ${text.slice(0, 200)}`); }
+  }
+
   if (!res.ok) {
     throw new Error(data?.error?.message || `Responses API error: HTTP ${res.status}`);
   }
@@ -170,8 +181,9 @@ async function responsesGenerate({ openaiKey, prompt, input_image, reference_ima
   const imageOutput = (data.output || []).find(o => o.type === 'image_generation_call');
   if (!imageOutput || !imageOutput.result) {
     // Log full response for debugging
-    console.error('No image in response. Output types:', (data.output || []).map(o => o.type));
-    throw new Error('No image generated in response');
+    const outputTypes = (data.output || []).map(o => o.type);
+    console.error('No image in response. Output types:', outputTypes, 'Full output keys:', JSON.stringify(data.output || []).slice(0, 500));
+    throw new Error('No image generated in response. Output types: ' + outputTypes.join(', '));
   }
 
   return {

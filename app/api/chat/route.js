@@ -1,6 +1,8 @@
 // app/api/chat/route.js
 // Server-side proxy for Anthropic Messages API — keeps API key off the client
 
+export const maxDuration = 60; // Allow up to 60s for Claude responses
+
 const ANTHROPIC_BASE = 'https://api.anthropic.com/v1/messages';
 
 const corsHeaders = {

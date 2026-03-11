@@ -2,6 +2,8 @@
 // Next.js App Router API route — Meshy.ai Image-to-3D generation
 // Supports: submit task, poll status, retrieve model URLs
 
+export const maxDuration = 60; // Allow up to 60s for 3D generation tasks
+
 const MESHY_BASE = 'https://api.meshy.ai/openapi/v1';
 
 export async function OPTIONS() {

@@ -1,11 +1,17 @@
 {
   "framework": "nextjs",
+  "functions": {
+    "app/api/generate-image/route.js": { "maxDuration": 60 },
+    "app/api/generate-render/route.js": { "maxDuration": 60 },
+    "app/api/generate-3d/route.js": { "maxDuration": 60 },
+    "app/api/chat/route.js": { "maxDuration": 60 }
+  },
   "headers": [
     {
       "source": "/api/(.*)",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "POST, OPTIONS" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
         { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
       ]
     }
