@@ -126,6 +126,21 @@ async function responsesGenerate({ openaiKey, prompt, hasInputImage, input_image
         { type: 'input_text', text: maskPrompt },
       ]
     }];
+  } else if (previous_response_id && (input_image_2 || input_image_3 || input_image_4)) {
+    // Multi-turn with additional reference images: source in context, attach new references
+    const content = [];
+    function addRefImage(b64str) {
+      if (!b64str || b64str.length < 100) return;
+      const dataUrl = b64str.startsWith('data:')
+        ? b64str
+        : `data:image/png;base64,${b64str}`;
+      content.push({ type: 'input_image', image_url: dataUrl });
+    }
+    if (input_image_2) addRefImage(input_image_2);
+    if (input_image_3) addRefImage(input_image_3);
+    if (input_image_4) addRefImage(input_image_4);
+    content.push({ type: 'input_text', text: prompt });
+    input = [{ role: 'user', content }];
   } else if (previous_response_id) {
     // Multi-turn correction without mask: images already in context from previous response
     input = prompt;

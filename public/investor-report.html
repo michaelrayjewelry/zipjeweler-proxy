@@ -4262,7 +4262,7 @@ async function renderS2IDirect(correctionText) {
   if (promptEl) promptEl.textContent = prompt;
 
   // Use Responses API endpoint with action:"edit" to force image editing
-  const responsesUrl = (PROXY_URL || '').replace('/api/generate-render', '/api/generate-image');
+  const responsesUrl = PROXY_URL;
 
   try {
     const payload = {
@@ -4468,7 +4468,7 @@ async function renderC2RDirect(correctionText) {
   if (instrEl) instrEl.textContent = prompt;
 
   // Use Responses API endpoint with action:"edit" to force image editing
-  const responsesUrl = (PROXY_URL || '').replace('/api/generate-render', '/api/generate-image');
+  const responsesUrl = PROXY_URL;
 
   try {
     const payload = {
@@ -5653,7 +5653,7 @@ async function generateTd() {
   document.getElementById('td-spinner').style.display = 'flex';
   document.getElementById('td-gen-btn').style.opacity = '.5';
 
-  const apiUrl = (PROXY_URL || '').replace('/api/generate-render', '/api/generate-image');
+  const apiUrl = PROXY_URL;
   const imageDataUrl = 'data:' + (tdImageType || 'image/jpeg') + ';base64,' + tdImageB64;
 
   /* ═══ STEP 0: Analyze jewelry with Claude to create anchor description ═══ */
@@ -5776,7 +5776,7 @@ async function generateTd() {
       payload.input_image = tdImageB64;
     }
     // Attach front orientation reference image
-    payload.reference_images = [tdGetRefImage('front')];
+    payload.input_image_2 = tdGetRefImage('front');
 
     const res = await fetch(apiUrl, {
       method: 'POST',
@@ -5822,7 +5822,7 @@ async function generateTd() {
       payload.input_image = tdImageB64;
     }
     // Attach top-down orientation reference image
-    payload.reference_images = [tdGetRefImage('top')];
+    payload.input_image_2 = tdGetRefImage('top');
 
     const res = await fetch(apiUrl, {
       method: 'POST',
@@ -6047,7 +6047,7 @@ function bcWait(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 /* ── Individual tool runners ── */
 async function bcRunRender() {
-  const url = (PROXY_URL || '').replace('/api/generate-render', '/api/generate-image');
+  const url = PROXY_URL;
   const prompt = 'Edit this image. This is a jewelry reference — a sketch, render, or photo. Convert it into a photorealistic product photograph. Keep the EXACT same design — same shape, same silhouette, same proportions. Use 18k white gold metal with a high polish finish. Scene: white studio background, soft studio lighting. Maintain every detail.';
   const res = await fetch(url, {
     method: 'POST',
@@ -6061,7 +6061,7 @@ async function bcRunRender() {
 }
 
 async function bcRunCadRender() {
-  const url = (PROXY_URL || '').replace('/api/generate-render', '/api/generate-image');
+  const url = PROXY_URL;
   const prompt = 'Edit this image. This is a CAD screenshot or technical view of a jewelry piece. Transform it into a photorealistic client-presentable product render. Keep the EXACT same design — same shape, proportions, stone placement, angles. Only change the surface materials and environment. Use polished white gold, realistic diamond refraction. Scene: gradient studio background, soft studio lighting, light reflections.';
   const res = await fetch(url, {
     method: 'POST',
@@ -7180,7 +7180,7 @@ async function applyModify() {
     payload.input_image = modImageB64;
   }
 
-  const apiUrl = (PROXY_URL || '').replace('/api/generate-render', '/api/generate-image');
+  const apiUrl = PROXY_URL;
 
   try {
     const res = await fetch(apiUrl, {
