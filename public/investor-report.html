@@ -2593,20 +2593,30 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-
                     <div style="display:flex;flex-direction:column;gap:6px;">
 
                       <!-- Step 1 -->
-                      <div id="td-step1-card" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;">
-                        <div style="width:24px;height:24px;border-radius:50%;background:rgba(201,83,75,.12);border:1px solid rgba(201,83,75,.25);display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;color:#C9534B;flex-shrink:0;">1</div>
-                        <div style="flex:1;">
-                          <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#C8C4BE;font-weight:600;">Technical Three-View Drawing</div>
-                          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;margin-top:2px;">Top, Front, and Perspective views on one page</div>
+                      <div id="td-step1-card" style="padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                          <div style="width:24px;height:24px;border-radius:50%;background:rgba(201,83,75,.12);border:1px solid rgba(201,83,75,.25);display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;color:#C9534B;flex-shrink:0;">1</div>
+                          <div style="flex:1;">
+                            <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:#C8C4BE;font-weight:600;">Sequential Three-View Generation</div>
+                            <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#5A5652;margin-top:2px;">Analyze → Perspective → Front → Top → Composite</div>
+                          </div>
+                          <div id="td-step1-badge" style="padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#5A5652;">READY</div>
                         </div>
-                        <div id="td-step1-badge" style="padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-family:'DM Sans',sans-serif;font-size:8px;font-weight:600;color:#5A5652;">READY</div>
+                        <!-- Sub-step indicators -->
+                        <div style="display:flex;gap:4px;margin:8px 0 0 34px;">
+                          <div style="flex:1;padding:3px 6px;border-radius:4px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);font-family:'DM Sans',sans-serif;font-size:7.5px;color:#3A3835;text-align:center;">Analyze</div>
+                          <div style="flex:1;padding:3px 6px;border-radius:4px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);font-family:'DM Sans',sans-serif;font-size:7.5px;color:#3A3835;text-align:center;">3/4 View</div>
+                          <div style="flex:1;padding:3px 6px;border-radius:4px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);font-family:'DM Sans',sans-serif;font-size:7.5px;color:#3A3835;text-align:center;">Front</div>
+                          <div style="flex:1;padding:3px 6px;border-radius:4px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);font-family:'DM Sans',sans-serif;font-size:7.5px;color:#3A3835;text-align:center;">Top</div>
+                        </div>
+                      </div>
+
+                      <!-- Arrow -->
+                      <div style="display:flex;align-items:center;justify-content:center;padding:2px 0;">
+                        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;">&#8595; composited sheet → patent card</div>
                       </div>
 
                       <!-- Step 2 -->
-                      <div style="display:flex;align-items:center;justify-content:center;padding:2px 0;">
-                        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:#3A3835;">&#8595; chains as edit</div>
-                      </div>
-
                       <div id="td-step2-card" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;">
                         <div style="width:24px;height:24px;border-radius:50%;background:rgba(112,80,168,.12);border:1px solid rgba(112,80,168,.25);display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;color:#9070C0;flex-shrink:0;">2</div>
                         <div style="flex:1;">
@@ -5491,6 +5501,66 @@ function tdGetProjectSpecs() {
   return specs.length > 0 ? specs : null;
 }
 
+/* ── Helper: load an image data URL into an Image element ── */
+function tdLoadImage(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = dataUrl;
+  });
+}
+
+/* ── Helper: composite 3 view images into a single technical sheet ── */
+async function tdCompositeViews(viewUrls) {
+  const W = 1536, H = 1024;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // White background
+  ctx.fillStyle = '#FAFAF8';
+  ctx.fillRect(0, 0, W, H);
+
+  // Thin outer border
+  ctx.strokeStyle = '#999';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(8, 8, W - 16, H - 16);
+
+  // Load all 3 view images
+  const images = await Promise.all(viewUrls.map(u => tdLoadImage(u)));
+
+  // Layout: 3 equal columns with padding
+  const pad = 24, gap = 16;
+  const colW = Math.floor((W - pad * 2 - gap * 2) / 3);
+  const labelH = 28; // space for labels at bottom
+  const viewH = H - pad * 2 - labelH;
+
+  const labels = ['TOP', 'FRONT', 'PERSPECTIVE'];
+
+  images.forEach((img, i) => {
+    const x = pad + i * (colW + gap);
+    const y = pad;
+
+    // Calculate fitted dimensions preserving aspect ratio
+    const scale = Math.min(colW / img.width, viewH / img.height);
+    const drawW = img.width * scale;
+    const drawH = img.height * scale;
+    const drawX = x + (colW - drawW) / 2;
+    const drawY = y + (viewH - drawH) / 2;
+
+    ctx.drawImage(img, drawX, drawY, drawW, drawH);
+
+    // Label beneath each view
+    ctx.fillStyle = '#333';
+    ctx.font = '600 11px "DM Sans", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(labels[i], x + colW / 2, H - pad - 4);
+  });
+
+  return canvas.toDataURL('image/png');
+}
+
 async function generateTd() {
   if (tdBusy) return;
   if (!tdImageB64) { alert('Please upload a 3/4 view image first.'); return; }
@@ -5504,88 +5574,192 @@ async function generateTd() {
   document.getElementById('td-gen-btn').style.opacity = '.5';
 
   const apiUrl = (PROXY_URL || '').replace('/api/generate-render', '/api/generate-image');
+  const imageDataUrl = 'data:' + (tdImageType || 'image/jpeg') + ';base64,' + tdImageB64;
 
-  /* ── STEP 1: Generate Technical Three-View Drawing ── */
+  /* ═══ STEP 0: Analyze jewelry with Claude to create anchor description ═══ */
   tdUpdateBadge(1, 'RUNNING', 'running');
   tdUpdateBadge(2, 'WAITING', 'neutral');
-  document.getElementById('td-spinner-text').textContent = 'Step 1: Generating three-view technical drawing…';
+  document.getElementById('td-spinner-text').textContent = 'Analyzing jewelry piece…';
 
-  // Improved prompt: explicit geometric preservation, engineering vocabulary,
-  // view-specific camera instructions, and strict invariant constraints
-  const step1Prompt =
-    'You are a technical illustrator creating an engineering drawing sheet. ' +
-    'The attached image is a 3/4 perspective photograph of a piece of jewelry. ' +
-    'Study every detail: the exact silhouette, proportions, number and placement of stones, ' +
-    'prong positions, metalwork patterns, band width, and all decorative elements.\n\n' +
-    'TASK: Edit this into a technical drawing page with THREE orthographic views of this EXACT piece, ' +
-    'arranged in a single horizontal row on a clean white sheet.\n\n' +
-    'VIEW SPECIFICATIONS:\n' +
-    '┌─────────────────────────────────────────────────────┐\n' +
-    '│  LEFT: TOP VIEW (Plan)     │  CENTER: FRONT VIEW (Elevation)  │  RIGHT: 3/4 PERSPECTIVE  │\n' +
-    '└─────────────────────────────────────────────────────┘\n\n' +
-    'LEFT — TOP VIEW (Plan View):\n' +
-    '  • Camera positioned directly above, looking straight down (bird\'s-eye, 0° elevation)\n' +
-    '  • Shows the full outline of the piece from above: the band as a complete oval/circle, ' +
-    'the head/setting from above showing stone arrangement and prong layout\n' +
-    '  • All horizontal proportions must match the original photo exactly\n\n' +
-    'CENTER — FRONT VIEW (Front Elevation):\n' +
-    '  • Camera positioned at exact eye level, looking straight at the front face (0° azimuth, 0° elevation)\n' +
-    '  • Shows the front profile: band height, setting height, stone prominence, gallery details\n' +
-    '  • Vertical proportions (height-to-width ratio) must precisely match the original\n\n' +
-    'RIGHT — 3/4 PERSPECTIVE VIEW:\n' +
-    '  • Same angle as the original uploaded photo\n' +
-    '  • This view should look like a direct trace/illustration of the input image\n' +
-    '  • Preserve EVERY detail: exact stone count, prong positions, metal texture, decorative elements\n\n' +
-    'GEOMETRY INVARIANTS (preserve across ALL three views):\n' +
-    '  • Identical piece — same number of stones, same prong count, same band thickness\n' +
-    '  • Proportions must be physically consistent (a wide band in perspective = wide band in front view)\n' +
+  let anchorDesc = '';
+  try {
+    const analysisRes = await claudeAPI({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 500,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: tdImageType || 'image/jpeg', data: tdImageB64 } },
+          { type: 'text', text: 'You are analyzing a piece of jewelry for a technical drawing. Describe it in precise, measurable terms. Include:\n' +
+            '1. Piece type (ring, pendant, earring, bracelet, etc.)\n' +
+            '2. Exact number of stones and their arrangement (e.g., "1 center oval stone in a 4-prong setting, surrounded by 20 small round pavé stones")\n' +
+            '3. Metal band/body description: approximate proportions, width relative to stone, profile shape\n' +
+            '4. Setting type and prong count\n' +
+            '5. Any decorative elements (filigree, milgrain, engraving, gallery details)\n' +
+            '6. Symmetry (bilateral, radial, asymmetric)\n' +
+            '7. Relative proportions: e.g., "the stone height is approximately 2x the band width"\n\n' +
+            'Be extremely specific and factual. This description will be used to ensure accuracy across multiple technical drawing views. 3-4 sentences max, dense with detail.' }
+        ]
+      }]
+    });
+    const analysisData = await analysisRes.json();
+    anchorDesc = analysisData?.content?.[0]?.text || '';
+  } catch (e) {
+    // Non-fatal — proceed without anchor description
+    console.warn('Anchor analysis failed:', e.message);
+  }
+
+  const anchorBlock = anchorDesc
+    ? '\n\nANCHOR DESCRIPTION (ground truth — every view must match this exactly):\n' + anchorDesc + '\n'
+    : '';
+
+  /* ── Invariants block — restated in every view prompt to prevent drift ── */
+  const invariants =
+    '\n\nGEOMETRY INVARIANTS — preserve across this view:\n' +
+    '  • Identical piece to the reference photo — same stone count, prong count, band thickness\n' +
+    '  • Proportions must be physically consistent with the original\n' +
     '  • Do NOT add, remove, or modify ANY design element. Zero artistic interpretation.\n' +
-    '  • Do NOT simplify or stylize the design. Preserve full geometric complexity.\n\n' +
-    'DRAWING STYLE:\n' +
-    '  • Clean technical illustration: precise contour lines (0.3pt weight), minimal shading\n' +
-    '  • Light gray construction lines and subtle tonal shading to indicate form and depth\n' +
-    '  • White/off-white background, thin outer border around the entire sheet\n' +
-    '  • Label each view: "TOP", "FRONT", "PERSPECTIVE" in small caps beneath each\n' +
-    '  • Each view fits in an equal-width column, vertically centered, with even spacing\n' +
+    '  • Do NOT simplify or stylize the design. Preserve full geometric complexity.\n' +
+    anchorBlock;
+
+  const drawingStyle =
+    '\n\nDRAWING STYLE:\n' +
+    '  • Clean technical illustration: precise contour lines, minimal shading\n' +
+    '  • Light tonal shading to indicate form and depth, no color\n' +
+    '  • White/off-white background, NO border (will be composited later)\n' +
+    '  • The view should fill most of the image with minimal margins\n' +
     '  • Professional engineering drafting quality — as if produced by a CAD system';
 
+  /* ═══ STEP 1a: Generate PERSPECTIVE view (closest to original) ═══ */
+  document.getElementById('td-spinner-text').textContent = 'Step 1: Generating perspective view (1/3)…';
+
+  let viewUrls = [];
+  let lastRespId = null;
+
+  // View 1: Perspective (3/4 angle — same as the original photo, easiest to get right)
   try {
-    const res1 = await fetch(apiUrl, {
+    const perspPrompt =
+      'Edit this image into a clean technical illustration. ' +
+      'Keep the EXACT same viewing angle (3/4 perspective). ' +
+      'Convert the photograph into a precise technical line drawing of this EXACT jewelry piece.' +
+      invariants + drawingStyle;
+
+    const res = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        prompt: step1Prompt,
+        prompt: perspPrompt,
         action: 'edit',
         quality: 'high',
         input_fidelity: 'high',
-        size: '1536x1024',
+        size: '1024x1024',
         input_image: tdImageB64,
       }),
     });
-    const data1 = await res1.json();
-    if (!res1.ok || !data1.url) throw new Error(data1.error || 'Step 1 failed — no image returned');
-
-    // Show step 1 result
-    document.getElementById('td-result-step1').src = data1.url;
-    document.getElementById('td-result-step1').style.display = 'block';
-    document.getElementById('td-results').style.display = 'flex';
-    tdResponseId = data1.response_id || null;
-    tdUpdateBadge(1, 'DONE', 'done');
-
+    const data = await res.json();
+    if (!res.ok || !data.url) throw new Error(data.error || 'Perspective view failed');
+    viewUrls.push(data.url);
+    lastRespId = data.response_id || null;
   } catch (e) {
-    document.getElementById('td-spinner').style.display = 'none';
-    document.getElementById('td-results').style.display = 'flex';
-    document.getElementById('td-error').textContent = 'Step 1 error: ' + e.message;
-    document.getElementById('td-error').style.display = 'block';
-    tdUpdateBadge(1, 'FAILED', 'error');
-    tdBusy = false;
-    document.getElementById('td-gen-btn').style.opacity = '1';
+    tdShowError('Perspective view error: ' + e.message);
     return;
   }
 
-  /* ── STEP 2: Patent Design Card — stylize 3-view + add spec cells ── */
+  /* ═══ STEP 1b: Generate FRONT view (chained from perspective) ═══ */
+  document.getElementById('td-spinner-text').textContent = 'Step 1: Generating front view (2/3)…';
+
+  try {
+    const frontPrompt =
+      'Now show the same jewelry piece from a FRONT ELEVATION view. ' +
+      'Camera at exact eye level, looking straight at the front face — 0° azimuth, 0° elevation. ' +
+      'No perspective distortion — pure orthographic projection. ' +
+      'Show: band height, setting height, stone prominence from the front, gallery details. ' +
+      'The vertical proportions (height-to-width ratio) must precisely match the original piece.' +
+      invariants + drawingStyle;
+
+    const payload = {
+      prompt: frontPrompt,
+      action: 'edit',
+      quality: 'high',
+      input_fidelity: 'high',
+      size: '1024x1024',
+    };
+    if (lastRespId) {
+      payload.previous_response_id = lastRespId;
+    } else {
+      payload.input_image = tdImageB64;
+    }
+
+    const res = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.url) throw new Error(data.error || 'Front view failed');
+    viewUrls.push(data.url);
+    lastRespId = data.response_id || null;
+  } catch (e) {
+    tdShowError('Front view error: ' + e.message);
+    return;
+  }
+
+  /* ═══ STEP 1c: Generate TOP view (chained from front) ═══ */
+  document.getElementById('td-spinner-text').textContent = 'Step 1: Generating top view (3/3)…';
+
+  try {
+    const topPrompt =
+      'Now show the same jewelry piece from a TOP-DOWN PLAN view. ' +
+      'Camera positioned directly above, looking straight down — bird\'s-eye, 90° elevation, pure orthographic projection. ' +
+      'Show: the complete outline from above — band as a full oval/circle, head/setting showing stone arrangement, prong layout from above. ' +
+      'All horizontal proportions must match the original piece exactly.' +
+      invariants + drawingStyle;
+
+    const payload = {
+      prompt: topPrompt,
+      action: 'edit',
+      quality: 'high',
+      input_fidelity: 'high',
+      size: '1024x1024',
+    };
+    if (lastRespId) {
+      payload.previous_response_id = lastRespId;
+    } else {
+      payload.input_image = tdImageB64;
+    }
+
+    const res = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.url) throw new Error(data.error || 'Top view failed');
+    viewUrls.push(data.url);
+    lastRespId = data.response_id || null;
+  } catch (e) {
+    tdShowError('Top view error: ' + e.message);
+    return;
+  }
+
+  /* ═══ STEP 1d: Composite 3 views into single technical sheet ═══ */
+  document.getElementById('td-spinner-text').textContent = 'Compositing three-view sheet…';
+
+  try {
+    // Order: TOP, FRONT, PERSPECTIVE (standard technical drawing layout)
+    const compositeUrl = await tdCompositeViews([viewUrls[2], viewUrls[1], viewUrls[0]]);
+    document.getElementById('td-result-step1').src = compositeUrl;
+    document.getElementById('td-result-step1').style.display = 'block';
+    document.getElementById('td-results').style.display = 'flex';
+    tdUpdateBadge(1, 'DONE', 'done');
+  } catch (e) {
+    tdShowError('Compositing error: ' + e.message);
+    return;
+  }
+
+  /* ═══ STEP 2: Patent Design Card — stylize composite + add spec cells ═══ */
   tdUpdateBadge(2, 'RUNNING', 'running');
-  document.getElementById('td-spinner-text').textContent = 'Step 2: Creating patent design card…';
+  document.getElementById('td-spinner-text').textContent = 'Step 2: Creating design patent card…';
 
   // Pull specs from the project folder if available
   const projectSpecs = tdGetProjectSpecs();
@@ -5593,7 +5767,6 @@ async function generateTd() {
   if (projectSpecs && projectSpecs.length > 0) {
     specsBlock = '\n\nSPECIFICATION CELLS — draw these as a row of drafting data cells across the bottom of the card, ' +
       'inside the border, styled like a technical drawing title block / revision table:\n';
-    // Group into rows of 4 for layout
     for (let i = 0; i < projectSpecs.length; i++) {
       specsBlock += '  | ' + projectSpecs[i];
       if ((i + 1) % 4 === 0 || i === projectSpecs.length - 1) specsBlock += ' |\n';
@@ -5607,7 +5780,7 @@ async function generateTd() {
   }
 
   const step2Prompt =
-    'Edit this technical drawing to create a Design Patent Collector Card. ' +
+    'Edit this technical drawing sheet to create a Design Patent Collector Card. ' +
     'The three jewelry views (Top, Front, Perspective) must remain EXACTLY as drawn — ' +
     'preserve their geometry, proportions, and every detail with zero changes. ' +
     'Do NOT redraw, simplify, or modify the jewelry in any way.\n\n' +
@@ -5633,36 +5806,23 @@ async function generateTd() {
     '  • Only the style, background, labels, annotations, border, and spec cells change';
 
   try {
-    const payload2 = {
-      prompt: step2Prompt,
-      action: 'edit',
-      quality: 'high',
-      input_fidelity: 'high',
-      size: '1536x1024',
-    };
-
-    // Chain from step 1 via response_id if available, otherwise send step 1 image
-    if (tdResponseId) {
-      payload2.previous_response_id = tdResponseId;
-    } else {
-      // Fallback: extract step 1 result as base64 and send directly
-      const step1Img = document.getElementById('td-result-step1');
-      if (step1Img.src && step1Img.src.startsWith('data:')) {
-        payload2.input_image = step1Img.src.split(',')[1];
-      } else {
-        throw new Error('Cannot chain step 2 — no response ID or image data from step 1');
-      }
-    }
-
+    // Send the composite sheet as a fresh input_image (not chained — different context)
+    const compositeB64 = document.getElementById('td-result-step1').src.split(',')[1];
     const res2 = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload2),
+      body: JSON.stringify({
+        prompt: step2Prompt,
+        action: 'edit',
+        quality: 'high',
+        input_fidelity: 'high',
+        size: '1536x1024',
+        input_image: compositeB64,
+      }),
     });
     const data2 = await res2.json();
     if (!res2.ok || !data2.url) throw new Error(data2.error || 'Step 2 failed — no image returned');
 
-    // Show step 2 result
     document.getElementById('td-result-step2').src = data2.url;
     document.getElementById('td-result-step2').style.display = 'block';
     tdUpdateBadge(2, 'DONE', 'done');
@@ -5674,6 +5834,17 @@ async function generateTd() {
   }
 
   document.getElementById('td-spinner').style.display = 'none';
+  tdBusy = false;
+  document.getElementById('td-gen-btn').style.opacity = '1';
+}
+
+/* ── Show error and reset TD state ── */
+function tdShowError(msg) {
+  document.getElementById('td-spinner').style.display = 'none';
+  document.getElementById('td-results').style.display = 'flex';
+  document.getElementById('td-error').textContent = msg;
+  document.getElementById('td-error').style.display = 'block';
+  tdUpdateBadge(1, 'FAILED', 'error');
   tdBusy = false;
   document.getElementById('td-gen-btn').style.opacity = '1';
 }
