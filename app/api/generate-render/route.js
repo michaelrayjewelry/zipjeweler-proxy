@@ -47,6 +47,9 @@ export async function POST(request) {
 
   // Try OpenAI Responses API first, then Higgsfield fallback
   const openaiKey = process.env.OPENAI_API_KEY;
+  if (!openaiKey) {
+    console.error('OPENAI_API_KEY is not set. Available env keys:', Object.keys(process.env).filter(k => k.includes('OPENAI') || k.includes('HIGGS') || k.includes('API')).join(', ') || '(none matching)');
+  }
   let openaiError = null;
   if (openaiKey) {
     try {
@@ -314,11 +317,13 @@ async function higgsGenerate({ keyId, keySecret, prompt, hasInputImage, input_im
 }
 
 export async function GET() {
+  const openaiKey = process.env.OPENAI_API_KEY;
   return Response.json(
     {
       status: 'ok',
       service: 'zipjeweler-proxy',
-      hasOpenAI: !!process.env.OPENAI_API_KEY,
+      hasOpenAI: !!openaiKey,
+      openaiKeyPrefix: openaiKey ? openaiKey.slice(0, 7) + '...' : null,
       hasKeyId: !!process.env.HIGGSFIELD_KEY_ID,
       hasKeySecret: !!process.env.HIGGSFIELD_KEY_SECRET,
       timestamp: new Date().toISOString(),

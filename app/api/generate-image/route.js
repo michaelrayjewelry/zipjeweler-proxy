@@ -73,14 +73,19 @@ async function responsesGenerate({ openaiKey, prompt, input_image, reference_ima
     'Authorization': `Bearer ${openaiKey}`,
   };
 
+  // Helper: wrap raw base64 as a data URL, auto-detecting JPEG vs PNG
+  function toDataUrl(b64str) {
+    if (b64str.startsWith('data:')) return b64str;
+    const mime = b64str.startsWith('/9j') ? 'image/jpeg' : 'image/png';
+    return `data:${mime};base64,${b64str}`;
+  }
+
   // Build input content — image + text prompt
   let input;
 
   if (previous_response_id && mask_image) {
     // Multi-turn with mask: send mask image + descriptive prompt
-    const maskDataUrl = mask_image.startsWith('data:')
-      ? mask_image
-      : `data:image/png;base64,${mask_image}`;
+    const maskDataUrl = toDataUrl(mask_image);
     const maskPrompt = prompt + '\n\nThe attached image is an editing mask. White regions indicate areas to modify. Black regions must be preserved exactly as they are in the previous image.';
     input = [{
       role: 'user',
@@ -94,10 +99,7 @@ async function responsesGenerate({ openaiKey, prompt, input_image, reference_ima
     const contentItems = [];
     for (const refImg of reference_images) {
       if (!refImg) continue;
-      const refUrl = refImg.startsWith('data:')
-        ? refImg
-        : `data:image/png;base64,${refImg}`;
-      contentItems.push({ type: 'input_image', image_url: refUrl });
+      contentItems.push({ type: 'input_image', image_url: toDataUrl(refImg) });
     }
     contentItems.push({ type: 'input_text', text: prompt });
     input = [{ role: 'user', content: contentItems }];
@@ -106,32 +108,19 @@ async function responsesGenerate({ openaiKey, prompt, input_image, reference_ima
     input = prompt;
   } else if (input_image) {
     // First turn with an image: include it in the user message
-    const dataUrl = input_image.startsWith('data:')
-      ? input_image
-      : `data:image/png;base64,${input_image}`;
-
     const contentItems = [
-      {
-        type: 'input_image',
-        image_url: dataUrl,
-      },
+      { type: 'input_image', image_url: toDataUrl(input_image) },
     ];
 
     // Append any reference images (orientation guides, etc.)
     if (Array.isArray(reference_images)) {
       for (const refImg of reference_images) {
         if (!refImg) continue;
-        const refUrl = refImg.startsWith('data:')
-          ? refImg
-          : `data:image/png;base64,${refImg}`;
-        contentItems.push({ type: 'input_image', image_url: refUrl });
+        contentItems.push({ type: 'input_image', image_url: toDataUrl(refImg) });
       }
     }
 
-    contentItems.push({
-      type: 'input_text',
-      text: prompt,
-    });
+    contentItems.push({ type: 'input_text', text: prompt });
 
     input = [{ role: 'user', content: contentItems }];
   } else {
