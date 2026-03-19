@@ -22,6 +22,7 @@ const TOOL_DESTINATIONS = [
   { id: 'photoshoot', label: 'Photoshoot', icon: '📸' },
   { id: 'modify', label: 'Modify / Inpaint', icon: '🎨' },
   { id: 'technical-drawing', label: 'Technical Drawing', icon: '📏' },
+  { id: 'sketch-dissector', label: 'Sketch Dissector', icon: '🔲' },
 ];
 const STORAGE_KEY = 'zipjeweler-file-hub';
 
